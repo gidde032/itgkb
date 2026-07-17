@@ -7,7 +7,7 @@ summary:
   User gets a "calendar use limit exceeded" style error when adding collaborators or guests to
   an event, often involving external (non-UMN) addresses.
 stub: false
-related: [gcal-cannot-be-shown, workspace-service-status]
+related: [gcal-cannot-be-shown, workspace-service-status, gcal-external-sharing]
 ---
 
 ## Summary

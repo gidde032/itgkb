@@ -9,6 +9,6 @@
 ## Phase 3 — Search
 - [x] P3 implement  - [x] P3 review  - [x] P3 triage+fix  - [x] P3 summary
 ## Phase 4 — Full content + list fallback
-- [~] P4 implement (articles done, list view next)  - [ ] P4 review  - [ ] P4 triage+fix  - [ ] P4 summary
+- [x] P4 implement  - [x] P4 review  - [x] P4 triage+fix  - [x] P4 summary
 ## Phase 5 — Hardening pass (v0.1.0)
 - [ ] Audit (spec-drift + user-friction)  - [ ] Slices per maintainer  - [ ] Tag v0.1.0

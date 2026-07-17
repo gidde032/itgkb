@@ -7,7 +7,7 @@ summary:
   Newer Node versions (v24+) can break older Vite/esbuild configs built for v18/v20. Diagnose
   with node --version; fix with nvm and a clean reinstall.
 stub: false
-related: []
+related: [icloud-node-modules, esbuild-missing-arm64]
 ---
 
 ## Summary
@@ -32,6 +32,6 @@ under v24+.
 ## Notes / Edge Cases
 
 - On machines where node_modules lives in an iCloud-synced folder, the `rm -rf` step can hang —
-  see the iCloud sync conflicts article (added in a later content batch).
+  see the iCloud sync conflicts article.
 - Consider adding an `engines` field or `.nvmrc` to the project so the next person hits a clear
   message instead of a cryptic esbuild error.

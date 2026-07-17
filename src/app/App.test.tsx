@@ -86,3 +86,19 @@ describe('narrow viewport swaps galaxy for list (NF-7)', () => {
     expect(screen.queryByRole('navigation', { name: 'Articles by constellation' })).not.toBeInTheDocument();
   });
 });
+
+// P4-F4 regression: the viewport hook must respond to live media-query
+// changes, not just the initial match — resizing swaps views without reload.
+import { act } from '@testing-library/react';
+
+describe('live viewport switching (P4-F4)', () => {
+  it('swaps canvas for list when the viewport narrows mid-session', () => {
+    render(<App />);
+    expect(screen.getByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' })).toBeInTheDocument();
+    act(() => {
+      (globalThis as unknown as { __setNarrowViewport: (v: boolean) => void }).__setNarrowViewport(true);
+    });
+    expect(screen.getByRole('navigation', { name: 'Articles by constellation' })).toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' })).not.toBeInTheDocument();
+  });
+});
