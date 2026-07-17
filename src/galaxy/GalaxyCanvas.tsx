@@ -20,6 +20,15 @@ interface DrawStar extends StarPosition {
 
 const HIT_RADIUS = 18;
 
+/**
+ * F1 regression: the click target should feel the same size on screen at any
+ * zoom, so the world-space radius scales with 1/k — clamped so extreme zoom
+ * levels can't make stars unclickable or grab distant neighbors.
+ */
+export function screenHitRadius(k: number): number {
+  return Math.min(40, Math.max(6, HIT_RADIUS / k));
+}
+
 /** Pure draw routine, kept outside React for testability and render-on-demand. */
 export function drawGalaxy(
   ctx: CanvasRenderingContext2D,
@@ -201,7 +210,7 @@ export function GalaxyCanvas({
         event.clientX - rect.left,
         event.clientY - rect.top,
       ]);
-      onSelect(hitTest(stars, wx, wy));
+      onSelect(hitTest(stars, wx, wy, screenHitRadius(transformRef.current.k)));
     };
     canvas.addEventListener('click', onClick);
 
@@ -221,7 +230,7 @@ export function GalaxyCanvas({
       ref={canvasRef}
       className="galaxy-canvas"
       role="img"
-      aria-label="Galaxy map of IT knowledge articles. Use the article list for keyboard access."
+      aria-label="Interactive galaxy map of IT knowledge articles"
     />
   );
 }

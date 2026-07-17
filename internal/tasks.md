@@ -1,9 +1,9 @@
 # Task list (full project)
 ## Phase 1 — Walking skeleton
-- [ ] P1 implement: scaffold, content pipeline, 5 articles, galaxy (pan/zoom/click), panel, gates wired
-- [ ] P1 review: 3 persona passes (skeptic + frontend + data-pipeline)
-- [ ] P1 triage+fix with regression tests
-- [ ] P1 summary + handoff + zip
+- [x] P1 implement: scaffold, content pipeline, 5 articles, galaxy (pan/zoom/click), panel, gates wired
+- [x] P1 review: 3 persona passes (skeptic + frontend + data-pipeline)
+- [x] P1 triage+fix with regression tests
+- [x] P1 summary + handoff + zip
 ## Phase 2 — Constellations & star craft
 - [ ] P2 implement  - [ ] P2 review  - [ ] P2 triage+fix  - [ ] P2 summary
 ## Phase 3 — Search

@@ -53,3 +53,36 @@ describe('validateCollection', () => {
     expect(errs.join(' ')).toMatch(/does not resolve/);
   });
 });
+
+// F3 regression (reviewer: data-pipeline, severity Medium): frontmatter block
+// parsing is a single shared implementation for CLI gate and app loader.
+import { parseFrontmatterBlock } from '../../scripts/validate-lib.mjs';
+
+describe('parseFrontmatterBlock (F3)', () => {
+  it('parses a valid block and returns the body', () => {
+    const { fm, body, errors } = parseFrontmatterBlock('---\nid: x\n---\nBody', 'f.md');
+    expect(errors).toEqual([]);
+    expect(fm).toEqual({ id: 'x' });
+    expect(body).toBe('Body');
+  });
+  it('reports missing frontmatter without throwing', () => {
+    const { fm, errors } = parseFrontmatterBlock('no fm here', 'f.md');
+    expect(fm).toBeNull();
+    expect(errors[0]).toMatch(/no YAML frontmatter/);
+  });
+  it('rejects array frontmatter as not-a-mapping', () => {
+    const { fm, errors } = parseFrontmatterBlock('---\n- a\n- b\n---\nBody', 'f.md');
+    expect(fm).toBeNull();
+    expect(errors[0]).toMatch(/not a mapping/);
+  });
+});
+
+// F5 regression (reviewer: testing, severity Low): related must be an array of ids.
+describe('related field validation (F5)', () => {
+  it('rejects non-array related', () => {
+    expect(validateFrontmatter({ ...good, related: 'a-two' }, 'f.md').join(' ')).toMatch(/related/);
+  });
+  it('rejects arrays containing non-strings', () => {
+    expect(validateFrontmatter({ ...good, related: [3] }, 'f.md').join(' ')).toMatch(/related/);
+  });
+});

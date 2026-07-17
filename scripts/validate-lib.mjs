@@ -7,6 +7,34 @@
  *   summary: string, stub: boolean, related: string[] }} Frontmatter
  */
 
+
+import yaml from 'js-yaml';
+
+export const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
+
+/**
+ * Split and YAML-parse a markdown file's frontmatter block. Single source of
+ * truth for BOTH the CLI gate and the app loader (review finding F3: the
+ * parse step had drifted into two copies).
+ * @param {string} raw
+ * @param {string} sourceName
+ * @returns {{ fm: Record<string, unknown> | null, body: string, errors: string[] }}
+ */
+export function parseFrontmatterBlock(raw, sourceName) {
+  const match = raw.match(FRONTMATTER_RE);
+  if (!match) return { fm: null, body: raw, errors: [`${sourceName}: no YAML frontmatter block found`] };
+  let fm;
+  try {
+    fm = yaml.load(match[1]);
+  } catch (e) {
+    return { fm: null, body: raw, errors: [`${sourceName}: YAML parse error — ${e.message.split('\n')[0]}`] };
+  }
+  if (typeof fm !== 'object' || fm === null || Array.isArray(fm)) {
+    return { fm: null, body: raw, errors: [`${sourceName}: frontmatter is not a mapping`] };
+  }
+  return { fm, body: raw.slice(match[0].length), errors: [] };
+}
+
 const REQUIRED_STRING_FIELDS = ['id', 'title', 'constellation', 'summary'];
 
 /**

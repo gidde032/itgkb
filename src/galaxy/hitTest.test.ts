@@ -21,3 +21,21 @@ describe('hitTest', () => {
     expect(hitTest(stars, 0, 25, 30)).toBe('s1');
   });
 });
+
+// F1 regression (reviewer: frontend/interaction, severity High): hit radius
+// must be screen-constant across zoom levels, clamped at the extremes.
+import { screenHitRadius } from './GalaxyCanvas';
+
+describe('screenHitRadius (F1)', () => {
+  it('equals the base radius at k=1', () => {
+    expect(screenHitRadius(1)).toBe(18);
+  });
+  it('grows in world units when zoomed out, clamped at 40', () => {
+    expect(screenHitRadius(0.5)).toBe(36);
+    expect(screenHitRadius(0.3)).toBe(40);
+  });
+  it('shrinks when zoomed in, clamped at 6', () => {
+    expect(screenHitRadius(2)).toBe(9);
+    expect(screenHitRadius(4)).toBe(6);
+  });
+});
