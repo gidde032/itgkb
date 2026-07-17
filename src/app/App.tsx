@@ -5,6 +5,8 @@ import { TextSearch } from '../search/textSearch';
 import { GalaxyCanvas } from '../galaxy/GalaxyCanvas';
 import { ArticlePanel } from '../article/ArticlePanel';
 import { SearchBar } from './SearchBar';
+import { ListView } from './ListView';
+import { useNarrowViewport } from './useNarrowViewport';
 
 const searchProvider = new TextSearch();
 
@@ -22,6 +24,7 @@ export function App(): JSX.Element {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [focus, setFocus] = useState<{ id: string; seq: number } | null>(null);
+  const narrow = useNarrowViewport();
 
   const matches = useMemo(
     () => (query.trim() ? searchProvider.search(query, content.articles) : null),
@@ -54,15 +57,24 @@ export function App(): JSX.Element {
         onOpenTopMatch={openTopMatch}
         onClear={clearSearch}
       />
-      <GalaxyCanvas
-        articles={content.articles}
-        constellations={content.constellations}
-        positions={positions}
-        selectedId={selectedId}
-        onSelect={onSelect}
-        matchIds={matchIds}
-        focus={focus}
-      />
+      {narrow ? (
+        <ListView
+          articles={content.articles}
+          constellations={content.constellations}
+          matchIds={matchIds}
+          onOpen={flyTo}
+        />
+      ) : (
+        <GalaxyCanvas
+          articles={content.articles}
+          constellations={content.constellations}
+          positions={positions}
+          selectedId={selectedId}
+          onSelect={onSelect}
+          matchIds={matchIds}
+          focus={focus}
+        />
+      )}
       {content.errors.length > 0 && (
         <div className="content-errors" role="alert">
           {content.errors.length} content problem{content.errors.length === 1 ? '' : 's'} — see

@@ -7,8 +7,13 @@ describe('App integration', () => {
   it('loads real content with zero errors (FR-1 on the shipped article set)', () => {
     const { articles, constellations, errors } = loadContent();
     expect(errors).toEqual([]);
-    expect(articles.length).toBeGreaterThanOrEqual(5);
+    // Phase 4 contract: the complete seed set — exact counts, not minimums.
+    expect(articles).toHaveLength(20);
     expect(constellations).toHaveLength(6);
+    expect(articles.filter((a) => a.stub)).toHaveLength(6);
+    for (const c of constellations) {
+      expect(articles.some((a) => a.constellation === c.id)).toBe(true);
+    }
   });
 
   it('renders the shell and galaxy canvas without crashing', () => {
@@ -28,7 +33,8 @@ describe('App search integration (FR-8, FR-7)', () => {
     fireEvent.change(screen.getByRole('searchbox', { name: 'Search articles' }), {
       target: { value: 'traceroute' },
     });
-    expect(screen.getByRole('status')).toHaveTextContent(/1 star/);
+    // Phase 4 content: 'traceroute' matches its own article + umn-network-architecture.
+    expect(screen.getByRole('status')).toHaveTextContent(/2 stars/);
   });
 
   it('Enter opens the top match article panel', () => {
@@ -57,5 +63,26 @@ describe('search keystrokes do not churn canvas setup (P3-F1)', () => {
       fireEvent.change(input, { target: { value: q } });
     }
     expect(stub.constructedCount).toBe(after_mount);
+  });
+});
+
+
+// Phase 4: NF-7 viewport switch — list replaces canvas below the breakpoint.
+describe('narrow viewport swaps galaxy for list (NF-7)', () => {
+  it('renders the grouped list instead of the canvas when narrow, and opens articles from it', () => {
+    (globalThis as unknown as { __setNarrowViewport: (v: boolean) => void }).__setNarrowViewport(true);
+    render(<App />);
+    expect(screen.queryByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' })).not.toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Articles by constellation' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Traceroute: Reading and interpreting output/ }));
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Traceroute: Reading and interpreting output' }),
+    ).toBeInTheDocument();
+  });
+
+  it('keeps the canvas on wide viewports', () => {
+    render(<App />);
+    expect(screen.getByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' })).toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Articles by constellation' })).not.toBeInTheDocument();
   });
 });

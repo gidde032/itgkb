@@ -314,3 +314,78 @@ body,
   border-radius: 999px;
   padding: 0.15rem 0.6rem;
 }
+
+/* Phase 4: narrow-viewport list fallback (NF-7) */
+.list-view {
+  position: absolute;
+  inset: 6.5rem 0 0 0;
+  overflow-y: auto;
+  padding: 0 1rem 2rem;
+  display: grid;
+  gap: 1.5rem;
+  align-content: start;
+}
+.list-view--empty {
+  color: var(--dim);
+  text-align: center;
+  padding-top: 3rem;
+}
+.list-view__group h2 {
+  font-family: var(--font-atlas);
+  font-size: 0.72rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  margin: 0 0 0.5rem 0.25rem;
+}
+.list-view__group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.list-view__group button {
+  width: 100%;
+  text-align: left;
+  display: grid;
+  gap: 0.25rem;
+  background: color-mix(in srgb, var(--space-haze) 80%, transparent);
+  border: 1px solid var(--space-line);
+  border-radius: 10px;
+  color: var(--starlight);
+  padding: 0.7rem 0.85rem;
+  cursor: pointer;
+}
+.list-view__group button:hover,
+.list-view__group button:focus-visible {
+  border-color: var(--dim);
+}
+.list-view__title {
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+.list-view__stub {
+  justify-self: start;
+  font-family: var(--font-atlas);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dim);
+  border: 1px dashed var(--dim);
+  border-radius: 999px;
+  padding: 0.05rem 0.45rem;
+}
+.list-view__summary {
+  font-size: 0.76rem;
+  color: var(--dim);
+  line-height: 1.45;
+}
+@media (max-width: 899px) {
+  .article-panel {
+    width: 100vw;
+    border-left: none;
+  }
+  .reset-view {
+    display: none;
+  }
+}

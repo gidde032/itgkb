@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { vi } from 'vitest';
+import { beforeEach, vi } from 'vitest';
 
 // jsdom lacks canvas 2D and ResizeObserver; stub both for component tests.
 // A recursive Proxy lets any ctx method chain (e.g. createRadialGradient().addColorStop()).
@@ -38,3 +38,29 @@ class ResizeObserverStub {
 if (typeof globalThis.ResizeObserver === 'undefined') {
   globalThis.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver;
 }
+
+// jsdom lacks matchMedia; stub with a test-controllable narrow flag (NF-7 tests).
+let narrowViewport = false;
+const mqlListeners = new Set<(e: { matches: boolean }) => void>();
+(globalThis as Record<string, unknown>).__setNarrowViewport = (v: boolean) => {
+  narrowViewport = v;
+  for (const l of mqlListeners) l({ matches: v });
+};
+beforeEach(() => {
+  narrowViewport = false;
+});
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn((query: string) => ({
+    get matches() {
+      return narrowViewport;
+    },
+    media: query,
+    addEventListener: (_t: string, l: (e: { matches: boolean }) => void) => mqlListeners.add(l),
+    removeEventListener: (_t: string, l: (e: { matches: boolean }) => void) => mqlListeners.delete(l),
+    addListener: () => {},
+    removeListener: () => {},
+    onchange: null,
+    dispatchEvent: () => false,
+  })),
+});
