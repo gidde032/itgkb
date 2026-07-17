@@ -14,6 +14,10 @@ export interface GalaxyCanvasProps {
   positions: StarPosition[];
   selectedId: string | null;
   onSelect: (id: string | null) => void;
+  /** FR-8: when a search is active, non-matching stars dim in place. Null = no search. */
+  matchIds: ReadonlySet<string> | null;
+  /** FR-7: bumping seq flies the view to the star with this id. */
+  focus: { id: string; seq: number } | null;
 }
 
 interface StarMeta {
@@ -87,6 +91,7 @@ export function drawGalaxy(
   transform: ZoomTransform,
   selectedId: string | null,
   hoveredId: string | null,
+  matchIds: ReadonlySet<string> | null,
 ): void {
   ctx.save();
   ctx.clearRect(0, 0, width, height);
@@ -141,7 +146,8 @@ export function drawGalaxy(
     const b = pointById.get(link.b);
     if (!a || !b) continue;
     const color = scene.meta.get(link.a)?.color ?? '#ffffff';
-    ctx.strokeStyle = `${color}2e`;
+    const linkDimmed = matchIds !== null && (!matchIds.has(link.a) || !matchIds.has(link.b));
+    ctx.strokeStyle = linkDimmed ? `${color}10` : `${color}2e`;
     ctx.beginPath();
     ctx.moveTo(a.x, a.y);
     ctx.lineTo(b.x, b.y);
@@ -152,13 +158,14 @@ export function drawGalaxy(
     const m = scene.meta.get(p.id);
     if (!m) continue;
     const depth = 0.65 + p.z * 0.35;
-    const emphasized = p.id === selectedId || p.id === hoveredId;
+    const dimmed = matchIds !== null && !matchIds.has(p.id);
+    const emphasized = !dimmed && (p.id === selectedId || p.id === hoveredId);
     const r = (emphasized ? 9 : 6) * depth;
     const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 3.2);
     glow.addColorStop(0, m.color);
     glow.addColorStop(0.35, `${m.color}66`);
     glow.addColorStop(1, `${m.color}00`);
-    ctx.globalAlpha = m.stub ? 0.45 : depth;
+    ctx.globalAlpha = (m.stub ? 0.45 : depth) * (dimmed ? 0.15 : 1);
     ctx.fillStyle = glow;
     ctx.beginPath();
     ctx.arc(p.x, p.y, r * 3.2, 0, Math.PI * 2);
@@ -187,7 +194,7 @@ export function drawGalaxy(
     }
     ctx.globalAlpha = 1;
 
-    if (transform.k > 0.9) {
+    if (transform.k > 0.9 && !dimmed) {
       ctx.font = '11px system-ui, sans-serif';
       ctx.fillStyle = `rgba(232, 237, 247, ${Math.min(1, (transform.k - 0.9) * 2) * 0.85})`;
       ctx.textAlign = 'center';
@@ -203,12 +210,22 @@ export function GalaxyCanvas({
   positions,
   selectedId,
   onSelect,
+  matchIds,
+  focus,
 }: GalaxyCanvasProps): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const transformRef = useRef<ZoomTransform>(zoomIdentity);
   const zoomRef = useRef<ZoomBehavior<HTMLCanvasElement, unknown> | null>(null);
   const [hovered, setHovered] = useState<{ id: string; x: number; y: number } | null>(null);
   const hoveredRef = useRef<string | null>(null);
+  // P3-F1: selection + search state are draw-time inputs, not setup inputs.
+  // Keeping them in refs lets keystrokes re-render without tearing down zoom,
+  // listeners, and the ResizeObserver on every change.
+  const drawStateRef = useRef<{ selectedId: string | null; matchIds: ReadonlySet<string> | null }>({
+    selectedId,
+    matchIds,
+  });
+  const renderRef = useRef<(() => void) | null>(null);
 
   const meta = useMemo(() => {
     const colorByConstellation = new Map(constellations.map((c) => [c.id, c.color]));
@@ -258,8 +275,9 @@ export function GalaxyCanvas({
         { points: currentPoints(), meta, links, dust: currentDust() },
         constellations,
         transformRef.current,
-        selectedId,
+        drawStateRef.current.selectedId,
         hoveredRef.current,
+        drawStateRef.current.matchIds,
       );
       ctx.restore();
     };
@@ -337,18 +355,44 @@ export function GalaxyCanvas({
     canvas.addEventListener('mousemove', onMove);
     canvas.addEventListener('mouseleave', onLeave);
 
+    renderRef.current = render;
     const observer = new ResizeObserver(resize);
     observer.observe(canvas);
     resize();
 
     return () => {
+      renderRef.current = null;
       canvas.removeEventListener('click', onClick);
       canvas.removeEventListener('mousemove', onMove);
       canvas.removeEventListener('mouseleave', onLeave);
       observer.disconnect();
       selection.on('.zoom', null);
     };
-  }, [positions, meta, links, dust, constellations, selectedId, onSelect]);
+  }, [positions, meta, links, dust, constellations, onSelect]);
+
+  // P3-F1: cheap re-draw when selection/search change — no setup teardown.
+  useEffect(() => {
+    drawStateRef.current = { selectedId, matchIds };
+    renderRef.current?.();
+  }, [selectedId, matchIds]);
+
+  // FR-7: fly to a star when a focus request arrives (related-link nav, search Enter).
+  useEffect(() => {
+    if (!focus) return;
+    const canvas = canvasRef.current;
+    const zoomBehavior = zoomRef.current;
+    const target = positions.find((p) => p.id === focus.id);
+    if (!canvas || !zoomBehavior || !target) return;
+    const rect = canvas.getBoundingClientRect();
+    const k = Math.max(1.2, transformRef.current.k);
+    select(canvas)
+      .transition()
+      .duration(500)
+      .call(
+        zoomBehavior.transform,
+        zoomIdentity.translate(rect.width / 2, rect.height / 2).scale(k).translate(-target.x, -target.y),
+      );
+  }, [focus, positions]);
 
   const resetView = () => {
     const canvas = canvasRef.current;

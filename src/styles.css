@@ -274,3 +274,43 @@ body,
   color: var(--starlight);
   border-color: var(--dim);
 }
+
+/* Phase 3: search bar */
+.search-bar {
+  position: absolute;
+  top: 3.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  width: min(420px, 90vw);
+}
+.search-bar input {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--starlight);
+  background: color-mix(in srgb, var(--space-haze) 88%, transparent);
+  border: 1px solid var(--space-line);
+  border-radius: 999px;
+  padding: 0.55rem 1.1rem;
+  backdrop-filter: blur(6px);
+}
+.search-bar input::placeholder {
+  color: var(--dim);
+}
+.search-bar input:focus-visible {
+  outline: none;
+  border-color: var(--dim);
+}
+.search-bar__count {
+  font-family: var(--font-atlas);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  color: var(--dim);
+  background: color-mix(in srgb, var(--space-deep) 75%, transparent);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+}

@@ -7,7 +7,7 @@
 ## Phase 2 — Constellations & star craft
 - [x] P2 implement  - [x] P2 review  - [x] P2 triage+fix  - [x] P2 summary
 ## Phase 3 — Search
-- [ ] P3 implement  - [ ] P3 review  - [ ] P3 triage+fix  - [ ] P3 summary
+- [x] P3 implement  - [x] P3 review  - [x] P3 triage+fix  - [x] P3 summary
 ## Phase 4 — Full content + list fallback
 - [ ] P4 implement  - [ ] P4 review  - [ ] P4 triage+fix  - [ ] P4 summary
 ## Phase 5 — Hardening pass (v0.1.0)

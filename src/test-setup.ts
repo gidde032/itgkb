@@ -25,10 +25,16 @@ Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
 });
 
 class ResizeObserverStub {
+  static constructedCount = 0;
+  constructor() {
+    ResizeObserverStub.constructedCount += 1;
+  }
   observe() {}
   unobserve() {}
   disconnect() {}
 }
+// Exposed for the P3-F1 regression test (setup-teardown churn detector).
+(globalThis as Record<string, unknown>).__ResizeObserverStub = ResizeObserverStub;
 if (typeof globalThis.ResizeObserver === 'undefined') {
   globalThis.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver;
 }
