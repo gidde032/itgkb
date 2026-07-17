@@ -11,4 +11,4 @@
 ## Phase 4 — Full content + list fallback
 - [x] P4 implement  - [x] P4 review  - [x] P4 triage+fix  - [x] P4 summary
 ## Phase 5 — Hardening pass (v0.1.0)
-- [x] Audit (spec-drift + user-friction)  - [x] Slices A1-A4 implemented with regression tests  - [~] Maintainer red-pen (awaiting)  - [ ] Tag v0.1.0
+- [x] Audit (spec-drift + user-friction)  - [x] Slices A1-A4 implemented with regression tests  - [~] Red-pen: pass 1 done from stub guide; [NEEDS VERIFICATION] answers pending  - [ ] Tag v0.1.0

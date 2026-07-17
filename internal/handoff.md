@@ -1,8 +1,13 @@
 # Handoff — current state
 
 Updated: 2026-07-17 (session 2)
-State: Phases 1–4 COMPLETE; Phase 5 hardening slices A1–A4 done (79 tests
-green). AWAITING maintainer content red-pen; v0.1.0 tag held for it.
+State: Phases 1-4 COMPLETE; hardening A1-A4 done; red-pen pass 1 applied from
+maintainer's stub guide (79 tests green). 3 TDX articles promoted to real
+content; 3 stubs remain (account-access, printer, hardware-intake) carrying
+[NEEDS VERIFICATION] markers. Source conversations confirmed unreachable via
+conversation_search (3 queries, consistent with kickoff finding OQ under
+decision 0b) — guide scope sections used as ground truth.
+v0.1.0 tag still held: maintainer to answer [NEEDS VERIFICATION] items.
 Next step: Phase 5 — Hardening pass toward v0.1.0. MAINTAINER CHECKPOINT:
 audit findings get ranked, maintainer picks fix slices; maintainer content
 red-pen slots here. Audit must confirm: SearchProvider exists (P1 deviation,

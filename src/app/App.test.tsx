@@ -10,7 +10,10 @@ describe('App integration', () => {
     // Phase 4 contract: the complete seed set — exact counts, not minimums.
     expect(articles).toHaveLength(20);
     expect(constellations).toHaveLength(6);
-    expect(articles.filter((a) => a.stub)).toHaveLength(6);
+    // Red-pen pass: 3 TDX articles promoted from stub to real content;
+    // account-access, printer, hardware-intake remain stubs pending
+    // [NEEDS VERIFICATION] answers from the Service Center.
+    expect(articles.filter((a) => a.stub)).toHaveLength(3);
     for (const c of constellations) {
       expect(articles.some((a) => a.constellation === c.id)).toBe(true);
     }
