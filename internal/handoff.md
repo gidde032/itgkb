@@ -1,7 +1,8 @@
 # Handoff — current state
 
 Updated: 2026-07-17 (session 2)
-State: Phases 1–4 COMPLETE. Gates all green: 67 tests, 20 articles validated.
+State: Phases 1–4 COMPLETE; Phase 5 hardening slices A1–A4 done (79 tests
+green). AWAITING maintainer content red-pen; v0.1.0 tag held for it.
 Next step: Phase 5 — Hardening pass toward v0.1.0. MAINTAINER CHECKPOINT:
 audit findings get ranked, maintainer picks fix slices; maintainer content
 red-pen slots here. Audit must confirm: SearchProvider exists (P1 deviation,

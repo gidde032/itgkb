@@ -41,19 +41,26 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
 
 // jsdom lacks matchMedia; stub with a test-controllable narrow flag (NF-7 tests).
 let narrowViewport = false;
+let reducedMotion = false;
 const mqlListeners = new Set<(e: { matches: boolean }) => void>();
 (globalThis as Record<string, unknown>).__setNarrowViewport = (v: boolean) => {
   narrowViewport = v;
   for (const l of mqlListeners) l({ matches: v });
 };
+(globalThis as Record<string, unknown>).__setReducedMotion = (v: boolean) => {
+  reducedMotion = v;
+};
 beforeEach(() => {
   narrowViewport = false;
+  reducedMotion = false;
 });
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn((query: string) => ({
     get matches() {
-      return narrowViewport;
+      // Query-aware stub: viewport queries follow the narrow flag,
+      // prefers-reduced-motion follows its own flag (A1 tests).
+      return query.includes('prefers-reduced-motion') ? reducedMotion : narrowViewport;
     },
     media: query,
     addEventListener: (_t: string, l: (e: { matches: boolean }) => void) => mqlListeners.add(l),

@@ -102,3 +102,36 @@ describe('live viewport switching (P4-F4)', () => {
     expect(screen.queryByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' })).not.toBeInTheDocument();
   });
 });
+
+
+// A4 regression: desktop users can toggle into the list view and back.
+describe('desktop list toggle (A4)', () => {
+  it('switches to the list and back without a narrow viewport', () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'List view' }));
+    expect(screen.getByRole('navigation', { name: 'Articles by constellation' })).toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Galaxy view' }));
+    expect(screen.getByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' })).toBeInTheDocument();
+  });
+
+  it('hides the toggle on narrow viewports where the list is forced', () => {
+    (globalThis as unknown as { __setNarrowViewport: (v: boolean) => void }).__setNarrowViewport(true);
+    render(<App />);
+    expect(screen.queryByRole('button', { name: 'List view' })).not.toBeInTheDocument();
+  });
+});
+
+// A2 end-to-end: natural phrasing that used to zero out now finds the article.
+describe('search fallback end-to-end (A2)', () => {
+  it("finds the calendar article for 'calendar wont update'", () => {
+    render(<App />);
+    const input = screen.getByRole('searchbox', { name: 'Search articles' });
+    fireEvent.change(input, { target: { value: 'calendar wont update' } });
+    expect(screen.getByRole('status')).toHaveTextContent(/close match/);
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(
+      screen.getByRole('heading', { level: 1, name: /Event couldn't be updated/ }),
+    ).toBeInTheDocument();
+  });
+});

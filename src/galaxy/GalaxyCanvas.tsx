@@ -7,6 +7,7 @@ import type { StarPosition } from '../layout/types';
 import { computeConstellationLinks, type StarLink } from './links';
 import { displayPositions, type DisplayPoint } from './display';
 import { hashString } from '../layout/curatedForce';
+import { motionDuration } from '../app/motion';
 
 export interface GalaxyCanvasProps {
   articles: Article[];
@@ -194,9 +195,11 @@ export function drawGalaxy(
     }
     ctx.globalAlpha = 1;
 
-    if (transform.k > 0.9 && !dimmed) {
+    if (transform.k > 0.75 && !dimmed) {
+      // A3: initial view is k=0.8 — titles must be legible on load, ramping
+      // to full strength as you zoom in.
       ctx.font = '11px system-ui, sans-serif';
-      ctx.fillStyle = `rgba(232, 237, 247, ${Math.min(1, (transform.k - 0.9) * 2) * 0.85})`;
+      ctx.fillStyle = `rgba(232, 237, 247, ${Math.min(1, (transform.k - 0.5) * 2) * 0.85})`;
       ctx.textAlign = 'center';
       ctx.fillText(m.title, p.x, p.y + 24);
     }
@@ -387,7 +390,7 @@ export function GalaxyCanvas({
     const k = Math.max(1.2, transformRef.current.k);
     select(canvas)
       .transition()
-      .duration(500)
+      .duration(motionDuration(500))
       .call(
         zoomBehavior.transform,
         zoomIdentity.translate(rect.width / 2, rect.height / 2).scale(k).translate(-target.x, -target.y),
@@ -401,7 +404,7 @@ export function GalaxyCanvas({
     const rect = canvas.getBoundingClientRect();
     select(canvas)
       .transition()
-      .duration(450)
+      .duration(motionDuration(450))
       .call(
         zoomBehavior.transform,
         zoomIdentity.translate(rect.width / 2, rect.height / 2).scale(0.8),

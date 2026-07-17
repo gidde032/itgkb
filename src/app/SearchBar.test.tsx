@@ -42,3 +42,14 @@ describe('SearchBar', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 });
+
+
+// A2 UI: fallback results are labeled honestly as close matches.
+describe('partial match labeling (A2)', () => {
+  it('says "close matches" when results are best-effort', () => {
+    render(
+      <SearchBar query="q" matchCount={3} partial onChange={() => {}} onOpenTopMatch={() => {}} onClear={() => {}} />,
+    );
+    expect(screen.getByRole('status')).toHaveTextContent('3 close matches');
+  });
+});

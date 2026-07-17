@@ -3,6 +3,8 @@ import type { ChangeEvent, KeyboardEvent } from 'react';
 export interface SearchBarProps {
   query: string;
   matchCount: number | null;
+  /** A2: true when results are best-effort (not every term matched). */
+  partial?: boolean;
   onChange: (query: string) => void;
   onOpenTopMatch: () => void;
   onClear: () => void;
@@ -11,6 +13,7 @@ export interface SearchBarProps {
 export function SearchBar({
   query,
   matchCount,
+  partial = false,
   onChange,
   onOpenTopMatch,
   onClear,
@@ -33,7 +36,7 @@ export function SearchBar({
         <span className="search-bar__count" role="status">
           {matchCount === 0
             ? 'No matching stars'
-            : `${matchCount} star${matchCount === 1 ? '' : 's'} — Enter opens the top match`}
+            : `${matchCount} ${partial ? 'close match' : 'star'}${matchCount === 1 ? '' : partial ? 'es' : 's'} — Enter opens the top match`}
         </span>
       )}
     </div>

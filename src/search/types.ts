@@ -6,6 +6,11 @@ export interface MatchResult {
   score: number;
   /** Which fields matched, for UI hints: 'title' | 'tags' | 'summary' | 'body'. */
   fields: string[];
+  /**
+   * True when this result comes from the best-effort fallback (not every
+   * query term matched). UI may present these as "close matches".
+   */
+  partial?: boolean;
 }
 
 /**

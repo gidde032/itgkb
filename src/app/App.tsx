@@ -25,6 +25,9 @@ export function App(): JSX.Element {
   const [query, setQuery] = useState('');
   const [focus, setFocus] = useState<{ id: string; seq: number } | null>(null);
   const narrow = useNarrowViewport();
+  // A4: desktop users can opt into the list; narrow viewports force it.
+  const [listMode, setListMode] = useState(false);
+  const showList = narrow || listMode;
 
   const matches = useMemo(
     () => (query.trim() ? searchProvider.search(query, content.articles) : null),
@@ -53,11 +56,22 @@ export function App(): JSX.Element {
       <SearchBar
         query={query}
         matchCount={matches ? matches.length : null}
+        partial={Boolean(matches && matches.length > 0 && matches[0].partial)}
         onChange={setQuery}
         onOpenTopMatch={openTopMatch}
         onClear={clearSearch}
       />
-      {narrow ? (
+      {!narrow && (
+        <button
+          type="button"
+          className="view-toggle"
+          aria-pressed={listMode}
+          onClick={() => setListMode((v) => !v)}
+        >
+          {listMode ? 'Galaxy view' : 'List view'}
+        </button>
+      )}
+      {showList ? (
         <ListView
           articles={content.articles}
           constellations={content.constellations}
