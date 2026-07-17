@@ -1,0 +1,22 @@
+/// <reference types="vitest/config" />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['src/test-setup.ts'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/**', 'scripts/validate-lib.mjs'],
+      // Entrypoint is DOM bootstrap only; excluded rather than smoke-tested.
+      exclude: ['src/main.tsx', 'src/test-setup.ts', '**/*.test.*'],
+      // Floor set from Phase 1 measurement (89% lines / 78% branch on 2026-07-17),
+      // with headroom so the gate fails on regression, not on noise. Ratchet up,
+      // never down without maintainer sign-off (SPEC NF-5, CLAUDE.md gates).
+      thresholds: { lines: 85, statements: 85, functions: 75, branches: 70 },
+    },
+  },
+});

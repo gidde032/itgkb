@@ -1,0 +1,8 @@
+[
+  { "id": "google-workspace", "name": "Google Workspace", "anchor": { "x": -320, "y": -160 }, "color": "#ffd27a" },
+  { "id": "tdx", "name": "TDX Ticketing", "anchor": { "x": 340, "y": -200 }, "color": "#ff8fa3" },
+  { "id": "dev-environment", "name": "Development Environment", "anchor": { "x": -60, "y": 240 }, "color": "#7ee8b2" },
+  { "id": "networking", "name": "Networking & Connectivity", "anchor": { "x": 300, "y": 140 }, "color": "#7ab8ff" },
+  { "id": "account-access", "name": "Account & Access", "anchor": { "x": 60, "y": -300 }, "color": "#c9a2ff" },
+  { "id": "hardware", "name": "Hardware & Peripherals", "anchor": { "x": -380, "y": 180 }, "color": "#ffb37a" }
+]

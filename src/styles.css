@@ -1,0 +1,227 @@
+/* Design tokens — sky-atlas direction (see frontend-design plan, Phase 2 expands) */
+:root {
+  --space-deep: #070b14;
+  --space-haze: #0d1424;
+  --space-line: #1c2740;
+  --starlight: #e8edf7;
+  --dim: #7d8aa5;
+  --font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-atlas: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  background: var(--space-deep);
+  color: var(--starlight);
+  font-family: var(--font-body);
+}
+
+.app-shell {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+}
+
+.galaxy-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+.galaxy-canvas:active {
+  cursor: grabbing;
+}
+
+.app-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  pointer-events: none;
+}
+.app-header__title {
+  font-family: var(--font-atlas);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+}
+.app-header__sub {
+  font-size: 0.75rem;
+  color: var(--dim);
+  letter-spacing: 0.08em;
+}
+
+.content-errors {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  z-index: 3;
+  padding: 0.5rem 0.75rem;
+  background: #3a1420;
+  border: 1px solid #7c2d3e;
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+.article-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
+  width: min(460px, 92vw);
+  overflow-y: auto;
+  background: color-mix(in srgb, var(--space-haze) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border-left: 1px solid var(--space-line);
+  padding: 1.5rem 1.5rem 2rem;
+}
+
+.article-panel__header {
+  position: relative;
+  border-bottom: 1px solid var(--space-line);
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+}
+.article-panel__eyebrow {
+  font-family: var(--font-atlas);
+  font-size: 0.7rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+.article-panel__header h1 {
+  font-size: 1.25rem;
+  line-height: 1.35;
+  margin: 0 2rem 0.5rem 0;
+}
+.article-panel__stub-badge {
+  display: inline-block;
+  font-family: var(--font-atlas);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--dim);
+  border: 1px dashed var(--dim);
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  margin: 0 0 0.5rem;
+}
+.article-panel__summary {
+  color: var(--dim);
+  font-size: 0.9rem;
+  margin: 0 0 0.75rem;
+}
+.article-panel__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.article-panel__tags li {
+  font-family: var(--font-atlas);
+  font-size: 0.68rem;
+  color: var(--dim);
+  border: 1px solid var(--space-line);
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+}
+.article-panel__close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: none;
+  border: 1px solid var(--space-line);
+  border-radius: 6px;
+  color: var(--dim);
+  width: 2rem;
+  height: 2rem;
+  cursor: pointer;
+}
+.article-panel__close:hover,
+.article-panel__close:focus-visible {
+  color: var(--starlight);
+  border-color: var(--dim);
+}
+
+.article-panel__body {
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+.article-panel__body h2 {
+  font-family: var(--font-atlas);
+  font-size: 0.78rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin: 1.5rem 0 0.5rem;
+}
+.article-panel__body code {
+  font-family: var(--font-atlas);
+  font-size: 0.85em;
+  background: var(--space-line);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+}
+.article-panel__body ol,
+.article-panel__body ul {
+  padding-left: 1.25rem;
+}
+
+.article-panel__related h2 {
+  font-family: var(--font-atlas);
+  font-size: 0.78rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.article-panel__related ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+.article-panel__related button {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 1px solid var(--space-line);
+  border-radius: 8px;
+  color: var(--starlight);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.article-panel__related button:hover,
+.article-panel__related button:focus-visible {
+  border-color: var(--dim);
+  background: var(--space-haze);
+}
+
+:focus-visible {
+  outline: 2px solid var(--starlight);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
