@@ -5,7 +5,7 @@
 - [x] P1 triage+fix with regression tests
 - [x] P1 summary + handoff + zip
 ## Phase 2 — Constellations & star craft
-- [ ] P2 implement  - [ ] P2 review  - [ ] P2 triage+fix  - [ ] P2 summary
+- [x] P2 implement  - [x] P2 review  - [x] P2 triage+fix  - [x] P2 summary
 ## Phase 3 — Search
 - [ ] P3 implement  - [ ] P3 review  - [ ] P3 triage+fix  - [ ] P3 summary
 ## Phase 4 — Full content + list fallback
