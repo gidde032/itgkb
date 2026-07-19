@@ -93,4 +93,20 @@ describe('search normalization (A2)', () => {
     expect(s2.search('couldnt', punctArticles)).toHaveLength(1);
     expect(s2.search("couldn't", punctArticles)).toHaveLength(1);
   });
+
+  // P6-D2 regression: en/em dashes normalize to space like hyphens.
+  it('normalizes en-dash and em-dash to space', () => {
+    expect(normalizeSearchText('A–B—C')).toBe('a b c');
+  });
+});
+
+// P6-D2 regression: duplicate query terms must not inflate scores.
+describe('duplicate query terms (P6-D2)', () => {
+  const s3 = new TextSearch();
+  const dup = [art('a', 'VPN access', ['networking'], 'Remote.', 'body')];
+  it('produces the same score regardless of repeated terms', () => {
+    const [single] = s3.search('vpn', dup);
+    const [doubled] = s3.search('vpn vpn', dup);
+    expect(doubled.score).toBe(single.score);
+  });
 });

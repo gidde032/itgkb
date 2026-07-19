@@ -10,5 +10,5 @@ export function normalizeSearchText(s: string): string {
   return s
     .toLowerCase()
     .replace(/['\u2018\u2019]/g, '')
-    .replace(/[-_/\\.,:;!?()[\]{}"\u201c\u201d`|#*>+=~^&%$@]/g, ' ');
+    .replace(/[-_/\\.,:;!?()[\]{}"\u201c\u201d`|#*>+=~^&%$@\u2013\u2014]/g, ' ');
 }

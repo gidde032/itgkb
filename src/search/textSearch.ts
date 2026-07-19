@@ -43,7 +43,7 @@ function scoreArticle(haystacks: Haystacks, terms: string[]): {
  */
 export class TextSearch implements SearchProvider {
   search(query: string, articles: Article[]): MatchResult[] {
-    const terms = normalizeSearchText(query).split(/\s+/).filter(Boolean);
+    const terms = [...new Set(normalizeSearchText(query).split(/\s+/).filter(Boolean))];
     if (terms.length === 0) return [];
     const scored = articles.map((a) => ({
       id: a.id,

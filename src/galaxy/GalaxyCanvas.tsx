@@ -257,7 +257,7 @@ export function GalaxyCanvas({
 
     let width = 0;
     let height = 0;
-    const dpr = window.devicePixelRatio || 1;
+    let dpr = window.devicePixelRatio || 1;
 
     // P6-B1: parallax is driven by the PAN DELTA from rest, not the absolute
     // transform — the initial centering translation is not user pan.
@@ -291,6 +291,7 @@ export function GalaxyCanvas({
     };
 
     const resize = () => {
+      dpr = window.devicePixelRatio || 1;
       const rect = canvas.getBoundingClientRect();
       width = rect.width;
       height = rect.height;

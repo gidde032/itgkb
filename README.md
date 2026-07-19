@@ -7,7 +7,7 @@ category, and proximity means topical similarity.
 ## Run it
 
 ```bash
-git clone <this-repo>
+git clone <repo-url>
 cd it-knowledge-galaxy
 npm install
 npm run dev
