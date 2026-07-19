@@ -67,25 +67,32 @@ export function validateFrontmatter(fm, sourceName) {
 }
 
 /**
- * Validate the collection: unique ids, known constellations, resolvable related links.
+ * Analyze the collection: unique ids, known constellations, resolvable related
+ * links. Besides the error strings, reports which sourceNames the runtime
+ * loader must EXCLUDE to honor FR-1 (P6-A2): unknown-constellation articles
+ * and second occurrences of a duplicate id. A dead `related` link errors but
+ * does NOT exclude the linking article (maintainer-approved policy).
  * @param {Array<{ fm: Record<string, unknown>, sourceName: string }>} entries
  * @param {Array<{ id: string }>} constellations
- * @returns {string[]}
+ * @returns {{ errors: string[], excludedSources: Set<string> }}
  */
-export function validateCollection(entries, constellations) {
+export function analyzeCollection(entries, constellations) {
   const errors = [];
+  const excludedSources = new Set();
   const constellationIds = new Set(constellations.map((c) => c.id));
   const seen = new Map();
   for (const { fm, sourceName } of entries) {
     if (typeof fm.id === 'string') {
       if (seen.has(fm.id)) {
         errors.push(`${sourceName}: duplicate id "${fm.id}" (also in ${seen.get(fm.id)})`);
+        excludedSources.add(sourceName);
       } else {
         seen.set(fm.id, sourceName);
       }
     }
     if (typeof fm.constellation === 'string' && !constellationIds.has(fm.constellation)) {
       errors.push(`${sourceName}: unknown constellation "${fm.constellation}"`);
+      excludedSources.add(sourceName);
     }
   }
   for (const { fm, sourceName } of entries) {
@@ -97,5 +104,16 @@ export function validateCollection(entries, constellations) {
       }
     }
   }
-  return errors;
+  return { errors, excludedSources };
+}
+
+/**
+ * Error-strings-only view of analyzeCollection, kept for the CLI gate, which
+ * reports every violation and exits non-zero rather than excluding anything.
+ * @param {Array<{ fm: Record<string, unknown>, sourceName: string }>} entries
+ * @param {Array<{ id: string }>} constellations
+ * @returns {string[]}
+ */
+export function validateCollection(entries, constellations) {
+  return analyzeCollection(entries, constellations).errors;
 }
