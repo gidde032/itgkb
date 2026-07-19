@@ -5,7 +5,7 @@ constellation: google-workspace # one of the ids in constellations.json
 tags: [tag-one, tag-two]
 summary: One to two sentences shown on hover. What is the issue and who hits it.
 stub: false
-related: [other-article-id]
+related: [] # optional: ids of EXISTING articles, e.g. [gcal-external-sharing]
 ---
 
 ## Summary

@@ -20,7 +20,8 @@ scroll to zoom.
 
 1. Copy `content/TEMPLATE.md` into `content/articles/<your-id>.md`.
 2. Fill in the frontmatter (id, title, constellation, tags, summary) and the
-   body sections.
+   body sections. Leave `related` empty (`[]`) or list ids of articles that
+   already exist — unresolvable ids fail validation.
 3. `npm run validate:content` — fix anything it flags.
 4. Reload the dev server. Your star is in the galaxy.
 
