@@ -49,3 +49,18 @@ describe('parallax applies uniformly to any point set (P2-F2)', () => {
     expect(dust.y).toBe(star.y);
   });
 });
+
+// P6-B1 regression (contextless review: skeptical-senior-engineer lens,
+// severity HIGH): stars sat offset from constellation halos at rest because
+// displayPositions was fed the absolute transform (including the centering
+// translation) rather than the pan delta. Callers now subtract the rest
+// transform; with zero delta, positions must be unchanged.
+describe('no parallax drift at rest (P6-B1)', () => {
+  it('produces zero offset when pan delta is zero regardless of depth', () => {
+    const pts = displayPositions(positions, 0, 0, 0.8);
+    for (const p of pts) {
+      expect(p.x).toBe(100);
+      expect(p.y).toBe(100);
+    }
+  });
+});

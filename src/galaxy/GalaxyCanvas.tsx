@@ -218,6 +218,7 @@ export function GalaxyCanvas({
 }: GalaxyCanvasProps): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const transformRef = useRef<ZoomTransform>(zoomIdentity);
+  const restTransformRef = useRef<ZoomTransform>(zoomIdentity);
   const zoomRef = useRef<ZoomBehavior<HTMLCanvasElement, unknown> | null>(null);
   const [hovered, setHovered] = useState<{ id: string; x: number; y: number } | null>(null);
   const hoveredRef = useRef<string | null>(null);
@@ -258,14 +259,18 @@ export function GalaxyCanvas({
     let height = 0;
     const dpr = window.devicePixelRatio || 1;
 
+    // P6-B1: parallax is driven by the PAN DELTA from rest, not the absolute
+    // transform — the initial centering translation is not user pan.
     const currentPoints = () => {
       const t = transformRef.current;
-      return displayPositions(positions, t.x, t.y, t.k);
+      const r = restTransformRef.current;
+      return displayPositions(positions, t.x - r.x, t.y - r.y, t.k);
     };
     // P2-F2: dust shares the parallax transform so the depth cue is real.
     const currentDust = () => {
       const t = transformRef.current;
-      return displayPositions(dust, t.x, t.y, t.k);
+      const r = restTransformRef.current;
+      return displayPositions(dust, t.x - r.x, t.y - r.y, t.k);
     };
 
     const render = () => {
@@ -316,10 +321,9 @@ export function GalaxyCanvas({
     selection.call(zoomBehavior);
     if (transformRef.current === zoomIdentity) {
       const rect = canvas.getBoundingClientRect();
-      selection.call(
-        zoomBehavior.transform,
-        zoomIdentity.translate(rect.width / 2, rect.height / 2).scale(0.8),
-      );
+      const initial = zoomIdentity.translate(rect.width / 2, rect.height / 2).scale(0.8);
+      restTransformRef.current = initial;
+      selection.call(zoomBehavior.transform, initial);
     }
 
     const toWorld = (event: MouseEvent): [number, number] => {
@@ -402,13 +406,12 @@ export function GalaxyCanvas({
     const zoomBehavior = zoomRef.current;
     if (!canvas || !zoomBehavior) return;
     const rect = canvas.getBoundingClientRect();
+    const rest = zoomIdentity.translate(rect.width / 2, rect.height / 2).scale(0.8);
+    restTransformRef.current = rest;
     select(canvas)
       .transition()
       .duration(motionDuration(450))
-      .call(
-        zoomBehavior.transform,
-        zoomIdentity.translate(rect.width / 2, rect.height / 2).scale(0.8),
-      );
+      .call(zoomBehavior.transform, rest);
   };
 
   const hoveredMeta = hovered ? meta.get(hovered.id) : undefined;
