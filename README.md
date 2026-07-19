@@ -13,8 +13,15 @@ npm install
 npm run dev
 ```
 
-Open the printed localhost URL. Click a star to read its article. Drag to pan,
-scroll to zoom.
+Open the printed localhost URL.
+
+**Finding articles fast:** type in the search bar — non-matching stars dim in
+place. Press Enter to jump to the top match, Escape to clear. On desktop, the
+"List view" button switches to a flat searchable list grouped by constellation.
+On narrow screens (<900 px) the list is shown automatically.
+
+Click a star to read its article. Drag to pan, scroll to zoom, "Reset view" to
+return home.
 
 ## Add or edit an article
 
