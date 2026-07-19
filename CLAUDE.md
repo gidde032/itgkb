@@ -8,7 +8,7 @@ maintainer, private repo, no hosting: sharing = clone + npm install + npm run de
 - Content = markdown files in content/articles/ with YAML frontmatter (schema in
   SPEC §5). NEVER hardcode article content in components.
 - Extensibility seams are contracts: LayoutProvider, SearchProvider, renderer
-  consumes {id,x,y,z} positions only.
+  consumes positions + match state only (never inspects article bodies).
 - Hard gates: typecheck (0 errors), lint (0 errors), tests green, build passes,
   npm run validate:content passes. Perf budgets are sanity checks, not gates.
 - Weakening a gate requires maintainer sign-off. Never an agent decision.

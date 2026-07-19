@@ -55,4 +55,14 @@ describe('parseArticle', () => {
     expect(article).toBeNull();
     expect(errors.join(' ')).toMatch(/"summary"/);
   });
+
+  // P6-C5 regression (contextless review: skeptic lens, LOW): tags is
+  // mandatory per SPEC FR-2 and enforced by the validator — omitting it must
+  // fail validation, not silently default to [].
+  it('rejects an article with omitted tags (P6-C5)', () => {
+    const raw = VALID.replace(/tags: \[alpha, beta\]\n/, '');
+    const { article, errors } = parseArticle(raw, 'notags.md', validateFrontmatter);
+    expect(article).toBeNull();
+    expect(errors.join(' ')).toMatch(/tags/);
+  });
 });

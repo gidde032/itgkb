@@ -21,7 +21,7 @@ export function parseArticle(
       id: fm.id as string,
       title: fm.title as string,
       constellation: fm.constellation as string,
-      tags: (fm.tags as string[] | undefined) ?? [],
+      tags: fm.tags as string[],
       summary: fm.summary as string,
       stub: (fm.stub as boolean | undefined) ?? false,
       related: (fm.related as string[] | undefined) ?? [],

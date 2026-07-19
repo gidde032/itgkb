@@ -73,9 +73,11 @@ positions, not a rewrite.
 - **FR-7** The article panel's Related Articles must be clickable and navigate
   the galaxy to the target star (pan/zoom transition + open panel).
 - **FR-8** A search bar overlaid on the galaxy must, as the user types, dim
-  non-matching stars and highlight matches in place — no separate list view.
-  Matching covers title, tags, summary, and full body text (case-insensitive
-  substring at minimum; simple relevance ranking of matches is a plus).
+  non-matching stars and highlight matches in place (the galaxy view has no
+  separate results list; the NF-7 list fallback is an alternative viewport,
+  not a search result). Matching covers title, tags, summary, and full body
+  text (case-insensitive substring at minimum; simple relevance ranking of
+  matches is a plus).
 - **FR-9** The galaxy must be pannable and zoomable with smooth transitions
   (wheel/trackpad zoom, drag pan, double-click or button to reset view).
 - **FR-10** Layout and search must sit behind provider interfaces
@@ -85,8 +87,8 @@ positions, not a rewrite.
   every article for required frontmatter fields, unique ids, known
   constellation ids, and that every `related` id resolves. It must exit
   non-zero on any violation.
-- **FR-12** The MVP ships with the 20 seed articles: 14 rich (drafted from
-  seed summaries, marked for red-pen review) and 6 stubs (7–9, 18–20).
+- **FR-12** The MVP ships with the 20 seed articles: 17 rich (14 original +
+  3 promoted from stubs in red-pen pass 1) and 3 stubs (18–20).
 
 ## 4. Non-functional budgets
 
@@ -106,8 +108,9 @@ skeleton; only test coverage and content validation are hard gates.
 - **NF-6** Scale target: the design must stay within budgets at **100
   articles** (5× seed set) without architectural change.
 - **NF-7** Graceful degradation: below 900 px viewport width, fall back to a
-  searchable list view grouped by constellation (galaxy hidden). Desktop is
-  primary.
+  searchable list view grouped by constellation (galaxy hidden). On desktop a
+  manual "List view" toggle offers the same fallback as an option. Desktop
+  galaxy is the primary view.
 
 ## 5. Schema / design
 
@@ -133,7 +136,7 @@ Body: markdown with conventional H2 sections — `## Diagnostic Steps`,
 | id | Name | Seed stars |
 |---|---|---|
 | google-workspace | Google Workspace | 1–6 |
-| tdx | TDX Ticketing | 7–9 (stubs) |
+| tdx | TDX Ticketing | 7–9 |
 | dev-environment | Development Environment | 10–14, **17** (moved from Networking per kickoff) |
 | networking | Networking & Connectivity | 15–16 |
 | account-access | Account & Access | 18 (stub) |
