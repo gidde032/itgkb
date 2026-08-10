@@ -2,3 +2,16 @@ node_modules
 dist
 coverage
 *.local
+.migration-working
+internal/
+
+# Environment
+.env
+.env.*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
