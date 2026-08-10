@@ -1,5 +1,7 @@
 # IT Knowledge Galaxy
 
+[![CI](https://github.com/gidde032/carlson-IT-galactic-wiki/actions/workflows/ci.yml/badge.svg)](https://github.com/gidde032/carlson-IT-galactic-wiki/actions/workflows/ci.yml)
+
 An explorable IT knowledge base for the Carlson IT Service Center, rendered as
 a galaxy: every article is a star, stars cluster into constellations by
 category, and proximity means topical similarity.
@@ -7,8 +9,8 @@ category, and proximity means topical similarity.
 ## Run it
 
 ```bash
-git clone <repo-url>
-cd it-knowledge-galaxy
+git clone https://github.com/gidde032/carlson-IT-galactic-wiki.git
+cd carlson-IT-galactic-wiki
 npm install
 npm run dev
 ```
@@ -39,7 +41,23 @@ color).
 
 - `npm run gates` — full quality gate: typecheck, lint, tests + coverage
   floor, content validation, production build. Must be green before merging.
+  CI (`.github/workflows/ci.yml`) runs the same gate on every push and PR.
 - `npm test` — test suite only.
-- Architecture notes and scope: `SPEC.md`. Layout and search sit behind
-  provider interfaces (`src/layout/types.ts`) so smarter backends can be
-  swapped in later without UI changes.
+
+## Architecture
+
+Three layers, deliberately decoupled so the visual front end never depends on
+where positions or search results come from:
+
+- **Content pipeline.** Articles are markdown files in `content/articles/` with
+  validated YAML frontmatter (schema in `SPEC.md` §5). `npm run validate:content`
+  is the gate; nothing hardcodes article bodies in components.
+- **Provider seams.** Layout and search sit behind provider interfaces
+  (`src/layout/types.ts`) — a `LayoutProvider` yields star positions and a
+  `SearchProvider` yields match state. Smarter backends can be swapped in later
+  without touching the UI.
+- **Renderer.** The galaxy consumes positions and match state only; it never
+  inspects article bodies. This keeps the near-term build to text search with no
+  AI/semantic features.
+
+See `SPEC.md` for full scope and the extensibility contracts.

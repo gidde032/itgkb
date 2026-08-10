@@ -1,7 +1,8 @@
 # IT Knowledge Galaxy — Operating Rules (compressed)
 
 Read SPEC.md for scope. Read internal/handoff.md for current state. Solo
-maintainer, private repo, no hosting: sharing = clone + npm install + npm run dev.
+maintainer, public GitHub repo, no hosting: sharing = clone + npm install +
+npm run dev. Planning truth lives in GitHub Issues/PRs/milestones.
 
 ## Non-negotiables
 - No AI/semantic features in near-term versions. Text search only.
@@ -27,7 +28,7 @@ maintainer, private repo, no hosting: sharing = clone + npm install + npm run de
 - Checkpoints: phase boundaries only. Batch questions; don't micro-ask.
 - Session continuity: filesystem resets between sessions. At every phase
   boundary: update internal/handoff.md, zip the repo to /mnt/user-data/outputs.
-  DEVIATION (deliberate): internal docs are committed, not gitignored — private
-  solo repo; the zip+handoff is the continuity mechanism and losing internal
-  docs would break it.
+  Internal docs (internal/) are gitignored — the repo is public, so continuity
+  material stays local and travels via the zip+handoff mechanism, not the public
+  history. Losing internal docs would break continuity, so keep the local copies.
 - Cost: don't re-read large files; batch doc updates to phase boundaries.
