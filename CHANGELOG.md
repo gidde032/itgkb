@@ -33,4 +33,4 @@ constellations by category, and proximity signals topical similarity.
 - Some seed articles contain `(verify)` / `[NEEDS VERIFICATION]` markers for
   Carlson/UMN-specific details pending maintainer red-pen.
 
-[0.1.0]: https://github.com/gidde032/carlson-IT-galactic-wiki/releases/tag/v0.1.0
+[0.1.0]: https://github.com/gidde032/itgkb/releases/tag/v0.1.0
