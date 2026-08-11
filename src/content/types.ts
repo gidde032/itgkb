@@ -3,6 +3,8 @@ export interface Constellation {
   name: string;
   anchor: { x: number; y: number };
   color: string;
+  /** Short catalog-id prefix for stars in this constellation (e.g. GW, SEC). */
+  prefix?: string;
 }
 
 export interface Article {

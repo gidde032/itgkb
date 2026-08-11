@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { loadContent } from '../content/load';
 import { CuratedForceLayout } from '../layout/curatedForce';
 import { TextSearch } from '../search/textSearch';
@@ -7,6 +7,7 @@ import { ArticlePanel } from '../article/ArticlePanel';
 import { SearchBar } from './SearchBar';
 import { ListView } from './ListView';
 import { useNarrowViewport } from './useNarrowViewport';
+import { ListIcon, StarIcon } from '../ui/icons';
 
 const searchProvider = new TextSearch();
 
@@ -35,10 +36,24 @@ export function App(): JSX.Element {
   );
   const matchIds = useMemo(() => (matches ? new Set(matches.map((m) => m.id)) : null), [matches]);
 
-  const onSelect = useCallback((id: string | null) => setSelectedId(id), []);
+  // A11y: remember what opened the panel so we can return focus on close.
+  const lastFocusedRef = useRef<HTMLElement | null>(null);
+
+  const onSelect = useCallback((id: string | null) => {
+    if (id) lastFocusedRef.current = document.activeElement as HTMLElement | null;
+    setSelectedId(id);
+  }, []);
   const flyTo = useCallback((id: string) => {
+    lastFocusedRef.current = document.activeElement as HTMLElement | null;
     setSelectedId(id);
     setFocus((f) => ({ id, seq: (f?.seq ?? 0) + 1 }));
+  }, []);
+  const closePanel = useCallback(() => {
+    setSelectedId(null);
+    const el = lastFocusedRef.current;
+    lastFocusedRef.current = null;
+    // Restore focus to the trigger, unless it lived inside the (now closing) panel.
+    if (el && document.contains(el) && !el.closest('.article-panel')) el.focus();
   }, []);
   const openTopMatch = useCallback(() => {
     if (matches && matches.length > 0) flyTo(matches[0].id);
@@ -50,8 +65,12 @@ export function App(): JSX.Element {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <span className="app-header__title">IT Knowledge Galaxy</span>
-        <span className="app-header__sub">Carlson IT Service Center</span>
+        <div className="wordmark">
+          <span className="wordmark__mark">
+            <i>it</i>gkb
+          </span>
+          <span className="wordmark__sub">IT Galactic Knowledge Base</span>
+        </div>
       </header>
       <SearchBar
         query={query}
@@ -68,6 +87,7 @@ export function App(): JSX.Element {
           aria-pressed={listMode}
           onClick={() => setListMode((v) => !v)}
         >
+          {listMode ? <StarIcon /> : <ListIcon />}
           {listMode ? 'Galaxy view' : 'List view'}
         </button>
       )}
@@ -101,7 +121,7 @@ export function App(): JSX.Element {
           constellation={content.constellations.find((c) => c.id === selected.constellation)}
           articlesById={articlesById}
           onNavigate={flyTo}
-          onClose={() => setSelectedId(null)}
+          onClose={closePanel}
         />
       )}
     </div>

@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { drawGalaxy } from './GalaxyCanvas';
+import { drawGalaxy } from './draw';
 import type { Constellation } from '../content/types';
 
-// A3 regression: star titles must be drawn at the INITIAL zoom (k=0.8), not
-// only after zooming past the old 0.9 threshold.
+// Star labels (M3 #16): at the initial zoom stars carry a compact bracketed
+// catalog id; the full title is revealed only on emphasis (hover/selection) or
+// a deeper zoom, and is truncated so it never sprawls.
 function makeRecordingCtx(): { ctx: CanvasRenderingContext2D; fillTexts: () => string[] } {
   const fillText = vi.fn();
   const gradient = { addColorStop: vi.fn() };
@@ -15,6 +16,8 @@ function makeRecordingCtx(): { ctx: CanvasRenderingContext2D; fillTexts: () => s
         if (prop === 'createRadialGradient' || prop === 'createLinearGradient') {
           return vi.fn(() => gradient);
         }
+        // Approximate metrics: 6px per character is enough to drive truncation.
+        if (prop === 'measureText') return (t: string) => ({ width: String(t).length * 6 });
         if (!(prop in target)) target[prop] = vi.fn();
         return target[prop];
       },
@@ -30,24 +33,76 @@ function makeRecordingCtx(): { ctx: CanvasRenderingContext2D; fillTexts: () => s
 const constellations: Constellation[] = [
   { id: 'c1', name: 'Group', anchor: { x: 0, y: 0 }, color: '#ffffff' },
 ];
-const scene = {
+const sceneWith = (title: string) => ({
   points: [{ id: 's1', x: 10, y: 10, z: 0.5 }],
-  meta: new Map([['s1', { color: '#ffffff', stub: false, title: 'Star Title', summary: 's' }]]),
+  meta: new Map([['s1', { color: '#ffffff', stub: false, title, summary: 's', catalog: 'GW-001' }]]),
   links: [],
   dust: [],
-};
+});
+const scene = sceneWith('Star Title');
 const transformAt = (k: number) =>
   ({ x: 0, y: 0, k }) as unknown as Parameters<typeof drawGalaxy>[5];
 
-describe('star title visibility threshold (A3)', () => {
-  it('draws titles at the initial zoom level k=0.8', () => {
+describe('star labels (#16)', () => {
+  it('draws the bracketed catalog id — not the full title — at initial zoom k=0.8', () => {
     const { ctx, fillTexts } = makeRecordingCtx();
     drawGalaxy(ctx, 800, 600, scene, constellations, transformAt(0.8), null, null, null);
+    const texts = fillTexts();
+    expect(texts.some((t) => t.includes('GW-001'))).toBe(true);
+    expect(texts).not.toContain('Star Title');
+  });
+
+  it('reveals the title when a star is emphasized (selected)', () => {
+    const { ctx, fillTexts } = makeRecordingCtx();
+    drawGalaxy(ctx, 800, 600, scene, constellations, transformAt(0.8), 's1', null, null);
     expect(fillTexts()).toContain('Star Title');
   });
-  it('hides titles when zoomed far out (k=0.5)', () => {
+
+  it('reveals the title past a deeper zoom (k=2)', () => {
+    const { ctx, fillTexts } = makeRecordingCtx();
+    drawGalaxy(ctx, 800, 600, scene, constellations, transformAt(2), null, null, null);
+    expect(fillTexts()).toContain('Star Title');
+  });
+
+  it('truncates a long title with an ellipsis', () => {
+    const { ctx, fillTexts } = makeRecordingCtx();
+    const long = sceneWith('A very long article title that would otherwise sprawl across the galaxy');
+    drawGalaxy(ctx, 800, 600, long, constellations, transformAt(2), null, null, null);
+    expect(fillTexts().some((t) => t.endsWith('…') && t.length < 71)).toBe(true);
+  });
+
+  it('culls a lower-priority label when two would collide', () => {
+    const { ctx, fillTexts } = makeRecordingCtx();
+    const cluster = {
+      points: [
+        { id: 's1', x: 10, y: 10, z: 0.9 },
+        { id: 's2', x: 12, y: 10, z: 0.1 },
+      ],
+      meta: new Map([
+        ['s1', { color: '#fff', stub: false, title: 'Alpha', summary: 's', catalog: 'GW-001' }],
+        ['s2', { color: '#fff', stub: false, title: 'Beta', summary: 's', catalog: 'GW-002' }],
+      ]),
+      links: [],
+      dust: [],
+    };
+    drawGalaxy(ctx, 800, 600, cluster, constellations, transformAt(2), null, null, null);
+    const texts = fillTexts();
+    // Nearer star (higher z) wins; the colliding one is dropped.
+    expect(texts.some((t) => t.includes('GW-001'))).toBe(true);
+    expect(texts.some((t) => t.includes('GW-002'))).toBe(false);
+  });
+
+  it('applies twinkle without error when an amplitude is set', () => {
+    const { ctx, fillTexts } = makeRecordingCtx();
+    drawGalaxy(ctx, 800, 600, scene, constellations, transformAt(1), null, null, null, 1500, 0.12);
+    expect(fillTexts().some((t) => t.includes('GW-001'))).toBe(true);
+  });
+
+  it('hides labels entirely when zoomed far out (k=0.5)', () => {
     const { ctx, fillTexts } = makeRecordingCtx();
     drawGalaxy(ctx, 800, 600, scene, constellations, transformAt(0.5), null, null, null);
-    expect(fillTexts()).not.toContain('Star Title');
+    const texts = fillTexts();
+    expect(texts.some((t) => t.includes('GW-001'))).toBe(false);
+    expect(texts).not.toContain('Star Title');
   });
 });

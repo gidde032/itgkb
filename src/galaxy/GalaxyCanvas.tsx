@@ -4,10 +4,11 @@ import 'd3-transition'; // side-effect: patches selection.transition for smooth 
 import { zoom, zoomIdentity, type ZoomTransform, type ZoomBehavior } from 'd3-zoom';
 import type { Article, Constellation } from '../content/types';
 import type { StarPosition } from '../layout/types';
-import { computeConstellationLinks, type StarLink } from './links';
-import { displayPositions, type DisplayPoint } from './display';
-import { hashString } from '../layout/curatedForce';
-import { motionDuration } from '../app/motion';
+import { computeConstellationLinks } from './links';
+import { displayPositions } from './display';
+import { motionDuration, prefersReducedMotion } from '../app/motion';
+import { ResetIcon } from '../ui/icons';
+import { drawGalaxy, hitTest, screenHitRadius, makeDust, type StarMeta } from './draw';
 
 export interface GalaxyCanvasProps {
   articles: Article[];
@@ -19,192 +20,6 @@ export interface GalaxyCanvasProps {
   matchIds: ReadonlySet<string> | null;
   /** FR-7: bumping seq flies the view to the star with this id. */
   focus: { id: string; seq: number } | null;
-}
-
-interface StarMeta {
-  color: string;
-  stub: boolean;
-  title: string;
-  summary: string;
-}
-
-const HIT_RADIUS = 18;
-
-/**
- * F1 regression: the click target should feel the same size on screen at any
- * zoom, so the world-space radius scales with 1/k — clamped so extreme zoom
- * levels can't make stars unclickable or grab distant neighbors.
- */
-export function screenHitRadius(k: number): number {
-  return Math.min(40, Math.max(6, HIT_RADIUS / k));
-}
-
-/** World-space nearest-star hit test; exported for regression tests. */
-export function hitTest(
-  stars: readonly { id: string; x: number; y: number }[],
-  worldX: number,
-  worldY: number,
-  radius: number = HIT_RADIUS,
-): string | null {
-  let best: string | null = null;
-  let bestDist = radius;
-  for (const s of stars) {
-    const d = Math.hypot(s.x - worldX, s.y - worldY);
-    if (d < bestDist) {
-      bestDist = d;
-      best = s.id;
-    }
-  }
-  return best;
-}
-
-/** Deterministic background dust, generated once per mount from a fixed seed. */
-function makeDust(count: number): DisplayPoint[] {
-  const dust: DisplayPoint[] = [];
-  for (let i = 0; i < count; i++) {
-    const h1 = hashString(`dust-x-${i}`);
-    const h2 = hashString(`dust-y-${i}`);
-    const h3 = hashString(`dust-z-${i}`);
-    dust.push({
-      id: `dust-${i}`,
-      x: ((h1 % 2000) - 1000) * 1.1,
-      y: ((h2 % 1400) - 700) * 1.1,
-      z: (h3 % 1000) / 1000,
-    });
-  }
-  return dust;
-}
-
-interface Scene {
-  points: DisplayPoint[];
-  meta: Map<string, StarMeta>;
-  links: StarLink[];
-  dust: DisplayPoint[];
-}
-
-/** Pure draw routine, kept outside React for render-on-demand. */
-export function drawGalaxy(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  scene: Scene,
-  constellations: Constellation[],
-  transform: ZoomTransform,
-  selectedId: string | null,
-  hoveredId: string | null,
-  matchIds: ReadonlySet<string> | null,
-): void {
-  ctx.save();
-  ctx.clearRect(0, 0, width, height);
-  const bg = ctx.createRadialGradient(
-    width / 2,
-    height / 2,
-    0,
-    width / 2,
-    height / 2,
-    Math.max(width, height) * 0.75,
-  );
-  bg.addColorStop(0, '#0b1120');
-  bg.addColorStop(1, '#070b14');
-  ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, width, height);
-
-  ctx.translate(transform.x, transform.y);
-  ctx.scale(transform.k, transform.k);
-
-  // Background dust (deep parallax layer).
-  for (const d of scene.dust) {
-    ctx.globalAlpha = 0.1 + d.z * 0.18;
-    ctx.fillStyle = '#aebcd8';
-    ctx.beginPath();
-    ctx.arc(d.x, d.y, 0.6 + d.z * 0.9, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-
-  // Constellation region halos + labels.
-  for (const c of constellations) {
-    const halo = ctx.createRadialGradient(c.anchor.x, c.anchor.y, 0, c.anchor.x, c.anchor.y, 190);
-    halo.addColorStop(0, `${c.color}14`);
-    halo.addColorStop(1, `${c.color}00`);
-    ctx.fillStyle = halo;
-    ctx.beginPath();
-    ctx.arc(c.anchor.x, c.anchor.y, 190, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.textAlign = 'center';
-    ctx.font = '600 13px ui-monospace, SFMono-Regular, Menlo, monospace';
-    ctx.fillStyle = `${c.color}66`;
-    ctx.fillText(c.name.toUpperCase().split('').join('\u200a\u200a'), c.anchor.x, c.anchor.y - 120);
-  }
-
-  const pointById = new Map(scene.points.map((p) => [p.id, p]));
-
-  // Constellation line art beneath the stars.
-  ctx.lineWidth = 1 / transform.k;
-  for (const link of scene.links) {
-    const a = pointById.get(link.a);
-    const b = pointById.get(link.b);
-    if (!a || !b) continue;
-    const color = scene.meta.get(link.a)?.color ?? '#ffffff';
-    const linkDimmed = matchIds !== null && (!matchIds.has(link.a) || !matchIds.has(link.b));
-    ctx.strokeStyle = linkDimmed ? `${color}10` : `${color}2e`;
-    ctx.beginPath();
-    ctx.moveTo(a.x, a.y);
-    ctx.lineTo(b.x, b.y);
-    ctx.stroke();
-  }
-
-  for (const p of scene.points) {
-    const m = scene.meta.get(p.id);
-    if (!m) continue;
-    const depth = 0.65 + p.z * 0.35;
-    const dimmed = matchIds !== null && !matchIds.has(p.id);
-    const emphasized = !dimmed && (p.id === selectedId || p.id === hoveredId);
-    const r = (emphasized ? 9 : 6) * depth;
-    const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 3.2);
-    glow.addColorStop(0, m.color);
-    glow.addColorStop(0.35, `${m.color}66`);
-    glow.addColorStop(1, `${m.color}00`);
-    ctx.globalAlpha = (m.stub ? 0.45 : depth) * (dimmed ? 0.15 : 1);
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, r * 3.2, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = m.stub ? `${m.color}99` : '#ffffff';
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, r * 0.55, 0, Math.PI * 2);
-    ctx.fill();
-
-    if (m.stub) {
-      ctx.strokeStyle = `${m.color}aa`;
-      ctx.setLineDash([3, 3]);
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, r * 1.6, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
-    if (p.id === selectedId) {
-      ctx.strokeStyle = '#ffffffcc';
-      ctx.lineWidth = 1.5 / transform.k;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, r * 1.9, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-    ctx.globalAlpha = 1;
-
-    if (transform.k > 0.75 && !dimmed) {
-      // A3: initial view is k=0.8 — titles must be legible on load, ramping
-      // to full strength as you zoom in.
-      ctx.font = '11px system-ui, sans-serif';
-      ctx.fillStyle = `rgba(232, 237, 247, ${Math.min(1, (transform.k - 0.5) * 2) * 0.85})`;
-      ctx.textAlign = 'center';
-      ctx.fillText(m.title, p.x, p.y + 24);
-    }
-  }
-  ctx.restore();
 }
 
 export function GalaxyCanvas({
@@ -230,19 +45,29 @@ export function GalaxyCanvas({
     matchIds,
   });
   const renderRef = useRef<(() => void) | null>(null);
+  const hudRef = useRef<HTMLSpanElement>(null);
 
   const meta = useMemo(() => {
     const colorByConstellation = new Map(constellations.map((c) => [c.id, c.color]));
+    const prefixByConstellation = new Map(constellations.map((c) => [c.id, c.prefix]));
+    // Catalog ids number per constellation: GW-001, SEC-001, ...
+    const counters = new Map<string, number>();
     return new Map<string, StarMeta>(
-      articles.map((a) => [
-        a.id,
-        {
-          color: colorByConstellation.get(a.constellation) ?? '#ffffff',
-          stub: a.stub,
-          title: a.title,
-          summary: a.summary,
-        },
-      ]),
+      articles.map((a) => {
+        const n = (counters.get(a.constellation) ?? 0) + 1;
+        counters.set(a.constellation, n);
+        const prefix = prefixByConstellation.get(a.constellation) ?? 'ITG';
+        return [
+          a.id,
+          {
+            color: colorByConstellation.get(a.constellation) ?? '#ffffff',
+            stub: a.stub,
+            title: a.title,
+            summary: a.summary,
+            catalog: `${prefix}-${String(n).padStart(3, '0')}`,
+          },
+        ];
+      }),
     );
   }, [articles, constellations]);
 
@@ -274,6 +99,7 @@ export function GalaxyCanvas({
     };
 
     const render = () => {
+      const reducedMotion = prefersReducedMotion();
       ctx.save();
       ctx.scale(dpr, dpr);
       drawGalaxy(
@@ -286,8 +112,22 @@ export function GalaxyCanvas({
         drawStateRef.current.selectedId,
         hoveredRef.current,
         drawStateRef.current.matchIds,
+        reducedMotion ? 0 : performance.now(),
+        reducedMotion ? 0 : 0.3,
       );
       ctx.restore();
+
+      // Coordinate HUD tracks the view centre (pseudo RA/DEC — instrument flavour).
+      if (hudRef.current) {
+        const [wx, wy] = transformRef.current.invert([width / 2, height / 2]);
+        const ra = (((wx / 60) % 24) + 24) % 24;
+        const hh = Math.floor(ra);
+        const mm = Math.floor((ra - hh) * 60);
+        const dec = Math.max(-89, Math.min(89, Math.round(-wy / 18)));
+        hudRef.current.textContent =
+          `RA ${String(hh).padStart(2, '0')}h ${String(mm).padStart(2, '0')}m · ` +
+          `DEC ${dec >= 0 ? '+' : '−'}${Math.abs(dec)}°`;
+      }
     };
 
     const resize = () => {
@@ -368,8 +208,29 @@ export function GalaxyCanvas({
     observer.observe(canvas);
     resize();
 
+    // Canvas text uses self-hosted fonts; redraw once they're ready so labels
+    // and catalog IDs aren't first painted in the fallback face.
+    if (typeof document !== 'undefined' && 'fonts' in document && document.fonts?.ready) {
+      void document.fonts.ready.then(() => renderRef.current?.());
+    }
+
+    // #19: living-sky twinkle — a capped (~30fps) redraw loop, only when motion
+    // is allowed. requestAnimationFrame auto-throttles in background tabs.
+    let rafId = 0;
+    let lastFrame = 0;
+    const tick = (now: number) => {
+      rafId = requestAnimationFrame(tick);
+      if (now - lastFrame < 33) return;
+      lastFrame = now;
+      render();
+    };
+    if (!prefersReducedMotion()) {
+      rafId = requestAnimationFrame(tick);
+    }
+
     return () => {
       renderRef.current = null;
+      cancelAnimationFrame(rafId);
       canvas.removeEventListener('click', onClick);
       canvas.removeEventListener('mousemove', onMove);
       canvas.removeEventListener('mouseleave', onLeave);
@@ -426,16 +287,17 @@ export function GalaxyCanvas({
         aria-label="Interactive galaxy map of IT knowledge articles"
       />
       {hovered && hoveredMeta && hovered.id !== selectedId && (
-        <div
-          className="star-tooltip"
-          style={{ left: hovered.x, top: hovered.y }}
-          role="status"
-        >
+        <div className="star-tooltip" style={{ left: hovered.x, top: hovered.y }} role="status">
           <strong>{hoveredMeta.title}</strong>
           <span>{hoveredMeta.summary}</span>
         </div>
       )}
+      <div className="hud" aria-hidden="true">
+        <span ref={hudRef}>RA 00h 00m · DEC +00°</span> · <b>{articles.length} OBJECTS</b> ·{' '}
+        {constellations.length} FIELDS
+      </div>
       <button type="button" className="reset-view" onClick={resetView}>
+        <ResetIcon />
         Reset view
       </button>
     </div>

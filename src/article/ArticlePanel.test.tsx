@@ -98,4 +98,34 @@ describe('ArticlePanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Close article' }));
     expect(onClose).toHaveBeenCalled();
   });
+
+  it('moves focus into the panel when it opens (a11y)', () => {
+    render(
+      <ArticlePanel
+        article={art()}
+        constellation={constellation}
+        articlesById={new Map()}
+        onNavigate={() => {}}
+        onClose={() => {}}
+      />,
+    );
+    expect(screen.getByRole('complementary', { name: 'Article: Test Article' })).toHaveFocus();
+  });
+
+  it('closes on Escape (a11y)', () => {
+    const onClose = vi.fn();
+    render(
+      <ArticlePanel
+        article={art()}
+        constellation={constellation}
+        articlesById={new Map()}
+        onNavigate={() => {}}
+        onClose={onClose}
+      />,
+    );
+    fireEvent.keyDown(screen.getByRole('complementary', { name: 'Article: Test Article' }), {
+      key: 'Escape',
+    });
+    expect(onClose).toHaveBeenCalled();
+  });
 });

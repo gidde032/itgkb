@@ -95,8 +95,14 @@ All gated by `prefers-reduced-motion` (hard off when requested).
 
 ## 6. Signature elements
 
-1. **Catalog IDs** — `ITG-014`-style IDs render near major stars (on hover/zoom
-   in the app), in `--instrument`.
+1. **Catalog IDs** — per-constellation prefixed ids (`GW-001`, `SEC-001`, …),
+   numbered per constellation. Prefixes: GW/TIX/DEV/NET/IAM/HW/SEC. On the
+   canvas they render beside stars **bracketed, in the constellation colour,
+   body font** (refined in M3 #16 for legibility). The panel eyebrow uses the
+   `--instrument` sky colour. On-star label behaviour: the bracketed id shows
+   once labels are on; the article title is appended (dimmed, truncated with `…`)
+   only on hover/selection or a deeper zoom, so the zoomed field stays clean.
+   Reference: `design/mockups/labels.html`.
 2. **Coordinate HUD** — a bottom readout (`RA … · DEC … · N OBJECTS · N FIELDS`)
    in instrument caps, object count highlighted in `--instrument`.
 3. **Catalog eyebrow** — article panel opens with `ITG-014 · CONSTELLATION`.

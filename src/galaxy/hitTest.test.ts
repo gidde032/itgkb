@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hitTest } from './GalaxyCanvas';
+import { hitTest } from './draw';
 
 const stars = [
   { id: 's1', x: 0, y: 0 },
@@ -24,7 +24,7 @@ describe('hitTest', () => {
 
 // F1 regression (reviewer: frontend/interaction, severity High): hit radius
 // must be screen-constant across zoom levels, clamped at the extremes.
-import { screenHitRadius } from './GalaxyCanvas';
+import { screenHitRadius } from './draw';
 
 describe('screenHitRadius (F1)', () => {
   it('equals the base radius at k=1', () => {
