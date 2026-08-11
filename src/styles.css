@@ -126,11 +126,12 @@ body,
   backdrop-filter: blur(6px);
 }
 .search-bar input::placeholder {
-  color: var(--faint);
+  color: var(--dim);
 }
 .search-bar input:focus-visible {
   outline: none;
   border-color: var(--brand);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent);
 }
 .search-bar__count {
   font-family: var(--font-chart);
@@ -227,6 +228,8 @@ body,
   right: 0;
   bottom: 0;
   z-index: 4;
+  /* Focused programmatically on open; the container itself needs no ring. */
+  outline: none;
   width: min(400px, 92vw);
   overflow-y: auto;
   background: linear-gradient(
@@ -269,7 +272,7 @@ body,
   font-size: 0.62rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--faint);
+  color: var(--dim);
   border: 1px dashed var(--line-2);
   border-radius: var(--radius);
   padding: 0.2rem 0.55rem;
@@ -333,7 +336,7 @@ body,
   font-size: 0.66rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--faint);
+  color: var(--dim);
   margin: 1.5rem 0 0.5rem;
 }
 .article-panel__body code {
@@ -354,7 +357,7 @@ body,
   font-size: 0.66rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--faint);
+  color: var(--dim);
 }
 .article-panel__related ul {
   list-style: none;
@@ -484,7 +487,7 @@ body,
   font-size: 0.6rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--faint);
+  color: var(--dim);
   border: 1px dashed var(--line-2);
   border-radius: var(--radius);
   padding: 0.05rem 0.4rem;

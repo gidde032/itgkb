@@ -1,3 +1,4 @@
+import { useEffect, useRef, type KeyboardEvent } from 'react';
 import ReactMarkdown from 'react-markdown';
 import type { Article, Constellation } from '../content/types';
 
@@ -16,8 +17,23 @@ export function ArticlePanel({
   onNavigate,
   onClose,
 }: ArticlePanelProps): JSX.Element {
+  const panelRef = useRef<HTMLElement>(null);
+  // A11y: move focus into the panel when it opens or navigates to a new article,
+  // so keyboard/screen-reader users land on the content they just requested.
+  useEffect(() => {
+    panelRef.current?.focus();
+  }, [article.id]);
+  const onKeyDown = (e: KeyboardEvent<HTMLElement>) => {
+    if (e.key === 'Escape') onClose();
+  };
   return (
-    <aside className="article-panel" aria-label={`Article: ${article.title}`}>
+    <aside
+      ref={panelRef}
+      tabIndex={-1}
+      onKeyDown={onKeyDown}
+      className="article-panel"
+      aria-label={`Article: ${article.title}`}
+    >
       <header className="article-panel__header">
         <div className="article-panel__eyebrow">{constellation?.name ?? article.constellation}</div>
         <h1>{article.title}</h1>
