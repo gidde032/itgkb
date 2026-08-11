@@ -146,6 +146,9 @@ body,
 .view-toggle {
   position: absolute;
   z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   font-family: var(--font-chart);
   font-weight: 600;
   font-size: 0.64rem;
@@ -173,6 +176,11 @@ body,
 .view-toggle[aria-pressed='true'] {
   color: var(--starlight);
   border-color: var(--dim);
+}
+/* Coral leading icons on chrome buttons, matching the search glyph. */
+.btn-icon {
+  flex: none;
+  color: var(--brand);
 }
 
 /* ---------------- Coordinate HUD ---------------- */

@@ -8,6 +8,7 @@ import { computeConstellationLinks, type StarLink } from './links';
 import { displayPositions, type DisplayPoint } from './display';
 import { hashString } from '../layout/curatedForce';
 import { motionDuration } from '../app/motion';
+import { ResetIcon } from '../ui/icons';
 
 export interface GalaxyCanvasProps {
   articles: Article[];
@@ -436,6 +437,7 @@ export function GalaxyCanvas({
         </div>
       )}
       <button type="button" className="reset-view" onClick={resetView}>
+        <ResetIcon />
         Reset view
       </button>
     </div>

@@ -7,6 +7,7 @@ import { ArticlePanel } from '../article/ArticlePanel';
 import { SearchBar } from './SearchBar';
 import { ListView } from './ListView';
 import { useNarrowViewport } from './useNarrowViewport';
+import { ListIcon, StarIcon } from '../ui/icons';
 
 const searchProvider = new TextSearch();
 
@@ -72,6 +73,7 @@ export function App(): JSX.Element {
           aria-pressed={listMode}
           onClick={() => setListMode((v) => !v)}
         >
+          {listMode ? <StarIcon /> : <ListIcon />}
           {listMode ? 'Galaxy view' : 'List view'}
         </button>
       )}
