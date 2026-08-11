@@ -28,9 +28,11 @@ export function ListIcon(): JSX.Element {
 }
 
 export function StarIcon(): JSX.Element {
+  // Four-point sparkle: elongated points with concave rounded curves between
+  // them (galaxy/twinkle), not a generic five-point star.
   return (
     <svg {...base}>
-      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+      <path d="M12 1.5C12 7 7 12 1.5 12C7 12 12 17 12 22.5C12 17 17 12 22.5 12C17 12 12 7 12 1.5Z" />
     </svg>
   );
 }
