@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>itgkb — M2 direction panel</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #04060c; color: #e9eef8;
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    padding: 24px clamp(12px, 3vw, 40px) 80px;
+  }
+  .lede { max-width: 900px; margin: 0 auto 8px; }
+  .lede h1 { font: 600 1.1rem/1.3 ui-monospace, Menlo, monospace; letter-spacing: .2em; text-transform: uppercase; }
+  .lede p { color: #9aa7c4; font-size: .9rem; line-height: 1.55; }
+  .brief { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 28px; }
+  .brief span { font: .7rem ui-monospace, monospace; letter-spacing: .08em; color: #b9c4e0;
+    border: 1px solid #223; border-radius: 999px; padding: 4px 10px; }
+
+  .screen { max-width: 1120px; margin: 0 auto 40px; }
+  .screen > .cap { display: flex; align-items: baseline; gap: 12px; margin: 0 0 10px; }
+  .cap b { font: 700 1rem ui-monospace, monospace; letter-spacing: .12em; text-transform: uppercase; }
+  .cap em { font-style: normal; color: #8f9cbb; font-size: .82rem; }
+
+  /* The "app" frame: galaxy with docked panel */
+  .app { position: relative; height: 420px; border-radius: 14px; overflow: hidden;
+    display: grid; grid-template-columns: 1fr 360px; box-shadow: 0 20px 60px -30px #000; }
+  .galaxy { position: relative; overflow: hidden; }
+  .galaxy svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .halo { filter: blur(6px); }
+  .cid { font: 7px ui-monospace, monospace; letter-spacing: .04em; }
+  .clabel { font: 9px ui-monospace, monospace; letter-spacing: .28em; text-transform: uppercase; }
+
+  /* Chrome overlays */
+  .title { position: absolute; top: 14px; left: 16px; z-index: 3; pointer-events: none; }
+  .title b { display: block; font: 600 .78rem ui-monospace, monospace; letter-spacing: .35em; text-transform: uppercase; }
+  .title small { font-size: .68rem; letter-spacing: .1em; }
+  .search { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 3; width: min(300px, 55%); }
+  .search input { width: 100%; font-size: .85rem; border-radius: 999px; padding: 8px 16px; outline: none; }
+  .reset { position: absolute; bottom: 14px; right: 14px; z-index: 3; font: .64rem ui-monospace, monospace;
+    letter-spacing: .12em; text-transform: uppercase; border-radius: 8px; padding: 7px 11px; cursor: pointer; }
+  .hud { position: absolute; bottom: 14px; left: 16px; z-index: 3; font: .62rem ui-monospace, monospace;
+    letter-spacing: .1em; display: none; }
+  .reticle { position: absolute; inset: 0; z-index: 2; pointer-events: none; display: none; }
+
+  /* Docked article panel */
+  .panel { position: relative; z-index: 4; overflow: hidden; padding: 20px 20px 24px; }
+  .panel .eyebrow { font: .66rem ui-monospace, monospace; letter-spacing: .3em; text-transform: uppercase; }
+  .panel h2 { font-size: 1.12rem; line-height: 1.3; margin: 8px 0 8px; }
+  .panel .sum { font-size: .82rem; line-height: 1.5; margin: 0 0 12px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 0; margin: 0 0 16px; list-style: none; }
+  .tags li { font: .62rem ui-monospace, monospace; border-radius: 999px; padding: 3px 9px; }
+  .panel h3 { font: .68rem ui-monospace, monospace; letter-spacing: .25em; text-transform: uppercase; margin: 14px 0 6px; }
+  .panel p.body { font-size: .82rem; line-height: 1.6; margin: 0; }
+
+  /* ============ Direction A — Deep Field (evolved, restrained) ============ */
+  .dir-a .galaxy { background: radial-gradient(120% 100% at 30% 10%, #101a30 0%, #0a1120 45%, #060912 100%); }
+  .dir-a .title b, .dir-a .title small { color: #aab6d6; }
+  .dir-a .search input { background: rgba(20,30,52,.7); border: 1px solid #26324f; color: #e9eef8; backdrop-filter: blur(6px); }
+  .dir-a .reset, .dir-a .reticle { color: #8593b0; }
+  .dir-a .reset { background: rgba(18,26,46,.75); border: 1px solid #26324f; color: #8593b0; }
+  .dir-a .panel { background: rgba(14,22,38,.94); border-left: 1px solid #1d2942; backdrop-filter: blur(8px); }
+  .dir-a .eyebrow { color: #a98cff; }
+  .dir-a .sum, .dir-a .body { color: #aab6d6; }
+  .dir-a .tags li { color: #8593b0; border: 1px solid #26324f; }
+  .dir-a .panel h3 { color: #7d8aa5; }
+
+  /* ============ Direction B — Observatory (instrument-forward) ============ */
+  .dir-b .galaxy { background: radial-gradient(130% 110% at 50% 0%, #0c1626 0%, #081120 50%, #050a15 100%); }
+  .dir-b .title b { color: #cfe6e8; } .dir-b .title small { color: #5fd0d6; }
+  .dir-b .search input { background: rgba(8,18,30,.72); border: 1px solid #234; border-color: #1d4d52; color: #dff3f4; }
+  .dir-b .reset { background: rgba(8,18,30,.8); border: 1px solid #1d4d52; color: #7fcfd4; }
+  .dir-b .hud { display: block; color: #5fd0d6; }
+  .dir-b .reticle { display: block; }
+  .dir-b .panel { background: linear-gradient(#0b1524, #091120); border-left: 1px solid #123; border-left-color: #12333a; }
+  .dir-b .eyebrow { color: #5fd0d6; }
+  .dir-b .sum, .dir-b .body { color: #a6b6cf; }
+  .dir-b .tags li { color: #8fb6bf; border: 1px solid #12333a; }
+  .dir-b .panel h3 { color: #6b93a0; }
+  .dir-b .panel h2 { font-family: ui-monospace, monospace; letter-spacing: .01em; }
+
+  /* ============ Direction C — Vivid (bold departure) ============ */
+  .dir-c .galaxy { background: radial-gradient(120% 100% at 70% 15%, #0a0b1a 0%, #06060f 55%, #04050a 100%); }
+  .dir-c .title b { color: #ffffff; font-weight: 800; } .dir-c .title small { color: #ff5ad8; }
+  .dir-c .search input { background: rgba(10,12,26,.7); border: 1.5px solid #35e0ff; color: #fff;
+    box-shadow: 0 0 18px -4px #35e0ff88; }
+  .dir-c .reset { background: rgba(10,12,26,.8); border: 1px solid #ff5ad8; color: #ff9ae7; }
+  .dir-c .panel { background: linear-gradient(#0b0c1c, #080810); border-left: 1px solid #1a1440; }
+  .dir-c .eyebrow { color: #35e0ff; letter-spacing: .3em; }
+  .dir-c .panel h2 { font-weight: 800; letter-spacing: -.01em; font-size: 1.2rem; }
+  .dir-c .sum, .dir-c .body { color: #b9bfe0; }
+  .dir-c .tags li { color: #fff; background: #17203f; }
+  .dir-c .panel h3 { color: #7f6fd0; }
+
+  @media (max-width: 760px){ .app{ grid-template-columns: 1fr; height:auto } .galaxy{height:280px} }
+</style>
+</head>
+<body>
+  <div class="lede">
+    <h1>itgkb · M2 direction panel</h1>
+    <p>Three visual directions over <b>identical</b> stars, constellations, and article content —
+    so you're judging <b>style</b>, not layout. Pick a base, and note any traits to borrow.</p>
+    <div class="brief">
+      <span>evolve + 1 bold alt</span><span>cool cosmic, deepened</span>
+      <span>signature: star field + HUD chrome</span><span>dark-only · AA text</span>
+    </div>
+  </div>
+
+  <section class="screen dir-a">
+    <div class="cap"><b>A · Deep Field</b><em>Evolved &amp; restrained — the sky is the hero, chrome recedes</em></div>
+    <div class="app"><div class="galaxy" data-theme="a"></div>__PANEL__</div>
+  </section>
+
+  <section class="screen dir-b">
+    <div class="cap"><b>B · Observatory</b><em>Instrument-forward — catalog IDs, coordinate HUD, reticle framing</em></div>
+    <div class="app"><div class="galaxy" data-theme="b"></div>__PANEL__</div>
+  </section>
+
+  <section class="screen dir-c">
+    <div class="cap"><b>C · Vivid</b><em>Bold departure — high-contrast luminous, punchy for screenshots</em></div>
+    <div class="app"><div class="galaxy" data-theme="c"></div>__PANEL__</div>
+  </section>
+
+<script>
+const COLORS = {
+  a: ['#8ea2ff','#b58cff','#7ee0c0','#78b6ff','#c9a2ff','#ffb682'],
+  b: ['#5fd0d6','#8ea2ff','#63d6a3','#6fc0ff','#a98cff','#d8b46a'],
+  c: ['#35e0ff','#ff5ad8','#5affc2','#4f9cff','#c86bff','#ffd24f'],
+};
+const CONS = ['Workspace','Ticketing','Dev Env','Networking','Identity','Endpoints'];
+const CENTROID = [[210,150],[780,140],[470,430],[760,400],[430,150],[160,410]];
+// x,y,r,constellationIndex
+const STARS = [
+  [210,150,6,0],[250,120,3,0],[175,185,3,0],[240,195,2.5,0],
+  [780,140,6,1],[820,175,3,1],[745,110,3,1],
+  [470,430,6,2],[505,400,3,2],[440,405,2.5,2],[500,462,2.5,2],
+  [760,400,5,3],[802,430,3,3],
+  [430,150,5,4],[398,186,2.5,4],
+  [160,410,5,5],[196,442,2.5,5],
+];
+const LINKS = [[0,1],[0,2],[0,3],[4,5],[4,6],[7,8],[7,9],[7,10],[11,12],[13,14],[15,16]];
+
+function renderGalaxy(el){
+  const t = el.dataset.theme, col = COLORS[t];
+  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('viewBox','0 0 1000 560');
+  const line = (a,b,c)=>{const l=document.createElementNS(svg.namespaceURI,'line');
+    l.setAttribute('x1',STARS[a][0]);l.setAttribute('y1',STARS[a][1]);
+    l.setAttribute('x2',STARS[b][0]);l.setAttribute('y2',STARS[b][1]);
+    l.setAttribute('stroke',c);l.setAttribute('stroke-width',t==='c'?1:.7);
+    l.setAttribute('stroke-opacity',t==='c'?.45:.28);svg.appendChild(l);};
+  LINKS.forEach(([a,b])=>line(a,b,col[STARS[a][3]]));
+  // faint dust stars
+  for(let i=0;i<70;i++){const c=document.createElementNS(svg.namespaceURI,'circle');
+    c.setAttribute('cx',Math.random()*1000);c.setAttribute('cy',Math.random()*560);
+    c.setAttribute('r',Math.random()*0.8+0.2);c.setAttribute('fill','#fff');
+    c.setAttribute('fill-opacity',Math.random()*0.4+0.05);svg.appendChild(c);}
+  STARS.forEach((s,i)=>{
+    const [x,y,r,ci]=s, c=col[ci];
+    const halo=document.createElementNS(svg.namespaceURI,'circle');
+    halo.setAttribute('cx',x);halo.setAttribute('cy',y);
+    halo.setAttribute('r',r*(t==='c'?3.6:2.9));halo.setAttribute('fill',c);
+    halo.setAttribute('fill-opacity',t==='c'?.55:.4);halo.setAttribute('class','halo');svg.appendChild(halo);
+    const core=document.createElementNS(svg.namespaceURI,'circle');
+    core.setAttribute('cx',x);core.setAttribute('cy',y);core.setAttribute('r',r);
+    core.setAttribute('fill', t==='a'?'#eef2ff':'#ffffff');svg.appendChild(core);
+    if(t==='b'){ const id=document.createElementNS(svg.namespaceURI,'text');
+      id.setAttribute('x',x+r+4);id.setAttribute('y',y+2);id.setAttribute('class','cid');
+      id.setAttribute('fill',c);id.setAttribute('fill-opacity','.8');
+      id.textContent='ITG-'+String(i+1).padStart(3,'0');svg.appendChild(id);}
+  });
+  CENTROID.forEach((p,i)=>{const lb=document.createElementNS(svg.namespaceURI,'text');
+    lb.setAttribute('x',p[0]);lb.setAttribute('y',p[1]-34);lb.setAttribute('text-anchor','middle');
+    lb.setAttribute('class','clabel');lb.setAttribute('fill',col[i]);
+    lb.setAttribute('fill-opacity',t==='c'?.9:.62);lb.textContent=CONS[i];svg.appendChild(lb);});
+  el.appendChild(svg);
+  el.insertAdjacentHTML('beforeend',
+    '<div class="title"><b>ITGKB</b><small>it galactic knowledge base</small></div>'+
+    '<div class="search"><input placeholder="Search the galaxy…" /></div>'+
+    '<div class="reset">Reset view</div>'+
+    (t==='b'?'<div class="hud">RA 14h 22m · DEC +32° · 17 OBJECTS · 6 FIELDS</div>'+
+      '<svg class="reticle" viewBox="0 0 1000 560" preserveAspectRatio="none">'+
+      '<path d="M20 20 h26 M20 20 v26 M980 20 h-26 M980 20 v26 M20 540 h26 M20 540 v-26 M980 540 h-26 M980 540 v-26" stroke="#5fd0d6" stroke-opacity=".5" fill="none"/></svg>':''));
+}
+
+const PANEL = `<div class="panel">
+  <div class="eyebrow">Workspace</div>
+  <h2>Calendar event won't update</h2>
+  <p class="sum">When an invite spans organizations, edits can silently fail. Here's why, and the reliable fix.</p>
+  <ul class="tags"><li>calendar</li><li>sharing</li><li>cross-org</li><li>admin</li></ul>
+  <h3>Diagnostic steps</h3>
+  <p class="body">Confirm you own the event, then check whether guests span an external domain and whether external sharing is permitted for your organization.</p>
+</div>`;
+
+document.querySelectorAll('.app').forEach(app=>{
+  app.innerHTML = app.innerHTML.replace('__PANEL__', PANEL);
+  renderGalaxy(app.querySelector('.galaxy'));
+});
+</script>
+</body>
+</html>

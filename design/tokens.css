@@ -1,0 +1,66 @@
+/*
+ * itgkb design tokens — RATIFIED in M2 (design confirmation).
+ * Source of truth for M3 visual refinement. Wire these into src/styles.css
+ * (replace the current ad-hoc :root block). Fonts must be self-hosted in M3
+ * (Fontsource / woff2) — do NOT ship the Google Fonts CDN link to production.
+ */
+:root {
+  /* ---- Base: deepened cool cosmic (dark-only) ---- */
+  --ink: #060a14;         /* app background */
+  --haze: #0e1626;        /* panel / raised surfaces */
+  --line: #1d2942;        /* hairline dividers */
+  --line-2: #2a3860;      /* stronger borders / field outlines */
+  --starlight: #e9eef8;   /* primary heading text */
+  --text: #d3dcf0;        /* body text */
+  --dim: #8593b0;         /* secondary text */
+  --faint: #5c6884;       /* tertiary / bracket punctuation / labels */
+  --star-core: #fbf6ee;   /* rendered star core */
+
+  /* ---- Accents: V1 split (warm brand / cool telemetry) ---- */
+  --brand: #f2a0a6;       /* coral — wordmark accent, eyebrow, search glyph, selection, links */
+  --brand-press: #e98a92; /* coral pressed/active */
+  --instrument: #8fc2ee;  /* bright sky — catalog IDs + HUD data ONLY */
+
+  /* ---- Constellations (7) — star/label/line colors ---- */
+  --c-workspace: #e4b363; /* Workspace & Email */
+  --c-ticketing: #e2985c; /* Ticketing & ITSM */
+  --c-dev: #7cc97a;       /* Dev Environment */
+  --c-networking: #4fc2b0;/* Networking */
+  --c-accounts: #7e8ce8;  /* Accounts & Identity */
+  --c-hardware: #c77fd0;  /* Hardware & Endpoints */
+  --c-security: #dd6070;  /* Security */
+
+  /* ---- Type families ---- */
+  --font-display: 'Newsreader', Georgia, serif;                 /* wordmark, article titles, related links */
+  --font-body: 'Hanken Grotesk', system-ui, -apple-system, sans-serif; /* body, summaries, UI */
+  --font-chart: 'Archivo Narrow', 'Inter Tight', sans-serif;    /* cartographic instrument layer: caps, tracked */
+
+  /* ---- Type scale ---- */
+  --fs-wordmark: 1.5rem;
+  --fs-h1: 1.7rem;    /* article title */
+  --fs-h2: 1.25rem;
+  --fs-body: 0.9rem;
+  --fs-small: 0.8rem;
+  --fs-label: 0.66rem; /* chart/instrument caps */
+  --lh-body: 1.6;
+  --lh-title: 1.15;
+
+  /* ---- Shape & layout ---- */
+  --radius: 3px;       /* fields, buttons — squared, NOT pills */
+  --radius-lg: 8px;    /* cards */
+  --hairline: 1px;
+  --tracking-label: 0.16em;  /* instrument caps tracking */
+  --tracking-wordmark: 0.005em;
+
+  /* ---- Motion ---- */
+  --motion-flyto: 520ms;                    /* pan+zoom to a selected star */
+  --motion-hover: 160ms;                    /* halo bloom on hover */
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-flyto: 0ms;
+    --motion-hover: 0ms;
+  }
+}

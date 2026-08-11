@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>itgkb — axis exploration (instrument · accent · serif)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,500;1,6..72,500&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=Martian+Mono:wght@400;500&family=Archivo+Narrow:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{ color-scheme:dark; --ink:#060a14; --haze:#0e1626; --line:#1d2942; --line2:#2a3860;
+    --starlight:#e9eef8; --text:#d3dcf0; --dim:#8593b0; --faint:#5c6884;
+    --sans:'Hanken Grotesk',system-ui,sans-serif; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:#04060c; color:var(--text); font-family:var(--sans); padding:22px clamp(12px,3vw,40px) 70px; }
+  .wrap{ max-width:1120px; margin:0 auto; }
+  h1{ font-family:'Space Mono',monospace; font-size:.72rem; letter-spacing:.32em; text-transform:uppercase; color:#6bd0d6; }
+  h2.axis{ font-family:'Fraunces',serif; font-weight:600; font-size:1.35rem; color:var(--starlight); margin:34px 0 4px; }
+  .hint{ color:var(--dim); font-size:.85rem; margin:0 0 16px; max-width:74ch; }
+  .grid{ display:grid; gap:14px; }
+  .g4{ grid-template-columns:repeat(4,1fr); } .g3{ grid-template-columns:repeat(3,1fr); }
+  .cell{ border:1px solid #142038; border-radius:8px; background:radial-gradient(120% 120% at 30% 0%, #0d1526, #070c17); padding:16px; min-height:120px; }
+  .cell .name{ font-family:'Space Mono',monospace; font-size:.58rem; letter-spacing:.18em; text-transform:uppercase; color:var(--faint); margin-bottom:12px; display:flex; justify-content:space-between; }
+  .cell .name .rec{ color:#7ee0c0; }
+  .star{ display:inline-block; width:9px; height:9px; border-radius:50%; background:#eef2ff; box-shadow:0 0 10px 3px #8ea2ff88; vertical-align:middle; margin-right:8px; }
+
+  /* instrument font classes */
+  .f-space{ font-family:'Space Mono',monospace; }
+  .f-plex{ font-family:'IBM Plex Mono',monospace; }
+  .f-martian{ font-family:'Martian Mono',monospace; }
+  .f-archivo{ font-family:'Archivo Narrow',sans-serif; text-transform:uppercase; }
+  .inst .id{ font-size:.66rem; letter-spacing:.04em; color:#c9d4ee; }
+  .inst .hud{ font-size:.62rem; letter-spacing:.12em; color:#6bd0d6; margin-top:12px; }
+  .inst .archivo-note{ letter-spacing:.18em; }
+
+  /* accent cells */
+  .acc .eyebrow{ font-family:'Space Mono',monospace; font-size:.62rem; letter-spacing:.2em; }
+  .acc h3{ font-family:'Fraunces',serif; font-weight:600; font-size:1.15rem; color:var(--starlight); margin:8px 0 12px; }
+  .swatches{ display:flex; gap:6px; margin-top:6px; }
+  .swatches span{ flex:1; height:22px; border-radius:3px; }
+  .acc .label{ font-family:'Space Mono',monospace; font-size:.56rem; letter-spacing:.1em; color:var(--faint); margin-top:8px; }
+
+  /* serif cells */
+  .ser .mark{ font-size:1.7rem; color:var(--starlight); line-height:1; }
+  .ser .title{ font-size:1.15rem; color:var(--text); margin-top:14px; line-height:1.2; }
+  .s-fra .mark,.s-fra .title{ font-family:'Fraunces',serif; font-weight:600; }
+  .s-ins .mark,.s-ins .title{ font-family:'Instrument Serif',serif; font-weight:400; }
+  .s-new .mark,.s-new .title{ font-family:'Newsreader',serif; font-weight:500; }
+  .ser .mark i{ font-style:italic; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>itgkb · axis exploration</h1>
+  <p class="hint">Three axes, everything else from the refined direction held constant. Judge each in isolation.</p>
+
+  <h2 class="axis">1 · Instrument text</h2>
+  <p class="hint">The catalog IDs + HUD readout. Monospace reads as "code" (the AI tell). The last option drops mono entirely for a condensed <b>cartographic label</b> — like a real star chart, not a terminal.</p>
+  <div class="grid g4 inst">
+    <div class="cell"><div class="name"><span>A · Space Mono</span><span>current</span></div>
+      <div class="id f-space"><span class="star"></span>ITG-014 · WORKSPACE</div><div class="hud f-space">RA 14h 22m · DEC +32°</div></div>
+    <div class="cell"><div class="name"><span>B · IBM Plex Mono</span><span></span></div>
+      <div class="id f-plex"><span class="star"></span>ITG-014 · WORKSPACE</div><div class="hud f-plex">RA 14h 22m · DEC +32°</div></div>
+    <div class="cell"><div class="name"><span>C · Martian Mono</span><span></span></div>
+      <div class="id f-martian"><span class="star"></span>ITG-014 · WORKSPACE</div><div class="hud f-martian">RA 14h 22m · DEC +32°</div></div>
+    <div class="cell"><div class="name"><span>D · Archivo Narrow</span><span class="rec">non-mono</span></div>
+      <div class="id f-archivo archivo-note"><span class="star"></span>ITG-014 · WORKSPACE</div><div class="hud f-archivo archivo-note">RA 14h 22m · DEC +32°</div></div>
+  </div>
+
+  <h2 class="axis">2 · Accent system <span style="font-family:var(--sans);font-size:.8rem;color:var(--dim)">(no teal / no lavender)</span></h2>
+  <p class="hint">The brand accent drives the eyebrow, selection, wordmark accent, and instrument color. Each shows its 6-constellation set beneath.</p>
+  <div class="grid g3 acc">
+    <div class="cell"><div class="name"><span>A · Amber / brass</span><span></span></div>
+      <div class="eyebrow" style="color:#E4B363">ITG-014 · WORKSPACE</div>
+      <h3>The calm antique atlas</h3>
+      <div class="swatches"><span style="background:#E4B363"></span><span style="background:#E8806B"></span><span style="background:#D06E9C"></span><span style="background:#8FB870"></span><span style="background:#6E9CD8"></span><span style="background:#C98A5A"></span></div>
+      <div class="label">accent #E4B363 · warm, editorial</div></div>
+    <div class="cell"><div class="name"><span>B · Signal coral</span><span></span></div>
+      <div class="eyebrow" style="color:#FF6F5E">ITG-014 · WORKSPACE</div>
+      <h3>Warm, alive, confident</h3>
+      <div class="swatches"><span style="background:#FF6F5E"></span><span style="background:#F0B24A"></span><span style="background:#E0D05A"></span><span style="background:#6FBF8A"></span><span style="background:#5A9BD8"></span><span style="background:#B06FB0"></span></div>
+      <div class="label">accent #FF6F5E · punchy on navy</div></div>
+    <div class="cell"><div class="name"><span>C · Phosphor green</span><span></span></div>
+      <div class="eyebrow" style="color:#96E05A">ITG-014 · WORKSPACE</div>
+      <h3>CRT / observatory readout</h3>
+      <div class="swatches"><span style="background:#96E05A"></span><span style="background:#CDE05A"></span><span style="background:#E0B84A"></span><span style="background:#E0855A"></span><span style="background:#5A9BD8"></span><span style="background:#E06A8C"></span></div>
+      <div class="label">accent #96E05A · retro-instrument</div></div>
+  </div>
+
+  <h2 class="axis">3 · Serif</h2>
+  <p class="hint">Wordmark + an article title in each. You liked the Fraunces direction — these are just adjacent flavours.</p>
+  <div class="grid g3 ser">
+    <div class="cell s-fra"><div class="name"><span>A · Fraunces</span><span>current</span></div>
+      <div class="mark"><i>it</i>gkb</div><div class="title">Calendar event won&rsquo;t update</div></div>
+    <div class="cell s-ins"><div class="name"><span>B · Instrument Serif</span><span></span></div>
+      <div class="mark"><i>it</i>gkb</div><div class="title">Calendar event won&rsquo;t update</div></div>
+    <div class="cell s-new"><div class="name"><span>C · Newsreader</span><span></span></div>
+      <div class="mark"><i>it</i>gkb</div><div class="title">Calendar event won&rsquo;t update</div></div>
+  </div>
+</div>
+</body>
+</html>
