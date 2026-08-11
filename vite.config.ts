@@ -7,6 +7,11 @@ export default defineConfig({
   // (local dev/preview, CI build). The deploy workflow sets GITHUB_PAGES=true.
   base: process.env.GITHUB_PAGES === 'true' ? '/itgkb/' : '/',
   plugins: [react()],
+  server: {
+    // Don't reload the running app when the coverage report or build output
+    // regenerates (e.g. while `npm run gates` runs in another terminal).
+    watch: { ignored: ['**/coverage/**', '**/dist/**'] },
+  },
   test: {
     environment: 'jsdom',
     globals: true,

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { drawGalaxy } from './GalaxyCanvas';
+import { drawGalaxy } from './draw';
 import type { Constellation } from '../content/types';
 
 // Star labels (M3 #16): at the initial zoom stars carry a compact bracketed
