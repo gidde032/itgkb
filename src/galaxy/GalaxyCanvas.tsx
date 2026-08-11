@@ -61,11 +61,26 @@ export function hitTest(
   return best;
 }
 
-/** Two-digit hex alpha suffix for `#rrggbb` colours (0..1 -> "00".."ff"). */
-function alphaHex(a: number): string {
-  return Math.max(0, Math.min(255, Math.round(a * 255)))
-    .toString(16)
-    .padStart(2, '0');
+interface LabelCandidate {
+  sx: number;
+  sy: number;
+  catalog: string;
+  title: string;
+  color: string;
+  showTitle: boolean;
+  emphasized: boolean;
+  z: number;
+}
+
+interface Rect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+function rectsOverlap(a: Rect, b: Rect): boolean {
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 }
 
 /** Trim `text` to fit `maxWidth` in the current ctx font, appending an ellipsis. */
@@ -76,6 +91,58 @@ function truncateToWidth(ctx: CanvasRenderingContext2D, text: string, maxWidth: 
     t = t.slice(0, -1);
   }
   return `${t.trimEnd()}…`;
+}
+
+/**
+ * Screen-space label pass with greedy collision culling. Labels are placed in
+ * priority order (hovered/selected first, then nearer stars); a label draws only
+ * if its box clears every already-placed label, so clusters never tangle and
+ * zooming in reveals more labels as stars separate on screen.
+ */
+function drawStarLabels(ctx: CanvasRenderingContext2D, candidates: LabelCandidate[]): void {
+  const ordered = [...candidates].sort(
+    (a, b) => Number(b.emphasized) - Number(a.emphasized) || b.z - a.z,
+  );
+  const placed: Rect[] = [];
+  const ID_FONT = "600 11px 'Hanken Grotesk', system-ui, sans-serif";
+  const TITLE_FONT = "500 11px 'Hanken Grotesk', system-ui, sans-serif";
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  for (const c of ordered) {
+    ctx.font = ID_FONT;
+    const idStr = `[${c.catalog}]`;
+    const idW = ctx.measureText(idStr).width;
+    let sepW = 0;
+    let titleW = 0;
+    let titleStr = '';
+    if (c.showTitle) {
+      ctx.font = TITLE_FONT;
+      titleStr = truncateToWidth(ctx, c.title, 180);
+      sepW = ctx.measureText('·').width;
+      titleW = ctx.measureText(titleStr).width;
+    }
+    const width = idW + (c.showTitle ? 6 + sepW + 5 + titleW : 0);
+    const x0 = c.sx + 12;
+    const rect: Rect = { x: x0, y: c.sy - 9, w: width, h: 16 };
+    // Emphasised labels (hover/selection) always win — never culled.
+    if (!c.emphasized && placed.some((p) => rectsOverlap(rect, p))) continue;
+    placed.push(rect);
+
+    const ly = c.sy + 4;
+    let lx = x0;
+    ctx.font = ID_FONT;
+    ctx.fillStyle = c.color;
+    ctx.fillText(idStr, lx, ly);
+    if (c.showTitle) {
+      lx += idW + 6;
+      ctx.font = TITLE_FONT;
+      ctx.fillStyle = '#5c6884';
+      ctx.fillText('·', lx, ly);
+      lx += sepW + 5;
+      ctx.fillStyle = '#8593b0';
+      ctx.fillText(titleStr, lx, ly);
+    }
+  }
 }
 
 /** Deterministic background dust, generated once per mount from a fixed seed. */
@@ -175,6 +242,7 @@ export function drawGalaxy(
     ctx.stroke();
   }
 
+  const labelCandidates: LabelCandidate[] = [];
   for (const p of scene.points) {
     const m = scene.meta.get(p.id);
     if (!m) continue;
@@ -215,34 +283,24 @@ export function drawGalaxy(
     }
     ctx.globalAlpha = 1;
 
-    // Merged star label (body font): a bracketed, category-coloured catalog id
-    // once labels are on, with the title revealed on hover/selection or a deeper
-    // zoom — dimmed and truncated so it never sprawls at scale.
+    // Collect a label candidate; drawn in a screen-space pass below with greedy
+    // collision culling so clusters never tangle.
     if (m.catalog && !dimmed && transform.k > 0.75) {
-      const showTitle = emphasized || transform.k > 1.6;
-      const alpha = Math.min(1, (transform.k - 0.6) * 2);
-      ctx.textAlign = 'left';
-      const ly = p.y + 3;
-      let lx = p.x + r + 6;
-
-      ctx.font = "600 10px 'Hanken Grotesk', system-ui, sans-serif";
-      const idStr = `[${m.catalog}]`;
-      ctx.fillStyle = `${m.color}${alphaHex(alpha)}`;
-      ctx.fillText(idStr, lx, ly);
-
-      if (showTitle) {
-        lx += ctx.measureText(idStr).width + 5;
-        ctx.font = "500 10px 'Hanken Grotesk', system-ui, sans-serif";
-        ctx.fillStyle = `#5c6884${alphaHex(alpha)}`;
-        ctx.fillText('·', lx, ly);
-        lx += ctx.measureText('·').width + 5;
-        ctx.fillStyle = `#8593b0${alphaHex(alpha)}`;
-        ctx.fillText(truncateToWidth(ctx, m.title, 168), lx, ly);
-      }
-      ctx.textAlign = 'center';
+      labelCandidates.push({
+        sx: p.x * transform.k + transform.x,
+        sy: p.y * transform.k + transform.y,
+        catalog: m.catalog,
+        title: m.title,
+        color: m.color,
+        showTitle: emphasized || transform.k > 1.6,
+        emphasized,
+        z: p.z,
+      });
     }
   }
   ctx.restore();
+
+  drawStarLabels(ctx, labelCandidates);
 }
 
 export function GalaxyCanvas({

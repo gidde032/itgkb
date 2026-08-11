@@ -71,6 +71,27 @@ describe('star labels (#16)', () => {
     expect(fillTexts().some((t) => t.endsWith('…') && t.length < 71)).toBe(true);
   });
 
+  it('culls a lower-priority label when two would collide', () => {
+    const { ctx, fillTexts } = makeRecordingCtx();
+    const cluster = {
+      points: [
+        { id: 's1', x: 10, y: 10, z: 0.9 },
+        { id: 's2', x: 12, y: 10, z: 0.1 },
+      ],
+      meta: new Map([
+        ['s1', { color: '#fff', stub: false, title: 'Alpha', summary: 's', catalog: 'GW-001' }],
+        ['s2', { color: '#fff', stub: false, title: 'Beta', summary: 's', catalog: 'GW-002' }],
+      ]),
+      links: [],
+      dust: [],
+    };
+    drawGalaxy(ctx, 800, 600, cluster, constellations, transformAt(2), null, null, null);
+    const texts = fillTexts();
+    // Nearer star (higher z) wins; the colliding one is dropped.
+    expect(texts.some((t) => t.includes('GW-001'))).toBe(true);
+    expect(texts.some((t) => t.includes('GW-002'))).toBe(false);
+  });
+
   it('hides labels entirely when zoomed far out (k=0.5)', () => {
     const { ctx, fillTexts } = makeRecordingCtx();
     drawGalaxy(ctx, 800, 600, scene, constellations, transformAt(0.5), null, null, null);
