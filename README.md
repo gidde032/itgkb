@@ -1,8 +1,8 @@
 # IT Knowledge Galaxy
 
-[![CI](https://github.com/gidde032/carlson-IT-galactic-wiki/actions/workflows/ci.yml/badge.svg)](https://github.com/gidde032/carlson-IT-galactic-wiki/actions/workflows/ci.yml)
+[![CI](https://github.com/gidde032/itgkb/actions/workflows/ci.yml/badge.svg)](https://github.com/gidde032/itgkb/actions/workflows/ci.yml)
 
-**▶ Live demo: https://gidde032.github.io/carlson-IT-galactic-wiki/**
+**▶ Live demo: https://gidde032.github.io/itgkb/**
 
 An explorable IT knowledge base for the Carlson IT Service Center, rendered as
 a galaxy: every article is a star, stars cluster into constellations by
@@ -11,8 +11,8 @@ category, and proximity means topical similarity.
 ## Run it
 
 ```bash
-git clone https://github.com/gidde032/carlson-IT-galactic-wiki.git
-cd carlson-IT-galactic-wiki
+git clone https://github.com/gidde032/itgkb.git
+cd itgkb
 npm install
 npm run dev
 ```
