@@ -7,7 +7,7 @@ import type { StarPosition } from '../layout/types';
 import { computeConstellationLinks, type StarLink } from './links';
 import { displayPositions, type DisplayPoint } from './display';
 import { hashString } from '../layout/curatedForce';
-import { motionDuration } from '../app/motion';
+import { motionDuration, prefersReducedMotion } from '../app/motion';
 import { ResetIcon } from '../ui/icons';
 
 export interface GalaxyCanvasProps {
@@ -180,6 +180,8 @@ export function drawGalaxy(
   selectedId: string | null,
   hoveredId: string | null,
   matchIds: ReadonlySet<string> | null,
+  time = 0,
+  twinkleAmp = 0,
 ): void {
   ctx.save();
   ctx.clearRect(0, 0, width, height);
@@ -250,11 +252,17 @@ export function drawGalaxy(
     const dimmed = matchIds !== null && !matchIds.has(p.id);
     const emphasized = !dimmed && (p.id === selectedId || p.id === hoveredId);
     const r = (emphasized ? 9 : 6) * depth;
+    // Living-sky twinkle: gentle per-star glow shimmer. Steady for the star you
+    // point at; disabled entirely when twinkleAmp is 0 (reduced motion / tests).
+    const twinkle =
+      emphasized || twinkleAmp === 0
+        ? 1
+        : 1 + Math.sin(time * 0.0016 + (hashString(p.id) % 628) / 100) * twinkleAmp;
     const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 3.2);
     glow.addColorStop(0, m.color);
     glow.addColorStop(0.35, `${m.color}66`);
     glow.addColorStop(1, `${m.color}00`);
-    ctx.globalAlpha = (m.stub ? 0.45 : depth) * (dimmed ? 0.15 : 1);
+    ctx.globalAlpha = (m.stub ? 0.45 : depth) * (dimmed ? 0.15 : 1) * twinkle;
     ctx.fillStyle = glow;
     ctx.beginPath();
     ctx.arc(p.x, p.y, r * 3.2, 0, Math.PI * 2);
@@ -380,6 +388,7 @@ export function GalaxyCanvas({
     };
 
     const render = () => {
+      const reducedMotion = prefersReducedMotion();
       ctx.save();
       ctx.scale(dpr, dpr);
       drawGalaxy(
@@ -392,6 +401,8 @@ export function GalaxyCanvas({
         drawStateRef.current.selectedId,
         hoveredRef.current,
         drawStateRef.current.matchIds,
+        reducedMotion ? 0 : performance.now(),
+        reducedMotion ? 0 : 0.12,
       );
       ctx.restore();
 
@@ -492,8 +503,23 @@ export function GalaxyCanvas({
       void document.fonts.ready.then(() => renderRef.current?.());
     }
 
+    // #19: living-sky twinkle — a capped (~30fps) redraw loop, only when motion
+    // is allowed. requestAnimationFrame auto-throttles in background tabs.
+    let rafId = 0;
+    let lastFrame = 0;
+    const tick = (now: number) => {
+      rafId = requestAnimationFrame(tick);
+      if (now - lastFrame < 33) return;
+      lastFrame = now;
+      render();
+    };
+    if (!prefersReducedMotion()) {
+      rafId = requestAnimationFrame(tick);
+    }
+
     return () => {
       renderRef.current = null;
+      cancelAnimationFrame(rafId);
       canvas.removeEventListener('click', onClick);
       canvas.removeEventListener('mousemove', onMove);
       canvas.removeEventListener('mouseleave', onLeave);

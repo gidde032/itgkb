@@ -92,6 +92,12 @@ describe('star labels (#16)', () => {
     expect(texts.some((t) => t.includes('GW-002'))).toBe(false);
   });
 
+  it('applies twinkle without error when an amplitude is set', () => {
+    const { ctx, fillTexts } = makeRecordingCtx();
+    drawGalaxy(ctx, 800, 600, scene, constellations, transformAt(1), null, null, null, 1500, 0.12);
+    expect(fillTexts().some((t) => t.includes('GW-001'))).toBe(true);
+  });
+
   it('hides labels entirely when zoomed far out (k=0.5)', () => {
     const { ctx, fillTexts } = makeRecordingCtx();
     drawGalaxy(ctx, 800, 600, scene, constellations, transformAt(0.5), null, null, null);
