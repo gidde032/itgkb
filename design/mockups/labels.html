@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>itgkb — star label options (#16)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=Archivo+Narrow:wght@600&display=swap" rel="stylesheet">
+<style>
+  :root{ color-scheme:dark; --ink:#060a14; --starlight:#e9eef8; --text:#d3dcf0; --dim:#8593b0; --faint:#5c6884;
+    --sky:#8fc2ee; --sans:'Hanken Grotesk',system-ui,sans-serif; --chart:'Archivo Narrow',sans-serif; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:#04060c; color:var(--text); font-family:var(--sans); padding:24px clamp(12px,3vw,40px) 70px; }
+  .wrap{ max-width:1120px; margin:0 auto; }
+  h1{ font-family:var(--chart); font-weight:600; font-size:.78rem; letter-spacing:.26em; text-transform:uppercase; color:var(--sky); }
+  h2.sec{ font-family:var(--sans); font-weight:600; font-size:1.15rem; color:var(--starlight); margin:28px 0 6px; }
+  .hint{ color:var(--dim); font-size:.87rem; line-height:1.55; max-width:80ch; margin:0 0 14px; }
+
+  /* prefix scheme */
+  .prefixes{ display:flex; flex-wrap:wrap; gap:8px 10px; }
+  .pf{ display:flex; align-items:center; gap:8px; border:1px solid #142038; border-radius:8px; padding:8px 12px; background:#080e1a; }
+  .pf .dot{ width:10px; height:10px; border-radius:50%; }
+  .pf b{ font-family:var(--sans); font-weight:600; font-size:.8rem; letter-spacing:.02em; }
+  .pf span{ font-size:.76rem; color:var(--dim); }
+  .pf .ex{ font-family:var(--sans); font-weight:600; font-size:.72rem; color:var(--faint); }
+
+  /* label style comparison — mini zoom views */
+  .grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+  .view{ position:relative; height:230px; border:1px solid #142038; border-radius:10px; overflow:hidden;
+    background:radial-gradient(120% 100% at 30% 0%, #0e1830, #0a1120 55%, #060a14 100%); }
+  .view .cap{ position:absolute; top:10px; left:12px; font-family:var(--chart); font-weight:600; font-size:.6rem; letter-spacing:.14em; text-transform:uppercase; color:var(--faint); z-index:3; }
+  .star{ position:absolute; display:flex; align-items:center; gap:8px; }
+  .star .dot{ width:8px; height:8px; border-radius:50%; background:#fbf6ee; flex:none; box-shadow:0 0 9px 2px var(--g); }
+  .lab{ font-family:var(--sans); font-size:10.5px; line-height:1; white-space:nowrap; display:flex; align-items:baseline; gap:5px; }
+  .lab .id{ font-weight:600; color:var(--c); }
+  .lab .sep{ color:var(--faint); }
+  .lab .ti{ color:var(--text); max-width:150px; overflow:hidden; text-overflow:ellipsis; }
+  .lab.dim .ti{ color:var(--dim); }
+  /* style variants */
+  .brk .id::before{ content:'['; color:var(--faint); } .brk .id::after{ content:']'; color:var(--faint); }
+  .idonly .ti{ display:none; }
+  .star.hot .lab .ti{ display:inline; }
+  .star.hot .dot{ box-shadow:0 0 12px 4px var(--g); width:10px; height:10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>itgkb · star label options (#16)</h1>
+
+  <h2 class="sec">1 · Per-category ID prefix scheme</h2>
+  <p class="hint">Replaces the generic <code>ITG-###</code>. IDs number per constellation. Prefixes are short, legible, and colour-tie to the constellation.</p>
+  <div class="prefixes">
+    <div class="pf"><span class="dot" style="background:#E4B363"></span><b>GW</b><span>Google Workspace</span><span class="ex">· GW-001</span></div>
+    <div class="pf"><span class="dot" style="background:#E2985C"></span><b>TIX</b><span>Ticketing &amp; ITSM</span><span class="ex">· TIX-004</span></div>
+    <div class="pf"><span class="dot" style="background:#7CC97A"></span><b>DEV</b><span>Dev Environment</span><span class="ex">· DEV-002</span></div>
+    <div class="pf"><span class="dot" style="background:#4FC2B0"></span><b>NET</b><span>Networking</span><span class="ex">· NET-003</span></div>
+    <div class="pf"><span class="dot" style="background:#7E8CE8"></span><b>IAM</b><span>Accounts &amp; Identity</span><span class="ex">· IAM-002</span></div>
+    <div class="pf"><span class="dot" style="background:#C77FD0"></span><b>HW</b><span>Hardware &amp; Endpoints</span><span class="ex">· HW-001</span></div>
+    <div class="pf"><span class="dot" style="background:#DD6070"></span><b>SEC</b><span>Security</span><span class="ex">· SEC-001</span></div>
+  </div>
+
+  <h2 class="sec">2 · Combined label style — one label per star, ~10px Hanken, titles truncated</h2>
+  <p class="hint">The full-title layer merges into the ID (no more separate big title). Compare obtrusiveness at zoom. Option D keeps only the compact ID until you hover a star.</p>
+  <div class="grid">
+
+    <div class="view">
+      <div class="cap">A · ID · title (dot)</div>
+      <div class="star" style="--g:#E4B363; --c:#E4B363; top:52px; left:40px"><span class="dot"></span><span class="lab"><span class="id">GW-001</span><span class="sep">·</span><span class="ti">Calendar event won't update across orgs</span></span></div>
+      <div class="star" style="--g:#4FC2B0; --c:#4FC2B0; top:104px; left:150px"><span class="dot"></span><span class="lab"><span class="id">NET-004</span><span class="sep">·</span><span class="ti">Reading traceroute output</span></span></div>
+      <div class="star" style="--g:#DD6070; --c:#DD6070; top:158px; left:70px"><span class="dot"></span><span class="lab"><span class="id">SEC-001</span><span class="sep">·</span><span class="ti">Recognizing phishing emails</span></span></div>
+      <div class="star" style="--g:#7E8CE8; --c:#7E8CE8; top:196px; left:200px"><span class="dot"></span><span class="lab"><span class="id">IAM-003</span><span class="sep">·</span><span class="ti">Reset your account password</span></span></div>
+    </div>
+
+    <div class="view">
+      <div class="cap">B · ID · title (dim title)</div>
+      <div class="star" style="--g:#E4B363; --c:#E4B363; top:52px; left:40px"><span class="dot"></span><span class="lab dim"><span class="id">GW-001</span><span class="sep">·</span><span class="ti">Calendar event won't update across orgs</span></span></div>
+      <div class="star" style="--g:#4FC2B0; --c:#4FC2B0; top:104px; left:150px"><span class="dot"></span><span class="lab dim"><span class="id">NET-004</span><span class="sep">·</span><span class="ti">Reading traceroute output</span></span></div>
+      <div class="star" style="--g:#DD6070; --c:#DD6070; top:158px; left:70px"><span class="dot"></span><span class="lab dim"><span class="id">SEC-001</span><span class="sep">·</span><span class="ti">Recognizing phishing emails</span></span></div>
+      <div class="star" style="--g:#7E8CE8; --c:#7E8CE8; top:196px; left:200px"><span class="dot"></span><span class="lab dim"><span class="id">IAM-003</span><span class="sep">·</span><span class="ti">Reset your account password</span></span></div>
+    </div>
+
+    <div class="view">
+      <div class="cap">C · [ID] title (bracketed)</div>
+      <div class="star brk" style="--g:#E4B363; --c:#E4B363; top:52px; left:40px"><span class="dot"></span><span class="lab dim"><span class="id">GW-001</span><span class="ti">Calendar event won't update across orgs</span></span></div>
+      <div class="star brk" style="--g:#4FC2B0; --c:#4FC2B0; top:104px; left:150px"><span class="dot"></span><span class="lab dim"><span class="id">NET-004</span><span class="ti">Reading traceroute output</span></span></div>
+      <div class="star brk" style="--g:#DD6070; --c:#DD6070; top:158px; left:70px"><span class="dot"></span><span class="lab dim"><span class="id">SEC-001</span><span class="ti">Recognizing phishing emails</span></span></div>
+      <div class="star brk" style="--g:#7E8CE8; --c:#7E8CE8; top:196px; left:200px"><span class="dot"></span><span class="lab dim"><span class="id">IAM-003</span><span class="ti">Reset your account password</span></span></div>
+    </div>
+
+    <div class="view">
+      <div class="cap">D · ID only · title on hover</div>
+      <div class="star idonly" style="--g:#E4B363; --c:#E4B363; top:52px; left:40px"><span class="dot"></span><span class="lab dim"><span class="id">GW-001</span><span class="sep">·</span><span class="ti">Calendar event won't update</span></span></div>
+      <div class="star hot" style="--g:#4FC2B0; --c:#4FC2B0; top:104px; left:150px"><span class="dot"></span><span class="lab dim"><span class="id">NET-004</span><span class="sep">·</span><span class="ti">Reading traceroute output</span></span></div>
+      <div class="star idonly" style="--g:#DD6070; --c:#DD6070; top:158px; left:70px"><span class="dot"></span><span class="lab dim"><span class="id">SEC-001</span><span class="sep">·</span><span class="ti">Recognizing phishing emails</span></span></div>
+      <div class="star idonly" style="--g:#7E8CE8; --c:#7E8CE8; top:196px; left:200px"><span class="dot"></span><span class="lab dim"><span class="id">IAM-003</span><span class="sep">·</span><span class="ti">Reset your account password</span></span></div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

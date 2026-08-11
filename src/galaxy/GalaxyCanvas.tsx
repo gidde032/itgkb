@@ -61,6 +61,23 @@ export function hitTest(
   return best;
 }
 
+/** Two-digit hex alpha suffix for `#rrggbb` colours (0..1 -> "00".."ff"). */
+function alphaHex(a: number): string {
+  return Math.max(0, Math.min(255, Math.round(a * 255)))
+    .toString(16)
+    .padStart(2, '0');
+}
+
+/** Trim `text` to fit `maxWidth` in the current ctx font, appending an ellipsis. */
+function truncateToWidth(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {
+  if (ctx.measureText(text).width <= maxWidth) return text;
+  let t = text;
+  while (t.length > 0 && ctx.measureText(`${t}…`).width > maxWidth) {
+    t = t.slice(0, -1);
+  }
+  return `${t.trimEnd()}…`;
+}
+
 /** Deterministic background dust, generated once per mount from a fixed seed. */
 function makeDust(count: number): DisplayPoint[] {
   const dust: DisplayPoint[] = [];
@@ -198,23 +215,30 @@ export function drawGalaxy(
     }
     ctx.globalAlpha = 1;
 
-    if (transform.k > 0.75 && !dimmed) {
-      // A3: initial view is k=0.8 — titles must be legible on load, ramping
-      // to full strength as you zoom in.
-      ctx.font = "11px 'Hanken Grotesk', system-ui, sans-serif";
-      ctx.fillStyle = `rgba(232, 237, 247, ${Math.min(1, (transform.k - 0.5) * 2) * 0.85})`;
-      ctx.textAlign = 'center';
-      ctx.fillText(m.title, p.x, p.y + 24);
-    }
-
-    // Signature: catalog IDs in the instrument (sky) colour, on emphasis or as
-    // you zoom in — the "star catalog" readout.
-    if (m.catalog && !dimmed && (emphasized || transform.k > 1.2)) {
-      const a = emphasized ? 0.95 : Math.min(1, (transform.k - 0.9) * 1.5) * 0.8;
-      ctx.font = "600 9px 'Archivo Narrow', system-ui, sans-serif";
-      ctx.fillStyle = `rgba(143, 194, 238, ${a})`;
+    // Merged star label (body font): a bracketed, category-coloured catalog id
+    // once labels are on, with the title revealed on hover/selection or a deeper
+    // zoom — dimmed and truncated so it never sprawls at scale.
+    if (m.catalog && !dimmed && transform.k > 0.75) {
+      const showTitle = emphasized || transform.k > 1.6;
+      const alpha = Math.min(1, (transform.k - 0.6) * 2);
       ctx.textAlign = 'left';
-      ctx.fillText(m.catalog, p.x + r + 6, p.y + 3);
+      const ly = p.y + 3;
+      let lx = p.x + r + 6;
+
+      ctx.font = "600 10px 'Hanken Grotesk', system-ui, sans-serif";
+      const idStr = `[${m.catalog}]`;
+      ctx.fillStyle = `${m.color}${alphaHex(alpha)}`;
+      ctx.fillText(idStr, lx, ly);
+
+      if (showTitle) {
+        lx += ctx.measureText(idStr).width + 5;
+        ctx.font = "500 10px 'Hanken Grotesk', system-ui, sans-serif";
+        ctx.fillStyle = `#5c6884${alphaHex(alpha)}`;
+        ctx.fillText('·', lx, ly);
+        lx += ctx.measureText('·').width + 5;
+        ctx.fillStyle = `#8593b0${alphaHex(alpha)}`;
+        ctx.fillText(truncateToWidth(ctx, m.title, 168), lx, ly);
+      }
       ctx.textAlign = 'center';
     }
   }
@@ -248,17 +272,25 @@ export function GalaxyCanvas({
 
   const meta = useMemo(() => {
     const colorByConstellation = new Map(constellations.map((c) => [c.id, c.color]));
+    const prefixByConstellation = new Map(constellations.map((c) => [c.id, c.prefix]));
+    // Catalog ids number per constellation: GW-001, SEC-001, ...
+    const counters = new Map<string, number>();
     return new Map<string, StarMeta>(
-      articles.map((a, i) => [
-        a.id,
-        {
-          color: colorByConstellation.get(a.constellation) ?? '#ffffff',
-          stub: a.stub,
-          title: a.title,
-          summary: a.summary,
-          catalog: `ITG-${String(i + 1).padStart(3, '0')}`,
-        },
-      ]),
+      articles.map((a) => {
+        const n = (counters.get(a.constellation) ?? 0) + 1;
+        counters.set(a.constellation, n);
+        const prefix = prefixByConstellation.get(a.constellation) ?? 'ITG';
+        return [
+          a.id,
+          {
+            color: colorByConstellation.get(a.constellation) ?? '#ffffff',
+            stub: a.stub,
+            title: a.title,
+            summary: a.summary,
+            catalog: `${prefix}-${String(n).padStart(3, '0')}`,
+          },
+        ];
+      }),
     );
   }, [articles, constellations]);
 
