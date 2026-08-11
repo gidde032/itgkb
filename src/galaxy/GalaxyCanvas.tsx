@@ -27,6 +27,8 @@ interface StarMeta {
   stub: boolean;
   title: string;
   summary: string;
+  /** Star-catalog id (e.g. ITG-014) — the instrument-layer signature. */
+  catalog?: string;
 }
 
 const HIT_RADIUS = 18;
@@ -134,7 +136,7 @@ export function drawGalaxy(
     ctx.fill();
 
     ctx.textAlign = 'center';
-    ctx.font = '600 13px ui-monospace, SFMono-Regular, Menlo, monospace';
+    ctx.font = "600 13px 'Archivo Narrow', system-ui, sans-serif";
     ctx.fillStyle = `${c.color}66`;
     ctx.fillText(c.name.toUpperCase().split('').join('\u200a\u200a'), c.anchor.x, c.anchor.y - 120);
   }
@@ -173,7 +175,7 @@ export function drawGalaxy(
     ctx.arc(p.x, p.y, r * 3.2, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = m.stub ? `${m.color}99` : '#ffffff';
+    ctx.fillStyle = m.stub ? `${m.color}99` : '#fbf6ee';
     ctx.beginPath();
     ctx.arc(p.x, p.y, r * 0.55, 0, Math.PI * 2);
     ctx.fill();
@@ -188,7 +190,7 @@ export function drawGalaxy(
       ctx.setLineDash([]);
     }
     if (p.id === selectedId) {
-      ctx.strokeStyle = '#ffffffcc';
+      ctx.strokeStyle = '#f2a0a6cc';
       ctx.lineWidth = 1.5 / transform.k;
       ctx.beginPath();
       ctx.arc(p.x, p.y, r * 1.9, 0, Math.PI * 2);
@@ -199,10 +201,21 @@ export function drawGalaxy(
     if (transform.k > 0.75 && !dimmed) {
       // A3: initial view is k=0.8 — titles must be legible on load, ramping
       // to full strength as you zoom in.
-      ctx.font = '11px system-ui, sans-serif';
+      ctx.font = "11px 'Hanken Grotesk', system-ui, sans-serif";
       ctx.fillStyle = `rgba(232, 237, 247, ${Math.min(1, (transform.k - 0.5) * 2) * 0.85})`;
       ctx.textAlign = 'center';
       ctx.fillText(m.title, p.x, p.y + 24);
+    }
+
+    // Signature: catalog IDs in the instrument (sky) colour, on emphasis or as
+    // you zoom in — the "star catalog" readout.
+    if (m.catalog && !dimmed && (emphasized || transform.k > 1.2)) {
+      const a = emphasized ? 0.95 : Math.min(1, (transform.k - 0.9) * 1.5) * 0.8;
+      ctx.font = "600 9px 'Archivo Narrow', system-ui, sans-serif";
+      ctx.fillStyle = `rgba(143, 194, 238, ${a})`;
+      ctx.textAlign = 'left';
+      ctx.fillText(m.catalog, p.x + r + 6, p.y + 3);
+      ctx.textAlign = 'center';
     }
   }
   ctx.restore();
@@ -231,17 +244,19 @@ export function GalaxyCanvas({
     matchIds,
   });
   const renderRef = useRef<(() => void) | null>(null);
+  const hudRef = useRef<HTMLSpanElement>(null);
 
   const meta = useMemo(() => {
     const colorByConstellation = new Map(constellations.map((c) => [c.id, c.color]));
     return new Map<string, StarMeta>(
-      articles.map((a) => [
+      articles.map((a, i) => [
         a.id,
         {
           color: colorByConstellation.get(a.constellation) ?? '#ffffff',
           stub: a.stub,
           title: a.title,
           summary: a.summary,
+          catalog: `ITG-${String(i + 1).padStart(3, '0')}`,
         },
       ]),
     );
@@ -289,6 +304,18 @@ export function GalaxyCanvas({
         drawStateRef.current.matchIds,
       );
       ctx.restore();
+
+      // Coordinate HUD tracks the view centre (pseudo RA/DEC — instrument flavour).
+      if (hudRef.current) {
+        const [wx, wy] = transformRef.current.invert([width / 2, height / 2]);
+        const ra = (((wx / 60) % 24) + 24) % 24;
+        const hh = Math.floor(ra);
+        const mm = Math.floor((ra - hh) * 60);
+        const dec = Math.max(-89, Math.min(89, Math.round(-wy / 18)));
+        hudRef.current.textContent =
+          `RA ${String(hh).padStart(2, '0')}h ${String(mm).padStart(2, '0')}m · ` +
+          `DEC ${dec >= 0 ? '+' : '−'}${Math.abs(dec)}°`;
+      }
     };
 
     const resize = () => {
@@ -369,6 +396,12 @@ export function GalaxyCanvas({
     observer.observe(canvas);
     resize();
 
+    // Canvas text uses self-hosted fonts; redraw once they're ready so labels
+    // and catalog IDs aren't first painted in the fallback face.
+    if (typeof document !== 'undefined' && 'fonts' in document && document.fonts?.ready) {
+      void document.fonts.ready.then(() => renderRef.current?.());
+    }
+
     return () => {
       renderRef.current = null;
       canvas.removeEventListener('click', onClick);
@@ -436,6 +469,10 @@ export function GalaxyCanvas({
           <span>{hoveredMeta.summary}</span>
         </div>
       )}
+      <div className="hud" aria-hidden="true">
+        <span ref={hudRef}>RA 00h 00m · DEC +00°</span> · <b>{articles.length} OBJECTS</b> ·{' '}
+        {constellations.length} FIELDS
+      </div>
       <button type="button" className="reset-view" onClick={resetView}>
         <ResetIcon />
         Reset view
