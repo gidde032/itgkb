@@ -50,8 +50,12 @@ export function App(): JSX.Element {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <span className="app-header__title">IT Knowledge Galaxy</span>
-        <span className="app-header__sub">Carlson IT Service Center</span>
+        <div className="wordmark">
+          <span className="wordmark__mark">
+            <i>it</i>gkb
+          </span>
+          <span className="wordmark__sub">IT Galactic Knowledge Base</span>
+        </div>
       </header>
       <SearchBar
         query={query}

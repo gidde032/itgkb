@@ -19,9 +19,7 @@ export function ArticlePanel({
   return (
     <aside className="article-panel" aria-label={`Article: ${article.title}`}>
       <header className="article-panel__header">
-        <div className="article-panel__eyebrow" style={{ color: constellation?.color }}>
-          {constellation?.name ?? article.constellation}
-        </div>
+        <div className="article-panel__eyebrow">{constellation?.name ?? article.constellation}</div>
         <h1>{article.title}</h1>
         {article.stub && (
           <p className="article-panel__stub-badge">Stub — procedure to be filled in</p>

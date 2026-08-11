@@ -21,7 +21,7 @@ describe('App integration', () => {
 
   it('renders the shell and galaxy canvas without crashing', () => {
     render(<App />);
-    expect(screen.getByText('IT Knowledge Galaxy')).toBeInTheDocument();
+    expect(screen.getByText('IT Galactic Knowledge Base')).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' })).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
