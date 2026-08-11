@@ -14,9 +14,12 @@ npm run dev. Planning truth lives in GitHub Issues/PRs/milestones.
   npm run validate:content passes. Perf budgets are sanity checks, not gates.
 - Weakening a gate requires maintainer sign-off. Never an agent decision.
 - Every accepted review finding gets a regression test.
-- Article drafts come from SPEC seed summaries (kickoff 0b); maintainer red-pens
-  post-MVP. Do not invent specific UMN facts (hostnames, exact policy text)
-  beyond the seed summaries — mark uncertain details with "(verify)".
+- Public content is vendor-generic (M4): no organization-specific data
+  (Carlson/UMN/TDX names, internal hostnames like `*-bn`, intranet URLs), no
+  PII/emails, and no unresolved `(verify)` / `[NEEDS VERIFICATION]` markers in
+  shipped articles. `npm run check:sensitivity` reports violations; it becomes a
+  hard gate once the seed articles are generalized (M4 #24). Draft articles may
+  use markers, but they must be resolved before merge.
 
 ## Workflow
 - Per-phase loop: implement → review → triage → fix+regression-test → summary

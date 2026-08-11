@@ -117,3 +117,56 @@ export function analyzeCollection(entries, constellations) {
 export function validateCollection(entries, constellations) {
   return analyzeCollection(entries, constellations).errors;
 }
+
+/**
+ * Content-sensitivity patterns (M4 #22). The public repo must not carry
+ * organization-specific data or unresolved authoring markers. Each pattern is
+ * global + case-insensitive so every occurrence on a line is reported.
+ */
+export const SENSITIVITY_PATTERNS = [
+  {
+    id: 'organization',
+    label: 'organization-specific name',
+    re: /\b(?:carlson|university of minnesota|umn|teamdynamix|tdx)\b/gi,
+  },
+  {
+    id: 'internal-hostname',
+    label: 'internal hostname',
+    re: /\b[a-z][a-z0-9-]*-bn\b/gi,
+  },
+  {
+    id: 'verify-marker',
+    label: 'unresolved verification marker',
+    re: /\(verify\)|\[needs verification\]/gi,
+  },
+  {
+    id: 'email',
+    label: 'email address',
+    re: /\b[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}\b/gi,
+  },
+];
+
+/**
+ * Scan one article's raw text for organization-specific data / authoring
+ * markers. Returns a finding per match with 1-based line numbers.
+ * @param {string} sourceName
+ * @param {string} raw
+ * @returns {Array<{ sourceName: string, line: number, patternId: string, label: string, match: string }>}
+ */
+export function findSensitiveMatches(sourceName, raw) {
+  const findings = [];
+  raw.split(/\r?\n/).forEach((text, index) => {
+    for (const pattern of SENSITIVITY_PATTERNS) {
+      for (const m of text.matchAll(pattern.re)) {
+        findings.push({
+          sourceName,
+          line: index + 1,
+          patternId: pattern.id,
+          label: pattern.label,
+          match: m[0],
+        });
+      }
+    }
+  });
+  return findings;
+}

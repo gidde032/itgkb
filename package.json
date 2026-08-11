@@ -14,6 +14,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "validate:content": "node scripts/validate-content.mjs",
+    "check:sensitivity": "node scripts/check-sensitivity.mjs",
     "gates": "npm run typecheck && npm run lint && npm run test:coverage && npm run validate:content && vite build"
   },
   "dependencies": {

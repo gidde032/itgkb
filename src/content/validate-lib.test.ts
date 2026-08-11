@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { validateFrontmatter, validateCollection } from '../../scripts/validate-lib.mjs';
+import {
+  validateFrontmatter,
+  validateCollection,
+  findSensitiveMatches,
+} from '../../scripts/validate-lib.mjs';
 
 const good = {
   id: 'a-one',
@@ -84,5 +88,29 @@ describe('related field validation (F5)', () => {
   });
   it('rejects arrays containing non-strings', () => {
     expect(validateFrontmatter({ ...good, related: [3] }, 'f.md').join(' ')).toMatch(/related/);
+  });
+});
+
+describe('content-sensitivity scan (M4 #22)', () => {
+  const ids = (raw: string) => findSensitiveMatches('a.md', raw).map((f) => f.patternId);
+
+  it('flags organization-specific names', () => {
+    expect(ids('Contact the Carlson IT desk')).toContain('organization');
+    expect(ids('Log a ticket in TDX')).toContain('organization');
+    expect(ids('per UMN policy')).toContain('organization');
+  });
+  it('flags internal hostnames, emails, and verify markers', () => {
+    expect(ids('route via infotech-bn')).toContain('internal-hostname');
+    expect(ids('email admin@example.com')).toContain('email');
+    expect(ids('the exact limit (verify)')).toContain('verify-marker');
+    expect(ids('steps here [NEEDS VERIFICATION]')).toContain('verify-marker');
+  });
+  it('reports the 1-based line number of each match', () => {
+    const found = findSensitiveMatches('a.md', 'clean line\nmentions Carlson here');
+    expect(found).toHaveLength(1);
+    expect(found[0].line).toBe(2);
+  });
+  it('passes clean, vendor-generic text', () => {
+    expect(findSensitiveMatches('a.md', 'Open your ticketing system and file a request.')).toEqual([]);
   });
 });
