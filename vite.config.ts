@@ -3,6 +3,9 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
+  // Served from a project subpath on GitHub Pages, root everywhere else
+  // (local dev/preview, CI build). The deploy workflow sets GITHUB_PAGES=true.
+  base: process.env.GITHUB_PAGES === 'true' ? '/carlson-IT-galactic-wiki/' : '/',
   plugins: [react()],
   test: {
     environment: 'jsdom',
