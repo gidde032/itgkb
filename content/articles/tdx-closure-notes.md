@@ -1,7 +1,7 @@
 ---
 id: tdx-closure-notes
 title: 'TDX: Writing effective ticket closure notes'
-constellation: tdx
+constellation: ticketing-itsm
 tags: [tdx, closure-notes, tickets, templates, documentation]
 summary:
   Structure and template language for closing tickets cleanly — spontaneous resolution, user

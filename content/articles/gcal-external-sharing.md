@@ -1,7 +1,7 @@
 ---
 id: gcal-external-sharing
 title: 'Google Calendar: External domain sharing restrictions'
-constellation: google-workspace
+constellation: workspace-email
 tags: [google-calendar, sharing, external-domains, admin-console, policy]
 summary:
   How UMN's Workspace admin policy controls whether calendar events can be shared with

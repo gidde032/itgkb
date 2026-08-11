@@ -1,8 +1,9 @@
 [
-  { "id": "google-workspace", "name": "Google Workspace", "prefix": "GW", "anchor": { "x": -320, "y": -160 }, "color": "#e4b363" },
-  { "id": "tdx", "name": "TDX Ticketing", "prefix": "TIX", "anchor": { "x": 340, "y": -200 }, "color": "#e2985c" },
-  { "id": "dev-environment", "name": "Development Environment", "prefix": "DEV", "anchor": { "x": -60, "y": 240 }, "color": "#7cc97a" },
-  { "id": "networking", "name": "Networking & Connectivity", "prefix": "NET", "anchor": { "x": 300, "y": 140 }, "color": "#4fc2b0" },
-  { "id": "account-access", "name": "Account & Access", "prefix": "IAM", "anchor": { "x": 60, "y": -300 }, "color": "#7e8ce8" },
-  { "id": "hardware", "name": "Hardware & Peripherals", "prefix": "HW", "anchor": { "x": -380, "y": 180 }, "color": "#c77fd0" }
+  { "id": "workspace-email", "name": "Workspace & Email", "prefix": "GW", "anchor": { "x": -320, "y": -160 }, "color": "#e4b363" },
+  { "id": "ticketing-itsm", "name": "Ticketing & ITSM", "prefix": "TIX", "anchor": { "x": 340, "y": -200 }, "color": "#e2985c" },
+  { "id": "dev-environment", "name": "Dev Environment", "prefix": "DEV", "anchor": { "x": -60, "y": 240 }, "color": "#7cc97a" },
+  { "id": "networking", "name": "Networking", "prefix": "NET", "anchor": { "x": 300, "y": 140 }, "color": "#4fc2b0" },
+  { "id": "accounts-identity", "name": "Accounts & Identity", "prefix": "IAM", "anchor": { "x": 60, "y": -300 }, "color": "#7e8ce8" },
+  { "id": "hardware-endpoints", "name": "Hardware & Endpoints", "prefix": "HW", "anchor": { "x": -380, "y": 180 }, "color": "#c77fd0" },
+  { "id": "security", "name": "Security", "prefix": "SEC", "anchor": { "x": 380, "y": 10 }, "color": "#dd6070" }
 ]

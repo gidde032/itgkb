@@ -1,7 +1,7 @@
 ---
 id: gcal-cannot-be-shown
 title: 'Google Calendar: "Calendar cannot be shown" warning'
-constellation: google-workspace
+constellation: workspace-email
 tags: [google-calendar, sharing, external-domains, visibility, guests]
 summary:
   An asterisk / warning that an external guest's calendar "cannot be shown" when adding them to

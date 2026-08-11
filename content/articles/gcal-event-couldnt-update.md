@@ -1,7 +1,7 @@
 ---
 id: gcal-event-couldnt-update
 title: 'Google Calendar: "Event couldn''t be updated" error'
-constellation: google-workspace
+constellation: workspace-email
 tags: [google-calendar, sharing, external-domains, admin-console, guests]
 summary:
   User gets a "calendar use limit exceeded" style error when adding collaborators or guests to

@@ -1,7 +1,7 @@
 ---
 id: tdx-escalation
 title: 'TDX: Escalation procedures'
-constellation: tdx
+constellation: ticketing-itsm
 tags: [tdx, escalation, tickets, procedure, documentation]
 summary:
   When to escalate vs. keep working an issue, and how to write an escalation note the next

@@ -9,13 +9,14 @@ describe('App integration', () => {
     expect(errors).toEqual([]);
     // Phase 4 contract: the complete seed set — exact counts, not minimums.
     expect(articles).toHaveLength(20);
-    expect(constellations).toHaveLength(6);
-    // Red-pen pass: 3 TDX articles promoted from stub to real content;
-    // account-access, printer, hardware-intake remain stubs pending
-    // [NEEDS VERIFICATION] answers from the Service Center.
+    // M4 remap: 7 vendor-neutral constellations. Security is defined but
+    // intentionally has no articles yet — content lands in M4 #25.
+    expect(constellations).toHaveLength(7);
     expect(articles.filter((a) => a.stub)).toHaveLength(3);
-    for (const c of constellations) {
-      expect(articles.some((a) => a.constellation === c.id)).toBe(true);
+    // Every article belongs to a defined constellation (no orphans).
+    const constellationIds = new Set(constellations.map((c) => c.id));
+    for (const a of articles) {
+      expect(constellationIds.has(a.constellation)).toBe(true);
     }
   });
 

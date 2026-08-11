@@ -1,7 +1,7 @@
 ---
 id: tdx-creating-tickets
 title: 'TDX: Creating and categorizing tickets'
-constellation: tdx
+constellation: ticketing-itsm
 tags: [tdx, tickets, categorization, priority, procedure]
 summary:
   Workflow for opening a TDX ticket — categorize, prioritize, then resolve in-tier or

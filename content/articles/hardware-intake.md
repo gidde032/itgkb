@@ -1,7 +1,7 @@
 ---
 id: hardware-intake
 title: 'Hardware intake and handoff'
-constellation: hardware
+constellation: hardware-endpoints
 tags: [hardware, intake, repair, documentation, escalation]
 summary:
   Intake checklist and handoff documentation for hardware arriving for repair or

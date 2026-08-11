@@ -1,7 +1,7 @@
 ---
 id: printer-troubleshooting
 title: 'Printer troubleshooting: Common Carlson issues'
-constellation: hardware
+constellation: hardware-endpoints
 tags: [printers, drivers, print-queue, network-printing, hardware]
 summary:
   General diagnostic framework for the recurring printer problems — drivers, discovery,

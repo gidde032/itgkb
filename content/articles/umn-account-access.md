@@ -1,7 +1,7 @@
 ---
 id: umn-account-access
 title: 'UMN account access: Scope and escalation'
-constellation: account-access
+constellation: accounts-identity
 tags: [accounts, passwords, two-factor, lockouts, escalation]
 summary:
   Common account access scenarios — resets, 2FA, lockouts — with the in-scope /

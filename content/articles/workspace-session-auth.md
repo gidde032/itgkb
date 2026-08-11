@@ -1,7 +1,7 @@
 ---
 id: workspace-session-auth
 title: 'Google Workspace: Session and auth token issues'
-constellation: google-workspace
+constellation: workspace-email
 tags: [google-workspace, session, auth, browser, incognito]
 summary:
   Stale browser sessions can masquerade as permission or quota errors across Workspace apps.

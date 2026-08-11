@@ -1,7 +1,7 @@
 ---
 id: workspace-service-status
 title: 'Google Workspace: Checking service status'
-constellation: google-workspace
+constellation: workspace-email
 tags: [google-workspace, outage, status-dashboard, triage]
 summary:
   How to use the Google Workspace Status Dashboard to separate a known Google outage from a
