@@ -36,7 +36,7 @@ describe('ArticlePanel', () => {
         onClose={() => {}}
       />,
     );
-    expect(screen.getByRole('heading', { level: 1, name: 'Test Article' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Test Article' })).toBeInTheDocument();
     expect(screen.getByText('Networking & Connectivity')).toBeInTheDocument();
     expect(screen.getByText('tag-a')).toBeInTheDocument();
     expect(screen.getByText('Diagnostic Steps')).toBeInTheDocument();
@@ -78,7 +78,7 @@ describe('ArticlePanel', () => {
         onClose={() => {}}
       />,
     );
-    const btn = screen.getByRole('button', { name: 'Target Article' });
+    const btn = screen.getByRole('button', { name: 'Related: Target Article' });
     fireEvent.click(btn);
     expect(onNavigate).toHaveBeenCalledWith('a2');
     expect(screen.queryByText('ghost')).not.toBeInTheDocument();
@@ -109,7 +109,7 @@ describe('ArticlePanel', () => {
         onClose={() => {}}
       />,
     );
-    expect(screen.getByRole('complementary', { name: 'Article: Test Article' })).toHaveFocus();
+    expect(screen.getByRole('dialog', { name: 'Article: Test Article' })).toHaveFocus();
   });
 
   it('closes on Escape (a11y)', () => {
@@ -123,9 +123,34 @@ describe('ArticlePanel', () => {
         onClose={onClose}
       />,
     );
-    fireEvent.keyDown(screen.getByRole('complementary', { name: 'Article: Test Article' }), {
+    fireEvent.keyDown(screen.getByRole('dialog', { name: 'Article: Test Article' }), {
       key: 'Escape',
     });
     expect(onClose).toHaveBeenCalled();
+  });
+
+  // A11y audit: Tab must cycle within the modal dialog and not escape behind it.
+  it('traps Tab focus inside the panel (a11y)', () => {
+    const target = art({ id: 'a2', title: 'Target Article' });
+    render(
+      <ArticlePanel
+        article={art({ related: ['a2'] })}
+        constellation={constellation}
+        articlesById={new Map([[target.id, target]])}
+        onNavigate={() => {}}
+        onClose={() => {}}
+      />,
+    );
+    const dialog = screen.getByRole('dialog', { name: 'Article: Test Article' });
+    const close = screen.getByRole('button', { name: 'Close article' });
+    const related = screen.getByRole('button', { name: 'Related: Target Article' });
+    // Focus the last focusable (related) then Tab → wraps to first (close).
+    related.focus();
+    expect(related).toHaveFocus();
+    fireEvent.keyDown(dialog, { key: 'Tab' });
+    expect(close).toHaveFocus();
+    // Shift+Tab on the first (close) → wraps back to the last (related).
+    fireEvent.keyDown(dialog, { key: 'Tab', shiftKey: true });
+    expect(related).toHaveFocus();
   });
 });

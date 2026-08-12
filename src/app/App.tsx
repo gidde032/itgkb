@@ -1,9 +1,14 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useMemo, useRef, useState } from 'react';
 import { loadContent } from '../content/load';
 import { CuratedForceLayout } from '../layout/curatedForce';
 import { TextSearch } from '../search/textSearch';
 import { GalaxyCanvas } from '../galaxy/GalaxyCanvas';
-import { ArticlePanel } from '../article/ArticlePanel';
+// P6: the article panel pulls in the react-markdown pipeline (~46% of the JS
+// bundle). Lazy-load it so users who never open an article don't pay that cost —
+// the panel chunk loads on first open and is cached after.
+const ArticlePanel = lazy(() =>
+  import('../article/ArticlePanel').then((m) => ({ default: m.ArticlePanel })),
+);
 import { SearchBar } from './SearchBar';
 import { ListView } from './ListView';
 import { useNarrowViewport } from './useNarrowViewport';
@@ -64,51 +69,57 @@ export function App(): JSX.Element {
 
   return (
     <div className="app-shell">
+      <a className="skip-link" href="#article-search">
+        Skip to search
+      </a>
       <header className="app-header">
         <div className="wordmark">
+          <h1 className="wordmark__title visually-hidden">IT Knowledge Galaxy</h1>
           <span className="wordmark__mark">
             <i>it</i>gkb
           </span>
           <span className="wordmark__sub">IT Galactic Knowledge Base</span>
         </div>
       </header>
-      <SearchBar
-        query={query}
-        matchCount={matches ? matches.length : null}
-        partial={Boolean(matches && matches.length > 0 && matches[0].partial)}
-        onChange={setQuery}
-        onOpenTopMatch={openTopMatch}
-        onClear={clearSearch}
-      />
-      {!narrow && (
-        <button
-          type="button"
-          className="view-toggle"
-          aria-pressed={listMode}
-          onClick={() => setListMode((v) => !v)}
-        >
-          {listMode ? <StarIcon /> : <ListIcon />}
-          {listMode ? 'Galaxy view' : 'List view'}
-        </button>
-      )}
-      {showList ? (
-        <ListView
-          articles={content.articles}
-          constellations={content.constellations}
-          matchIds={matchIds}
-          onOpen={flyTo}
+      <main className="app-main">
+        <SearchBar
+          query={query}
+          matchCount={matches ? matches.length : null}
+          partial={Boolean(matches && matches.length > 0 && matches[0].partial)}
+          onChange={setQuery}
+          onOpenTopMatch={openTopMatch}
+          onClear={clearSearch}
         />
-      ) : (
-        <GalaxyCanvas
-          articles={content.articles}
-          constellations={content.constellations}
-          positions={positions}
-          selectedId={selectedId}
-          onSelect={onSelect}
-          matchIds={matchIds}
-          focus={focus}
-        />
-      )}
+        {!narrow && (
+          <button
+            type="button"
+            className="view-toggle"
+            aria-pressed={listMode}
+            onClick={() => setListMode((v) => !v)}
+          >
+            {listMode ? <StarIcon /> : <ListIcon />}
+            {listMode ? 'Galaxy view' : 'List view'}
+          </button>
+        )}
+        {showList ? (
+          <ListView
+            articles={content.articles}
+            constellations={content.constellations}
+            matchIds={matchIds}
+            onOpen={flyTo}
+          />
+        ) : (
+          <GalaxyCanvas
+            articles={content.articles}
+            constellations={content.constellations}
+            positions={positions}
+            selectedId={selectedId}
+            onSelect={onSelect}
+            matchIds={matchIds}
+            focus={focus}
+          />
+        )}
+      </main>
       {content.errors.length > 0 && (
         <div className="content-errors" role="alert">
           {content.errors.length} content problem{content.errors.length === 1 ? '' : 's'} — see
@@ -116,13 +127,21 @@ export function App(): JSX.Element {
         </div>
       )}
       {selected && (
-        <ArticlePanel
-          article={selected}
-          constellation={content.constellations.find((c) => c.id === selected.constellation)}
-          articlesById={articlesById}
-          onNavigate={flyTo}
-          onClose={closePanel}
-        />
+        <Suspense
+          fallback={
+            <aside className="article-panel article-panel--loading" aria-label="Loading article">
+              <span className="article-panel__loading">Loading…</span>
+            </aside>
+          }
+        >
+          <ArticlePanel
+            article={selected}
+            constellation={content.constellations.find((c) => c.id === selected.constellation)}
+            articlesById={articlesById}
+            onNavigate={flyTo}
+            onClose={closePanel}
+          />
+        </Suspense>
       )}
     </div>
   );

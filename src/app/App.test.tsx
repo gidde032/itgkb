@@ -22,7 +22,9 @@ describe('App integration', () => {
   it('renders the shell and galaxy canvas without crashing', () => {
     render(<App />);
     expect(screen.getByText('IT Galactic Knowledge Base')).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' }),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });
@@ -40,14 +42,17 @@ describe('App search integration (FR-8, FR-7)', () => {
     expect(screen.getByRole('status')).toHaveTextContent(/2 stars/);
   });
 
-  it('Enter opens the top match article panel', () => {
+  it('Enter opens the top match article panel', async () => {
     render(<App />);
     fireEvent.change(screen.getByRole('searchbox', { name: 'Search articles' }), {
       target: { value: 'traceroute' },
     });
     fireEvent.keyDown(screen.getByRole('searchbox', { name: 'Search articles' }), { key: 'Enter' });
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Traceroute: Reading and interpreting output' }),
+      await screen.findByRole('heading', {
+        level: 2,
+        name: 'Traceroute: Reading and interpreting output',
+      }),
     ).toBeInTheDocument();
   });
 });
@@ -69,24 +74,38 @@ describe('search keystrokes do not churn canvas setup (P3-F1)', () => {
   });
 });
 
-
 // Phase 4: NF-7 viewport switch — list replaces canvas below the breakpoint.
 describe('narrow viewport swaps galaxy for list (NF-7)', () => {
-  it('renders the grouped list instead of the canvas when narrow, and opens articles from it', () => {
-    (globalThis as unknown as { __setNarrowViewport: (v: boolean) => void }).__setNarrowViewport(true);
+  it('renders the grouped list instead of the canvas when narrow, and opens articles from it', async () => {
+    (globalThis as unknown as { __setNarrowViewport: (v: boolean) => void }).__setNarrowViewport(
+      true,
+    );
     render(<App />);
-    expect(screen.queryByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' })).not.toBeInTheDocument();
-    expect(screen.getByRole('navigation', { name: 'Articles by constellation' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Traceroute: Reading and interpreting output/ }));
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Traceroute: Reading and interpreting output' }),
+      screen.queryByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('navigation', { name: 'Articles by constellation' }),
+    ).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', { name: /Traceroute: Reading and interpreting output/ }),
+    );
+    expect(
+      await screen.findByRole('heading', {
+        level: 2,
+        name: 'Traceroute: Reading and interpreting output',
+      }),
     ).toBeInTheDocument();
   });
 
   it('keeps the canvas on wide viewports', () => {
     render(<App />);
-    expect(screen.getByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' })).toBeInTheDocument();
-    expect(screen.queryByRole('navigation', { name: 'Articles by constellation' })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('navigation', { name: 'Articles by constellation' }),
+    ).not.toBeInTheDocument();
   });
 });
 
@@ -97,29 +116,44 @@ import { act } from '@testing-library/react';
 describe('live viewport switching (P4-F4)', () => {
   it('swaps canvas for list when the viewport narrows mid-session', () => {
     render(<App />);
-    expect(screen.getByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' }),
+    ).toBeInTheDocument();
     act(() => {
-      (globalThis as unknown as { __setNarrowViewport: (v: boolean) => void }).__setNarrowViewport(true);
+      (globalThis as unknown as { __setNarrowViewport: (v: boolean) => void }).__setNarrowViewport(
+        true,
+      );
     });
-    expect(screen.getByRole('navigation', { name: 'Articles by constellation' })).toBeInTheDocument();
-    expect(screen.queryByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('navigation', { name: 'Articles by constellation' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' }),
+    ).not.toBeInTheDocument();
   });
 });
-
 
 // A4 regression: desktop users can toggle into the list view and back.
 describe('desktop list toggle (A4)', () => {
   it('switches to the list and back without a narrow viewport', () => {
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: 'List view' }));
-    expect(screen.getByRole('navigation', { name: 'Articles by constellation' })).toBeInTheDocument();
-    expect(screen.queryByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('navigation', { name: 'Articles by constellation' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' }),
+    ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Galaxy view' }));
-    expect(screen.getByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' }),
+    ).toBeInTheDocument();
   });
 
   it('hides the toggle on narrow viewports where the list is forced', () => {
-    (globalThis as unknown as { __setNarrowViewport: (v: boolean) => void }).__setNarrowViewport(true);
+    (globalThis as unknown as { __setNarrowViewport: (v: boolean) => void }).__setNarrowViewport(
+      true,
+    );
     render(<App />);
     expect(screen.queryByRole('button', { name: 'List view' })).not.toBeInTheDocument();
   });
@@ -127,14 +161,28 @@ describe('desktop list toggle (A4)', () => {
 
 // A2 end-to-end: natural phrasing that used to zero out now finds the article.
 describe('search fallback end-to-end (A2)', () => {
-  it("finds the calendar article for 'calendar wont update'", () => {
+  it("finds the calendar article for 'calendar wont update'", async () => {
     render(<App />);
     const input = screen.getByRole('searchbox', { name: 'Search articles' });
     fireEvent.change(input, { target: { value: 'calendar wont update' } });
     expect(screen.getByRole('status')).toHaveTextContent(/close match/);
     fireEvent.keyDown(input, { key: 'Enter' });
     expect(
-      screen.getByRole('heading', { level: 1, name: /Event couldn't be updated/ }),
+      await screen.findByRole('heading', { level: 2, name: /Event couldn't be updated/ }),
+    ).toBeInTheDocument();
+  });
+});
+
+// A11y audit: a keyboard user gets a skip link past the canvas and a main
+// landmark to navigate by, plus a page-level heading.
+describe('app landmarks (a11y)', () => {
+  it('renders a skip link targeting search, a main landmark, and a page h1', () => {
+    render(<App />);
+    const skip = screen.getByRole('link', { name: 'Skip to search' });
+    expect(skip).toHaveAttribute('href', '#article-search');
+    expect(screen.getByRole('main')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'IT Knowledge Galaxy' }),
     ).toBeInTheDocument();
   });
 });
