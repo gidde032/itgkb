@@ -10,21 +10,13 @@ import {
 } from 'd3-force';
 import type { Article, Constellation } from '../content/types';
 import type { LayoutProvider, StarPosition } from './types';
+import { hashString } from '../util/hash';
+import { sharedTagCount } from '../util/tags';
 
 interface StarNode extends SimulationNodeDatum {
   id: string;
   anchorX: number;
   anchorY: number;
-}
-
-/** Deterministic 32-bit hash for stable per-article jitter and z-depth. */
-export function hashString(s: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
 }
 
 /** Seeded LCG so d3-force's internal jitter is reproducible run-to-run. */
@@ -34,11 +26,6 @@ function makeRandom(seed: number): () => number {
     state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
     return state / 4294967296;
   };
-}
-
-export function sharedTagCount(a: Article, b: Article): number {
-  const set = new Set(a.tags);
-  return b.tags.reduce((n, t) => n + (set.has(t) ? 1 : 0), 0);
 }
 
 /**

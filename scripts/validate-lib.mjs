@@ -7,7 +7,6 @@
  *   summary: string, stub: boolean, related: string[] }} Frontmatter
  */
 
-
 import yaml from 'js-yaml';
 
 export const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
@@ -22,12 +21,17 @@ export const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
  */
 export function parseFrontmatterBlock(raw, sourceName) {
   const match = raw.match(FRONTMATTER_RE);
-  if (!match) return { fm: null, body: raw, errors: [`${sourceName}: no YAML frontmatter block found`] };
+  if (!match)
+    return { fm: null, body: raw, errors: [`${sourceName}: no YAML frontmatter block found`] };
   let fm;
   try {
     fm = yaml.load(match[1]);
   } catch (e) {
-    return { fm: null, body: raw, errors: [`${sourceName}: YAML parse error — ${e.message.split('\n')[0]}`] };
+    return {
+      fm: null,
+      body: raw,
+      errors: [`${sourceName}: YAML parse error — ${e.message.split('\n')[0]}`],
+    };
   }
   if (typeof fm !== 'object' || fm === null || Array.isArray(fm)) {
     return { fm: null, body: raw, errors: [`${sourceName}: frontmatter is not a mapping`] };
@@ -60,9 +64,72 @@ export function validateFrontmatter(fm, sourceName) {
   if (fm.stub !== undefined && typeof fm.stub !== 'boolean') {
     errors.push(`${sourceName}: "stub" must be a boolean when present`);
   }
-  if (fm.related !== undefined && (!Array.isArray(fm.related) || fm.related.some((r) => typeof r !== 'string'))) {
+  if (
+    fm.related !== undefined &&
+    (!Array.isArray(fm.related) || fm.related.some((r) => typeof r !== 'string'))
+  ) {
     errors.push(`${sourceName}: "related" must be an array of article ids when present`);
   }
+  return errors;
+}
+
+/**
+ * Verify an article's frontmatter `id` matches its filename (sans `.md`).
+ * Enforces the SPEC §5 convention so the app's id-based addressing and the
+ * filesystem stay in sync; drift here confuses contributors and tooling.
+ * @param {string} filename e.g. "gcal-event-couldnt-update.md"
+ * @param {unknown} id parsed frontmatter id
+ * @param {string} sourceName
+ * @returns {string[]}
+ */
+export function validateFilenameId(filename, id, sourceName) {
+  const expected = filename.replace(/\.md$/, '');
+  if (typeof id !== 'string' || id !== expected) {
+    return [`${sourceName}: id "${id}" does not match filename "${expected}"`];
+  }
+  return [];
+}
+
+/**
+ * Validate the constellations.json schema. The layout engine and renderer both
+ * read `anchor`/`color`/`prefix`/`name`, so a malformed entry must fail the
+ * content gate rather than crash the app at runtime.
+ * @param {unknown} constellations
+ * @returns {string[]}
+ */
+export function validateConstellations(constellations) {
+  const errors = [];
+  if (!Array.isArray(constellations) || constellations.length === 0) {
+    return ['constellations.json: must be a non-empty array'];
+  }
+  const seen = new Set();
+  const entryName = (i) => `constellations.json[${i}]`;
+  const isNonEmptyString = (v) => typeof v === 'string' && v.trim() !== '';
+  constellations.forEach((c, i) => {
+    const src = entryName(i);
+    if (typeof c !== 'object' || c === null || Array.isArray(c)) {
+      errors.push(`${src}: entry must be an object`);
+      return;
+    }
+    if (!isNonEmptyString(c.id)) errors.push(`${src}: missing or empty "id"`);
+    else if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(c.id))
+      errors.push(`${src}: id "${c.id}" is not kebab-case`);
+    if (seen.has(c.id)) errors.push(`${src}: duplicate constellation id "${c.id}"`);
+    else if (typeof c.id === 'string') seen.add(c.id);
+    if (!isNonEmptyString(c.name)) errors.push(`${src}: missing or empty "name"`);
+    if (!isNonEmptyString(c.prefix)) errors.push(`${src}: missing or empty "prefix"`);
+    if (!isNonEmptyString(c.color)) errors.push(`${src}: missing or empty "color"`);
+    const a = c.anchor;
+    if (
+      typeof a !== 'object' ||
+      a === null ||
+      Array.isArray(a) ||
+      typeof a.x !== 'number' ||
+      typeof a.y !== 'number'
+    ) {
+      errors.push(`${src}: "anchor" must be { x: number, y: number }`);
+    }
+  });
   return errors;
 }
 

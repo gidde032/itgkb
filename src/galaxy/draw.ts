@@ -2,7 +2,7 @@ import type { Constellation } from '../content/types';
 import type { ZoomTransform } from 'd3-zoom';
 import type { StarLink } from './links';
 import type { DisplayPoint } from './display';
-import { hashString } from '../layout/curatedForce';
+import { hashString } from '../util/hash';
 
 export interface StarMeta {
   color: string;

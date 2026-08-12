@@ -7,11 +7,20 @@ import { parseFrontmatterBlock, validateFrontmatter } from '../../scripts/valida
 // own content. The template must validate out of the box (unique id aside).
 
 const raw = (
-  import.meta.glob('../../content/TEMPLATE.md', { query: '?raw', import: 'default', eager: true }) as Record<
-    string,
-    string
-  >
-)[Object.keys(import.meta.glob('../../content/TEMPLATE.md', { query: '?raw', import: 'default', eager: true }))[0]];
+  import.meta.glob('../../content/TEMPLATE.md', {
+    query: '?raw',
+    import: 'default',
+    eager: true,
+  }) as Record<string, string>
+)[
+  Object.keys(
+    import.meta.glob('../../content/TEMPLATE.md', {
+      query: '?raw',
+      import: 'default',
+      eager: true,
+    }),
+  )[0]
+];
 
 describe('TEMPLATE validates out of the box (P6-A3)', () => {
   it('has frontmatter that passes field validation', () => {

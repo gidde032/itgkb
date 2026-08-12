@@ -6,7 +6,13 @@ describe('SearchBar', () => {
   it('reports typed queries and shows a match count (FR-8)', () => {
     const onChange = vi.fn();
     render(
-      <SearchBar query="" matchCount={3} onChange={onChange} onOpenTopMatch={() => {}} onClear={() => {}} />,
+      <SearchBar
+        query=""
+        matchCount={3}
+        onChange={onChange}
+        onOpenTopMatch={() => {}}
+        onClear={() => {}}
+      />,
     );
     fireEvent.change(screen.getByRole('searchbox', { name: 'Search articles' }), {
       target: { value: 'calendar' },
@@ -17,7 +23,13 @@ describe('SearchBar', () => {
 
   it('shows an actionable empty state', () => {
     render(
-      <SearchBar query="zz" matchCount={0} onChange={() => {}} onOpenTopMatch={() => {}} onClear={() => {}} />,
+      <SearchBar
+        query="zz"
+        matchCount={0}
+        onChange={() => {}}
+        onOpenTopMatch={() => {}}
+        onClear={() => {}}
+      />,
     );
     expect(screen.getByRole('status')).toHaveTextContent('No matching stars');
   });
@@ -26,7 +38,13 @@ describe('SearchBar', () => {
     const onOpenTopMatch = vi.fn();
     const onClear = vi.fn();
     render(
-      <SearchBar query="q" matchCount={2} onChange={() => {}} onOpenTopMatch={onOpenTopMatch} onClear={onClear} />,
+      <SearchBar
+        query="q"
+        matchCount={2}
+        onChange={() => {}}
+        onOpenTopMatch={onOpenTopMatch}
+        onClear={onClear}
+      />,
     );
     const input = screen.getByRole('searchbox', { name: 'Search articles' });
     fireEvent.keyDown(input, { key: 'Enter' });
@@ -37,18 +55,30 @@ describe('SearchBar', () => {
 
   it('hides the count when no search is active', () => {
     render(
-      <SearchBar query="" matchCount={null} onChange={() => {}} onOpenTopMatch={() => {}} onClear={() => {}} />,
+      <SearchBar
+        query=""
+        matchCount={null}
+        onChange={() => {}}
+        onOpenTopMatch={() => {}}
+        onClear={() => {}}
+      />,
     );
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 });
 
-
 // A2 UI: fallback results are labeled honestly as close matches.
 describe('partial match labeling (A2)', () => {
   it('says "close matches" when results are best-effort', () => {
     render(
-      <SearchBar query="q" matchCount={3} partial onChange={() => {}} onOpenTopMatch={() => {}} onClear={() => {}} />,
+      <SearchBar
+        query="q"
+        matchCount={3}
+        partial
+        onChange={() => {}}
+        onOpenTopMatch={() => {}}
+        onClear={() => {}}
+      />,
     );
     expect(screen.getByRole('status')).toHaveTextContent('3 close matches');
   });

@@ -4,9 +4,9 @@
 
 **▶ Live demo: https://gidde032.github.io/itgkb/**
 
-An explorable IT knowledge base for the Carlson IT Service Center, rendered as
-a galaxy: every article is a star, stars cluster into constellations by
-category, and proximity means topical similarity.
+An explorable, vendor-neutral IT knowledge base rendered as a galaxy: every
+article is a star, stars cluster into constellations by category, and proximity
+means topical similarity. Part Wikipedia, part star chart.
 
 ## Run it
 
@@ -29,22 +29,36 @@ return home.
 
 ## Add or edit an article
 
-1. Copy `content/TEMPLATE.md` into `content/articles/<your-id>.md`.
-2. Fill in the frontmatter (id, title, constellation, tags, summary) and the
-   body sections. Leave `related` empty (`[]`) or list ids of articles that
-   already exist — unresolvable ids fail validation.
+1. Copy `content/TEMPLATE.md` into `content/articles/<your-id>.md`. The filename
+   must match the frontmatter `id` (e.g. `clear-stale-port.md` →
+   `id: clear-stale-port`).
+2. Fill in the frontmatter (`id`, `title`, `constellation`, `tags`, `summary`)
+   and the body sections. Leave `related` empty (`[]`) or list ids of articles
+   that already exist — unresolvable ids fail validation.
 3. `npm run validate:content` — fix anything it flags.
 4. Reload the dev server. Your star is in the galaxy.
 
-Constellations live in `content/constellations.json` (id, name, map position,
-color).
+`constellation` must be one of the ids in `content/constellations.json`
+(`workspace-email`, `ticketing-itsm`, `dev-environment`, `networking`,
+`accounts-identity`, `hardware-endpoints`, `security`). That file also holds each
+constellation's display name, catalog prefix, anchor position, and accent color.
+
+**Vendor-neutral content.** Public articles are organization-agnostic: no
+employer/team names, internal hostnames, intranet URLs, or PII.
+`npm run check:sensitivity` reports violations.
 
 ## Development
 
-- `npm run gates` — full quality gate: typecheck, lint, tests + coverage
-  floor, content validation, production build. Must be green before merging.
-  CI (`.github/workflows/ci.yml`) runs the same gate on every push and PR.
+- `npm run gates` — full quality gate: format check, typecheck, lint, tests +
+  coverage floor, content validation, and a production build. Must be green
+  before merging. CI (`.github/workflows/ci.yml`) runs the same gate on every
+  push and PR; the Pages deploy (`.github/workflows/deploy.yml`) re-runs the
+  quality gates before publishing, so a red build can't ship.
+- `npm run gates:quality` — the gate chain without the build (used by the deploy
+  job, which builds separately with the Pages base path).
 - `npm test` — test suite only.
+- `npm run check:sensitivity` — content-sensitivity report (advisory; becomes a
+  hard gate once the seed articles are fully generalized — tracked in #24).
 
 ## Architecture
 
@@ -54,12 +68,17 @@ where positions or search results come from:
 - **Content pipeline.** Articles are markdown files in `content/articles/` with
   validated YAML frontmatter (schema in `SPEC.md` §5). `npm run validate:content`
   is the gate; nothing hardcodes article bodies in components.
-- **Provider seams.** Layout and search sit behind provider interfaces
-  (`src/layout/types.ts`) — a `LayoutProvider` yields star positions and a
-  `SearchProvider` yields match state. Smarter backends can be swapped in later
-  without touching the UI.
+- **Provider seams.** Layout and search sit behind provider interfaces — a
+  `LayoutProvider` (`src/layout/types.ts`) yields star positions and a
+  `SearchProvider` (`src/search/types.ts`) yields match state. Smarter backends
+  can be swapped in later without touching the UI.
 - **Renderer.** The galaxy consumes positions and match state only; it never
   inspects article bodies. This keeps the near-term build to text search with no
   AI/semantic features.
+
+The visual system (color, type, the cartographic "instrument" layer of catalog
+IDs and a coordinate HUD) is defined in `design/DESIGN.md`; `design/tokens.css`
+is the ratified design reference, and `src/styles.css` holds the implemented
+token subset.
 
 See `SPEC.md` for full scope and the extensibility contracts.

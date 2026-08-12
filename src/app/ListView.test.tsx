@@ -9,7 +9,17 @@ const constellations: Constellation[] = [
 ];
 
 function art(id: string, title: string, constellation: string, stub = false): Article {
-  return { id, title, constellation, tags: [], summary: `${title} summary`, stub, related: [], body: '', sourceName: `${id}.md` };
+  return {
+    id,
+    title,
+    constellation,
+    tags: [],
+    summary: `${title} summary`,
+    stub,
+    related: [],
+    body: '',
+    sourceName: `${id}.md`,
+  };
 }
 
 const articles = [
@@ -20,7 +30,14 @@ const articles = [
 
 describe('ListView (NF-7)', () => {
   it('groups by constellation in config order and sorts titles within groups', () => {
-    render(<ListView articles={articles} constellations={constellations} matchIds={null} onOpen={() => {}} />);
+    render(
+      <ListView
+        articles={articles}
+        constellations={constellations}
+        matchIds={null}
+        onOpen={() => {}}
+      />,
+    );
     const headings = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
     expect(headings).toEqual(['Alpha Group', 'Beta Group']);
     const buttons = screen.getAllByRole('button').map((b) => b.textContent);
@@ -29,7 +46,14 @@ describe('ListView (NF-7)', () => {
   });
 
   it('marks stub articles', () => {
-    render(<ListView articles={articles} constellations={constellations} matchIds={null} onOpen={() => {}} />);
+    render(
+      <ListView
+        articles={articles}
+        constellations={constellations}
+        matchIds={null}
+        onOpen={() => {}}
+      />,
+    );
     const stubButton = screen.getByRole('button', { name: /Alpha article/ });
     expect(stubButton.textContent).toContain('stub');
     const richButton = screen.getByRole('button', { name: /Beta article/ });
@@ -38,20 +62,39 @@ describe('ListView (NF-7)', () => {
 
   it('filters by active search matches and hides empty groups', () => {
     render(
-      <ListView articles={articles} constellations={constellations} matchIds={new Set(['b1'])} onOpen={() => {}} />,
+      <ListView
+        articles={articles}
+        constellations={constellations}
+        matchIds={new Set(['b1'])}
+        onOpen={() => {}}
+      />,
     );
     expect(screen.queryByRole('heading', { name: 'Alpha Group' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Beta article/ })).toBeInTheDocument();
   });
 
   it('shows an empty state when nothing matches', () => {
-    render(<ListView articles={articles} constellations={constellations} matchIds={new Set()} onOpen={() => {}} />);
+    render(
+      <ListView
+        articles={articles}
+        constellations={constellations}
+        matchIds={new Set()}
+        onOpen={() => {}}
+      />,
+    );
     expect(screen.getByText('No articles match this search.')).toBeInTheDocument();
   });
 
   it('opens an article on activation', () => {
     const onOpen = vi.fn();
-    render(<ListView articles={articles} constellations={constellations} matchIds={null} onOpen={onOpen} />);
+    render(
+      <ListView
+        articles={articles}
+        constellations={constellations}
+        matchIds={null}
+        onOpen={onOpen}
+      />,
+    );
     fireEvent.click(screen.getByRole('button', { name: /Beta article/ }));
     expect(onOpen).toHaveBeenCalledWith('b1');
   });

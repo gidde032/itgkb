@@ -13,7 +13,9 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const articlesDir = join(root, 'content', 'articles');
 
 let findings = [];
-for (const file of readdirSync(articlesDir).filter((f) => f.endsWith('.md')).sort()) {
+for (const file of readdirSync(articlesDir)
+  .filter((f) => f.endsWith('.md'))
+  .sort()) {
   const raw = readFileSync(join(articlesDir, file), 'utf8');
   findings = findings.concat(findSensitiveMatches(file, raw));
 }
@@ -31,8 +33,15 @@ if (findings.length > 0) {
     console.error(`\n  ${file}`);
     for (const f of fs) console.error(`    L${f.line}  [${f.patternId}] "${f.match}"`);
   }
-  const counts = findings.reduce((acc, f) => ((acc[f.patternId] = (acc[f.patternId] ?? 0) + 1), acc), {});
-  console.error(`\n  by category: ${Object.entries(counts).map(([k, v]) => `${k}=${v}`).join(', ')}`);
+  const counts = findings.reduce(
+    (acc, f) => ((acc[f.patternId] = (acc[f.patternId] ?? 0) + 1), acc),
+    {},
+  );
+  console.error(
+    `\n  by category: ${Object.entries(counts)
+      .map(([k, v]) => `${k}=${v}`)
+      .join(', ')}`,
+  );
   process.exit(1);
 }
 console.log('Content-sensitivity check passed: no organization-specific data found.');

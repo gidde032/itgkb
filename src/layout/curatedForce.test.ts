@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { CuratedForceLayout, hashString, sharedTagCount } from './curatedForce';
+import { CuratedForceLayout } from './curatedForce';
+import { hashString } from '../util/hash';
+import { sharedTagCount } from '../util/tags';
 import type { Article, Constellation } from '../content/types';
 
 const constellations: Constellation[] = [

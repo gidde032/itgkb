@@ -15,7 +15,8 @@
     "test:coverage": "vitest run --coverage",
     "validate:content": "node scripts/validate-content.mjs",
     "check:sensitivity": "node scripts/check-sensitivity.mjs",
-    "gates": "npm run typecheck && npm run lint && npm run test:coverage && npm run validate:content && vite build"
+    "gates": "npm run gates:quality && vite build",
+    "gates:quality": "npm run format:check && npm run typecheck && npm run lint && npm run test:coverage && npm run validate:content"
   },
   "dependencies": {
     "@fontsource/archivo-narrow": "^5.3.0",

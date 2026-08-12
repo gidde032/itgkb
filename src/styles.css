@@ -8,7 +8,7 @@
   --starlight: #e9eef8;
   --text: #d3dcf0;
   --dim: #8593b0;
-  --faint: #5c6884;
+  --faint: #6b7a9a; /* AA: 4.59:1 on --ink (audit P-D: was #5c6884 at 3.55:1) */
   --star-core: #fbf6ee;
 
   /* Accents — V1 split: warm brand / cool telemetry */
@@ -257,7 +257,7 @@ body,
   color: var(--brand);
   margin-bottom: 0.6rem;
 }
-.article-panel__header h1 {
+.article-panel__header h2 {
   font-family: var(--font-display);
   font-weight: 600;
   font-size: 1.6rem;
@@ -351,7 +351,7 @@ body,
   padding-left: 1.25rem;
 }
 
-.article-panel__related h2 {
+.article-panel__related h3 {
   font-family: var(--font-chart);
   font-weight: 700;
   font-size: 0.66rem;
@@ -388,6 +388,53 @@ body,
 :focus-visible {
   outline: 2px solid var(--brand);
   outline-offset: 2px;
+}
+
+/* ---------------- Accessibility utilities ---------------- */
+/* Landmark wrapper that adds <main> semantics without disturbing the
+   absolutely-positioned app layout. */
+.app-main {
+  display: contents;
+}
+
+/* Screen-reader-only text (related-button prefixes, page heading). */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Skip link: off-screen until focused, then keyboard users can jump past the
+   canvas to search. */
+.skip-link {
+  position: absolute;
+  left: 0.5rem;
+  top: -3rem;
+  z-index: 10;
+  padding: 0.5rem 0.75rem;
+  background: var(--starlight);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-weight: 600;
+  border-radius: var(--radius);
+  transition: top 160ms var(--ease-out);
+}
+.skip-link:focus {
+  top: 0.5rem;
+}
+
+/* Lazy-loaded article panel placeholder (P6 Suspense fallback). */
+.article-panel--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--dim);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -3,6 +3,8 @@ import {
   validateFrontmatter,
   validateCollection,
   findSensitiveMatches,
+  validateFilenameId,
+  validateConstellations,
 } from '../../scripts/validate-lib.mjs';
 
 const good = {
@@ -111,6 +113,62 @@ describe('content-sensitivity scan (M4 #22)', () => {
     expect(found[0].line).toBe(2);
   });
   it('passes clean, vendor-generic text', () => {
-    expect(findSensitiveMatches('a.md', 'Open your ticketing system and file a request.')).toEqual([]);
+    expect(findSensitiveMatches('a.md', 'Open your ticketing system and file a request.')).toEqual(
+      [],
+    );
+  });
+});
+
+// P8 regression (audit: id/filename drift passed the gate silently).
+describe('validateFilenameId (P8)', () => {
+  it('accepts when id matches the filename', () => {
+    expect(validateFilenameId('a-one.md', 'a-one', 'a-one.md')).toEqual([]);
+  });
+  it('rejects when id differs from the filename', () => {
+    const errs = validateFilenameId('a-one.md', 'a-two', 'a-one.md');
+    expect(errs.join(' ')).toMatch(/does not match filename/);
+  });
+  it('rejects a missing id', () => {
+    expect(validateFilenameId('a-one.md', undefined, 'a-one.md').length).toBe(1);
+  });
+});
+
+// P7 regression (audit: malformed constellations.json crashed layout but passed
+// validate:content because only c.id was read).
+describe('validateConstellations (P7)', () => {
+  const good = [
+    {
+      id: 'networking',
+      name: 'Networking',
+      prefix: 'NET',
+      color: '#4fc2b0',
+      anchor: { x: 1, y: 2 },
+    },
+  ];
+  it('accepts a well-formed constellation set', () => {
+    expect(validateConstellations(good)).toEqual([]);
+  });
+  it('rejects a missing anchor', () => {
+    const errs = validateConstellations([{ ...good[0], anchor: undefined }]);
+    expect(errs.join(' ')).toMatch(/anchor/);
+  });
+  it('rejects an anchor with non-number coordinates', () => {
+    const errs = validateConstellations([{ ...good[0], anchor: { x: '1', y: 2 } }]);
+    expect(errs.join(' ')).toMatch(/anchor/);
+  });
+  it('rejects a missing prefix', () => {
+    const errs = validateConstellations([{ ...good[0], prefix: '' }]);
+    expect(errs.join(' ')).toMatch(/prefix/);
+  });
+  it('rejects a missing color', () => {
+    const errs = validateConstellations([{ ...good[0], color: '' }]);
+    expect(errs.join(' ')).toMatch(/color/);
+  });
+  it('rejects a duplicate constellation id', () => {
+    const errs = validateConstellations([...good, { ...good[0] }]);
+    expect(errs.join(' ')).toMatch(/duplicate constellation id/);
+  });
+  it('rejects an empty array', () => {
+    expect(validateConstellations([]).join(' ')).toMatch(/non-empty array/);
   });
 });

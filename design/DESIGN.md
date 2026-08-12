@@ -1,8 +1,9 @@
 # itgkb — Design System (M2 ratified contract)
 
 Status: **RATIFIED** 2026-08-11 (M2 · design confirmation). Source of truth for
-M3 visual refinement. Tokens live in `design/tokens.css`; reference mockups in
-`design/mockups/`.
+M3 visual refinement. `design/tokens.css` is the ratified design reference;
+`src/styles.css` holds the implemented token subset (kept in agreement by hand).
+Reference mockups in `design/mockups/`.
 
 Method: `agentic-product-discovery` design lane — visual brief → direction panel
 → controlled refinement rounds (typography, shape, instrument type, accent hue,
@@ -24,21 +25,21 @@ everything, and rounded "pill" components.
 
 Base (cool navy):
 
-| token | hex | role |
-|---|---|---|
-| `--ink` | `#060A14` | app background |
-| `--haze` | `#0E1626` | panels / raised surfaces |
-| `--line` / `--line-2` | `#1D2942` / `#2A3860` | hairlines / borders |
-| `--starlight` | `#E9EEF8` | headings |
-| `--text` | `#D3DCF0` | body |
-| `--dim` / `--faint` | `#8593B0` / `#5C6884` | secondary / tertiary |
+| token                 | hex                   | role                                           |
+| --------------------- | --------------------- | ---------------------------------------------- |
+| `--ink`               | `#060A14`             | app background                                 |
+| `--haze`              | `#0E1626`             | panels / raised surfaces                       |
+| `--line` / `--line-2` | `#1D2942` / `#2A3860` | hairlines / borders                            |
+| `--starlight`         | `#E9EEF8`             | headings                                       |
+| `--text`              | `#D3DCF0`             | body                                           |
+| `--dim` / `--faint`   | `#8593B0` / `#6B7A9A` | secondary / tertiary (`--faint` lifted for AA) |
 
 **Two-accent split (V1 — "warm brand / cool telemetry"):**
 
-| token | hex | used for |
-|---|---|---|
-| `--brand` (coral) | `#F2A0A6` | wordmark accent, eyebrow, search glyph, **selection/active**, related-link arrows |
-| `--instrument` (bright sky) | `#8FC2EE` | **catalog IDs + HUD readout only** (the data/telemetry layer) |
+| token                       | hex       | used for                                                                          |
+| --------------------------- | --------- | --------------------------------------------------------------------------------- |
+| `--brand` (coral)           | `#F2A0A6` | wordmark accent, eyebrow, search glyph, **selection/active**, related-link arrows |
+| `--instrument` (bright sky) | `#8FC2EE` | **catalog IDs + HUD readout only** (the data/telemetry layer)                     |
 
 The split is semantic: warm = brand & interaction, cool = machine/catalog data.
 Do not use `--instrument` for interactive affordances, or `--brand` for catalog
@@ -46,15 +47,15 @@ telemetry — the meaning is the point.
 
 **Constellations (7)** — used for star fill, halo, constellation lines, labels:
 
-| id | name | token | hex |
-|---|---|---|---|
-| `workspace-email` | Workspace & Email | `--c-workspace` | `#E4B363` |
-| `ticketing-itsm` | Ticketing & ITSM | `--c-ticketing` | `#E2985C` |
-| `dev-environment` | Dev Environment | `--c-dev` | `#7CC97A` |
-| `networking` | Networking | `--c-networking` | `#4FC2B0` |
-| `accounts-identity` | Accounts & Identity | `--c-accounts` | `#7E8CE8` |
-| `hardware-endpoints` | Hardware & Endpoints | `--c-hardware` | `#C77FD0` |
-| `security` | Security | `--c-security` | `#DD6070` |
+| id                   | name                 | token            | hex       |
+| -------------------- | -------------------- | ---------------- | --------- |
+| `workspace-email`    | Workspace & Email    | `--c-workspace`  | `#E4B363` |
+| `ticketing-itsm`     | Ticketing & ITSM     | `--c-ticketing`  | `#E2985C` |
+| `dev-environment`    | Dev Environment      | `--c-dev`        | `#7CC97A` |
+| `networking`         | Networking           | `--c-networking` | `#4FC2B0` |
+| `accounts-identity`  | Accounts & Identity  | `--c-accounts`   | `#7E8CE8` |
+| `hardware-endpoints` | Hardware & Endpoints | `--c-hardware`   | `#C77FD0` |
+| `security`           | Security             | `--c-security`   | `#DD6070` |
 
 Contrast: all text/instrument colors target **WCAG AA** on `--ink`/`--haze` at
 their used sizes. `--instrument` and `--brand` verified legible at the 11px
@@ -66,11 +67,11 @@ offset from `--brand`/`--instrument`.
 Self-host in M3 (Fontsource/woff2). **Do not ship the Google Fonts CDN** used in
 the mockups.
 
-| role | family | token | notes |
-|---|---|---|---|
-| Display — wordmark, article titles, related links | **Newsreader** (serif) | `--font-display` | 600; editorial, sturdy at title sizes |
-| Body — summaries, UI, reading | **Hanken Grotesk** | `--font-body` | 400/500/600 |
-| Instrument — catalog IDs, HUD, section labels, tags | **Archivo Narrow** | `--font-chart` | 600/700, UPPERCASE, tracked `--tracking-label`. This replaces monospace entirely (the "cartographic label" voice). |
+| role                                                | family                 | token            | notes                                                                                                              |
+| --------------------------------------------------- | ---------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Display — wordmark, article titles, related links   | **Newsreader** (serif) | `--font-display` | 600; editorial, sturdy at title sizes                                                                              |
+| Body — summaries, UI, reading                       | **Hanken Grotesk**     | `--font-body`    | 400/500/600                                                                                                        |
+| Instrument — catalog IDs, HUD, section labels, tags | **Archivo Narrow**     | `--font-chart`   | 600/700, UPPERCASE, tracked `--tracking-label`. This replaces monospace entirely (the "cartographic label" voice). |
 
 Wordmark: `itgkb` in Newsreader; the leading `it` is italic in `--brand`.
 
@@ -118,7 +119,7 @@ NOT changed in M2 to keep the 20 current articles valid):
 - `networking` → `networking` (unchanged)
 - `account-access` → `accounts-identity`
 - `hardware` → `hardware-endpoints`
-- *(new)* `security` — no articles yet; M4 authors them.
+- _(new)_ `security` — no articles yet; M4 authors them.
 
 ## 8. Deferred to implementation (not decided in M2)
 
@@ -138,15 +139,15 @@ NOT changed in M2 to keep the 20 current articles valid):
 
 ## 10. Decision register
 
-| decision | state | note |
-|---|---|---|
-| Base direction A (Deep Field) | RATIFIED | over B Observatory / C Vivid |
-| Serif = Newsreader | RATIFIED | over Fraunces / Instrument Serif |
-| Body = Hanken Grotesk | RATIFIED | |
-| Instrument = Archivo Narrow (non-mono cartographic) | RATIFIED | monospace rejected as the "AI tell" |
+| decision                                            | state    | note                                         |
+| --------------------------------------------------- | -------- | -------------------------------------------- |
+| Base direction A (Deep Field)                       | RATIFIED | over B Observatory / C Vivid                 |
+| Serif = Newsreader                                  | RATIFIED | over Fraunces / Instrument Serif             |
+| Body = Hanken Grotesk                               | RATIFIED |                                              |
+| Instrument = Archivo Narrow (non-mono cartographic) | RATIFIED | monospace rejected as the "AI tell"          |
 | Accents = coral `#F2A0A6` + sky `#8FC2EE`, V1 split | RATIFIED | over amber; navy/mint/powder/forest rejected |
-| Shape: no pills, bracketed tags, squared fields | RATIFIED | |
-| 7 constellations, neutral names + Security | RATIFIED | |
-| Motion language | RATIFIED | parallax / fly-to / hover / subtle twinkle |
-| Dark-only for v1.0.0 | RATIFIED | light mode deferred |
-| Light/daytime theme | DEFERRED | post-1.0 |
+| Shape: no pills, bracketed tags, squared fields     | RATIFIED |                                              |
+| 7 constellations, neutral names + Security          | RATIFIED |                                              |
+| Motion language                                     | RATIFIED | parallax / fly-to / hover / subtle twinkle   |
+| Dark-only for v1.0.0                                | RATIFIED | light mode deferred                          |
+| Light/daytime theme                                 | DEFERRED | post-1.0                                     |

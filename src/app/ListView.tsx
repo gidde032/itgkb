@@ -12,7 +12,12 @@ export interface ListViewProps {
  * NF-7 narrow-viewport fallback: the same knowledge base as a grouped,
  * keyboard-navigable list. Search filters it exactly as it dims the galaxy.
  */
-export function ListView({ articles, constellations, matchIds, onOpen }: ListViewProps): JSX.Element {
+export function ListView({
+  articles,
+  constellations,
+  matchIds,
+  onOpen,
+}: ListViewProps): JSX.Element {
   const groups = constellations
     .map((c) => ({
       constellation: c,

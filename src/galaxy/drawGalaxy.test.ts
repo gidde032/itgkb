@@ -35,7 +35,9 @@ const constellations: Constellation[] = [
 ];
 const sceneWith = (title: string) => ({
   points: [{ id: 's1', x: 10, y: 10, z: 0.5 }],
-  meta: new Map([['s1', { color: '#ffffff', stub: false, title, summary: 's', catalog: 'GW-001' }]]),
+  meta: new Map([
+    ['s1', { color: '#ffffff', stub: false, title, summary: 's', catalog: 'GW-001' }],
+  ]),
   links: [],
   dust: [],
 });
@@ -66,7 +68,9 @@ describe('star labels (#16)', () => {
 
   it('truncates a long title with an ellipsis', () => {
     const { ctx, fillTexts } = makeRecordingCtx();
-    const long = sceneWith('A very long article title that would otherwise sprawl across the galaxy');
+    const long = sceneWith(
+      'A very long article title that would otherwise sprawl across the galaxy',
+    );
     drawGalaxy(ctx, 800, 600, long, constellations, transformAt(2), null, null, null);
     expect(fillTexts().some((t) => t.endsWith('…') && t.length < 71)).toBe(true);
   });
