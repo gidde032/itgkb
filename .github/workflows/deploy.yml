@@ -27,6 +27,13 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
+      # Gate the deploy so a red master build can never reach Pages. CI runs the
+      # same gates on the push, but CI and deploy trigger in parallel — running
+      # gates:quality here makes the deploy authoritative for its own artifact.
+      # The Pages build (GITHUB_PAGES=true) then runs separately because it
+      # needs the /itgkb/ base path, distinct from the dev build.
+      - name: Quality gates (format, typecheck, lint, test+coverage, content)
+        run: npm run gates:quality
       - name: Build (Pages base path)
         run: npm run build
         env:
