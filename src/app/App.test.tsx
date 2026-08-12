@@ -7,12 +7,12 @@ describe('App integration', () => {
   it('loads real content with zero errors (FR-1 on the shipped article set)', () => {
     const { articles, constellations, errors } = loadContent();
     expect(errors).toEqual([]);
-    // Phase 4 contract: the complete seed set — exact counts, not minimums.
-    expect(articles).toHaveLength(20);
-    // M4 remap: 7 vendor-neutral constellations. Security is defined but
-    // intentionally has no articles yet — content lands in M4 #25.
-    expect(constellations).toHaveLength(7);
-    expect(articles.filter((a) => a.stub)).toHaveLength(3);
+    // M4 cut/relocate: 10 articles remain (Dev Environment relocated to the
+    // vault; hardware-intake + 3 TDX cut). ticketing-itsm and security are
+    // defined but await content/revisit in #25.
+    expect(articles).toHaveLength(10);
+    expect(constellations).toHaveLength(6);
+    expect(articles.filter((a) => a.stub)).toHaveLength(2);
     // Every article belongs to a defined constellation (no orphans).
     const constellationIds = new Set(constellations.map((c) => c.id));
     for (const a of articles) {

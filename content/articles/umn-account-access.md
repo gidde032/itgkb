@@ -7,7 +7,7 @@ summary:
   Common account access scenarios — resets, 2FA, lockouts — with the in-scope /
   refer-to-central-IT boundary for Carlson student employees.
 stub: true
-related: [tdx-escalation, tdx-creating-tickets]
+related: []
 ---
 
 ## Summary

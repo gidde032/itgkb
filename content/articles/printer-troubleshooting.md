@@ -7,7 +7,7 @@ summary:
   General diagnostic framework for the recurring printer problems — drivers, discovery,
   stuck queues, jams — pending Carlson-specific hardware details.
 stub: true
-related: [hardware-intake]
+related: []
 ---
 
 ## Summary
