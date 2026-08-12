@@ -20,19 +20,18 @@ The invitation itself is delivered normally.
 ## Diagnostic Steps
 
 1. Confirm the warning text refers to calendar visibility (free/busy), not delivery failure.
-2. Confirm the guest address is external to UMN's Workspace domain — this is expected for
-   external guests whose calendars are not shared across domains.
+2. Confirm the guest address is external to your organization's Workspace domain — this is
+   expected for external guests whose calendars are not shared across domains.
 
 ## Resolution Steps
 
 1. Reassure the user: the guest can still receive the invite, RSVP, and join any attached
    meeting link. No fix is required.
 2. If the organizer genuinely needs free/busy visibility for an external collaborator, that is
-   a cross-domain calendar sharing question — refer to the external domain sharing policy
+   a cross-domain calendar-sharing question — refer to the external-domain sharing policy
    (admin-level) rather than treating it as a bug.
 
 ## Notes / Edge Cases
 
-- Good ticket framing: "expected behavior, informational warning" — resolve rather than
+- Good framing for the user: "expected behavior, informational warning" — resolve rather than
   escalate.
-- Draft note: authored from summarized ticket history; red-pen against the original ticket.

@@ -5,7 +5,7 @@ constellation: workspace-email
 tags: [google-calendar, sharing, external-domains, admin-console, guests]
 summary:
   User gets a "calendar use limit exceeded" style error when adding collaborators or guests to
-  an event, often involving external (non-UMN) addresses.
+  an event, often involving external addresses.
 stub: false
 related: [gcal-cannot-be-shown, workspace-service-status, gcal-external-sharing]
 ---
@@ -19,10 +19,10 @@ sharing policy, or a transient backend error.
 
 ## Diagnostic Steps
 
-1. Ask how many guests are on the event. Google enforces a guest limit (around 200 for standard
-   events — verify current limit); large recurring meetings can hit it.
-2. Check whether the address being added is external (not `@umn.edu`). External addresses are
-   subject to the Workspace admin sharing policy.
+1. Ask how many guests are on the event. Google enforces a per-event guest limit; very large or
+   recurring meetings can approach it.
+2. Check whether the address being added is external to your organization's domain. External
+   addresses are subject to the Workspace admin sharing policy.
 3. Check whether the external address is a non-Google account (no Google/Workspace identity
    behind it) — behavior differs from external Gmail/Workspace addresses.
 4. Rule out a stale session: have the user try a new browser session or incognito window (see
@@ -45,5 +45,3 @@ sharing policy, or a transient backend error.
 - Transient cases often resolve overnight with no intervention. Suggested closure language:
   "Resolved spontaneously. Likely momentary backend error. User advised to try a new browser
   instance, wait 15–30 minutes, and report if it recurs."
-- Draft note: authored from summarized ticket history; details marked "(verify)" or approximate
-  should be confirmed against the original ticket before treating as authoritative.

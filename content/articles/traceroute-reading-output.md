@@ -7,7 +7,7 @@ summary:
   How to run traceroute (Mac/Linux) or tracert (Windows) and read the hops, why "* * *" is
   usually not an error, and what latency jumps mean.
 stub: false
-related: []
+related: [network-architecture]
 ---
 
 ## Summary
@@ -23,20 +23,20 @@ destination up."
 3. Interpret `* * *`: the router at that hop is dropping or deprioritizing probe packets. If
    later hops respond normally, the path is fine — this is common and not an error.
 4. Interpret latency jumps: a sustained increase that persists through all later hops marks a
-   real cost — typically geographic distance or a network boundary (e.g., leaving the campus
-   network for the ISP). A spike at one hop that disappears afterward is that router
-   deprioritizing probe responses, not path latency.
+   real cost — typically geographic distance or a network boundary (e.g., leaving your
+   organization's network for the ISP). A spike at one hop that disappears afterward is that
+   router deprioritizing probe responses, not path latency.
 
 ## Resolution Steps
 
-1. If latency/loss begins inside the campus network: gather the output and escalate with the
-   hop where it starts.
-2. If it begins after the ISP boundary: the issue is outside UMN's network — document and set
-   expectations with the user.
+1. If latency/loss begins inside your organization's network: gather the output and escalate
+   with the hop where it starts.
+2. If it begins after the ISP boundary: the issue is outside your organization's network —
+   document and set expectations with the user.
 
 ## Notes / Edge Cases
 
-- Always capture the full output in the ticket before closing; the hop where trouble starts is
-  the whole diagnostic value.
-- Related: UMN network architecture basics (later content batch) explains the specific hops
-  you'll see from campus machines.
+- Always capture the full output before closing; the hop where trouble starts is the whole
+  diagnostic value.
+- Related: the network-architecture basics article explains the internal hops you'll typically
+  see from an organization machine.
