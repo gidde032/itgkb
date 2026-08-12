@@ -12,7 +12,10 @@ interface Haystacks {
   body: string;
 }
 
-function scoreArticle(haystacks: Haystacks, terms: string[]): {
+function scoreArticle(
+  haystacks: Haystacks,
+  terms: string[],
+): {
   score: number;
   fields: Set<string>;
   matchedTerms: number;
@@ -70,8 +73,7 @@ export class TextSearch implements SearchProvider {
     return scored
       .filter((s) => s.matchedTerms > 0)
       .sort(
-        (a, b) =>
-          b.matchedTerms - a.matchedTerms || b.score - a.score || a.id.localeCompare(b.id),
+        (a, b) => b.matchedTerms - a.matchedTerms || b.score - a.score || a.id.localeCompare(b.id),
       )
       .map((s) => ({ id: s.id, score: s.score, fields: [...s.fields], partial: true }));
   }

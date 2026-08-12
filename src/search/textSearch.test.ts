@@ -3,12 +3,34 @@ import { TextSearch } from './textSearch';
 import type { Article } from '../content/types';
 
 function art(id: string, title: string, tags: string[], summary: string, body: string): Article {
-  return { id, title, constellation: 'c', tags, summary, stub: false, related: [], body, sourceName: `${id}.md` };
+  return {
+    id,
+    title,
+    constellation: 'c',
+    tags,
+    summary,
+    stub: false,
+    related: [],
+    body,
+    sourceName: `${id}.md`,
+  };
 }
 
 const articles = [
-  art('cal-share', 'Calendar sharing error', ['google-calendar', 'sharing'], 'Sharing fails.', 'Check the admin console.'),
-  art('printer', 'Printer setup', ['printing'], 'Install drivers.', 'Calendar of maintenance events.'),
+  art(
+    'cal-share',
+    'Calendar sharing error',
+    ['google-calendar', 'sharing'],
+    'Sharing fails.',
+    'Check the admin console.',
+  ),
+  art(
+    'printer',
+    'Printer setup',
+    ['printing'],
+    'Install drivers.',
+    'Calendar of maintenance events.',
+  ),
   art('vpn', 'VPN access', ['networking'], 'Remote access.', 'Use the campus VPN.'),
 ];
 
@@ -55,7 +77,10 @@ describe('TextSearch (FR-8)', () => {
   });
 
   it('is deterministic for tied scores', () => {
-    const tied = [art('b-art', 'same words', [], 'x', 'y'), art('a-art', 'same words', [], 'x', 'y')];
+    const tied = [
+      art('b-art', 'same words', [], 'x', 'y'),
+      art('a-art', 'same words', [], 'x', 'y'),
+    ];
     expect(s.search('same', tied).map((r) => r.id)).toEqual(['a-art', 'b-art']);
   });
 });
@@ -67,7 +92,13 @@ import { normalizeSearchText } from './normalize';
 describe('search normalization (A2)', () => {
   const s2 = new TextSearch();
   const punctArticles = [
-    art('gcal-update', "Google Calendar: \u201cEvent couldn't be updated\u201d error", ['google-calendar'], 'Update fails.', 'Details.'),
+    art(
+      'gcal-update',
+      "Google Calendar: \u201cEvent couldn't be updated\u201d error",
+      ['google-calendar'],
+      'Update fails.',
+      'Details.',
+    ),
   ];
 
   it('normalizeSearchText strips apostrophes and spaces out punctuation', () => {
