@@ -7,12 +7,12 @@ describe('App integration', () => {
   it('loads real content with zero errors (FR-1 on the shipped article set)', () => {
     const { articles, constellations, errors } = loadContent();
     expect(errors).toEqual([]);
-    // M4 cut/relocate: 10 articles remain (Dev Environment relocated to the
-    // vault; hardware-intake + 3 TDX cut). ticketing-itsm and security are
-    // defined but await content/revisit in #25.
+    // M4: 10 vendor-generic articles remain (Dev Environment relocated; TDX +
+    // hardware-intake cut). Both former stubs are now filled. ticketing-itsm
+    // and security are defined but await content/revisit in #25.
     expect(articles).toHaveLength(10);
     expect(constellations).toHaveLength(6);
-    expect(articles.filter((a) => a.stub)).toHaveLength(2);
+    expect(articles.filter((a) => a.stub)).toHaveLength(0);
     // Every article belongs to a defined constellation (no orphans).
     const constellationIds = new Set(constellations.map((c) => c.id));
     for (const a of articles) {

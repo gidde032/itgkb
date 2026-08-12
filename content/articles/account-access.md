@@ -1,46 +1,54 @@
 ---
 id: account-access
-title: 'Account access: scope and escalation'
+title: 'Account access: scope and routing'
 constellation: accounts-identity
-tags: [accounts, passwords, two-factor, lockouts, escalation]
+tags: [accounts, passwords, two-factor, box, escalation]
 summary:
-  Common account-access scenarios — resets, 2FA, lockouts — with the in-scope /
-  refer-to-central-IT boundary for front-line technicians.
-stub: true
+  What to route to the help desk, what users self-serve, and what to ticket across the common
+  account-access requests — password resets, MFA devices, email, and app accounts.
+stub: false
 related: []
 ---
 
 ## Summary
 
-Account-access requests are a predictable high-frequency category. The critical knowledge is
-the scope boundary: which actions a front-line technician performs directly, and which get
-referred to central IT / the identity team. Getting the boundary wrong either wastes the user's
-time or touches systems the service desk shouldn't.
+Account-access requests are a predictable, high-frequency category. The useful knowledge is
+routing: most requests are **not** self-service and belong at the organization's main help desk,
+while multi-factor device management is genuinely self-service, and a few app accounts are
+ticketed. Getting the routing right saves the user a round trip.
 
-## Common Scenarios
+## Password resets & general account support
 
-1. **Password reset** — organizations standardly provide a self-service reset portal; the first
-   move is directing the user there. Organization detail to fill in: the self-service reset URL,
-   and whether any reset action is in-scope at the service desk beyond directing to it.
-2. **Two-factor problems** — new device enrollment, lost device, no backup codes. Organization
-   detail to fill in: your MFA provider and which 2FA actions (e.g. re-enrollment) require
-   central IT.
-3. **Account lockout** — standard patterns are a cooldown wait or a central-IT unlock.
-   Organization detail to fill in: the actual lockout policy and unlock path.
-4. **New account provisioning** — organization detail to fill in: whether the service desk has
-   any local provisioning procedure or if it is entirely central.
+There is no self-service reset form. Route **all** password-reset requests and general account
+support to the organization's main help desk — do not attempt resets directly.
 
-## Scope Boundary
+## Multi-factor (MFA) device management
 
-Organization-specific: the definitive list of account actions in-scope at the service desk vs.
-referred to central IT, and the referral path (queue, contact, expected SLA).
+Adding, removing, and reactivating MFA devices is self-service through the MFA provider. For a
+Duo-based setup:
 
-## Verification Before Helping
+1. **Add or remove a device** — from a Duo authentication prompt, choose "Other options" →
+   "Manage devices" (Universal Prompt), then add or remove; see
+   <https://guide.duo.com/universal-prompt#add-or-manage-devices>.
+2. **Reactivate a previously connected device** (new phone, same number, or a reinstalled app) —
+   use the same "Manage devices" flow to reactivate the existing enrollment rather than starting
+   over.
 
-Organization-specific: identity-verification requirements before discussing any account with a
-walk-in or remote user (what ID or confirmation is required, per policy).
+Point the user at the self-service flow first; only escalate if they can't reach a prompt at all
+(e.g. no working device and no backup method).
+
+## Email domain requests
+
+Route email domain requests to the organization's main help desk.
+
+## Application accounts
+
+- **Box (or similar cloud storage)** — first check whether the user is already enrolled /
+  provisioned; if they are not, submit a ticket to have access provisioned.
+- **Research software / database accounts** — submit a ticket; these are provisioned per system,
+  not at the desk.
 
 ## Notes / Edge Cases
 
-- When referring out, write the handoff like an escalation note: scenario, what was already
-  checked, exact error text.
+- When routing out, write the handoff like an escalation note: scenario, what was already
+  checked, and the exact error text.
