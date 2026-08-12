@@ -46,6 +46,12 @@ export function GalaxyCanvas({
   });
   const renderRef = useRef<(() => void) | null>(null);
   const hudRef = useRef<HTMLSpanElement>(null);
+  // P14: cache prefers-reduced-motion once and keep it current via a single
+  // listener, instead of re-querying matchMedia on every animation frame.
+  const reducedMotionRef = useRef(prefersReducedMotion());
+  // P1: twinkle phase advances only while the loop is active, so it resumes
+  // seamlessly after an idle pause (no phase jump from wall-clock time).
+  const twinkleTimeRef = useRef(0);
 
   const meta = useMemo(() => {
     const colorByConstellation = new Map(constellations.map((c) => [c.id, c.color]));
@@ -74,6 +80,17 @@ export function GalaxyCanvas({
   const links = useMemo(() => computeConstellationLinks(articles), [articles]);
   const dust = useMemo(() => makeDust(140), []);
 
+  // P14: keep the cached reduced-motion flag current. One listener fires only on
+  // an actual preference change — never per frame.
+  useEffect(() => {
+    const mql = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => {
+      reducedMotionRef.current = mql.matches;
+    };
+    mql.addEventListener('change', update);
+    return () => mql.removeEventListener('change', update);
+  }, []);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -99,7 +116,7 @@ export function GalaxyCanvas({
     };
 
     const render = () => {
-      const reducedMotion = prefersReducedMotion();
+      const reducedMotion = reducedMotionRef.current;
       ctx.save();
       ctx.scale(dpr, dpr);
       drawGalaxy(
@@ -112,7 +129,7 @@ export function GalaxyCanvas({
         drawStateRef.current.selectedId,
         hoveredRef.current,
         drawStateRef.current.matchIds,
-        reducedMotion ? 0 : performance.now(),
+        reducedMotion ? 0 : twinkleTimeRef.current,
         reducedMotion ? 0 : 0.3,
       );
       ctx.restore();
@@ -130,7 +147,36 @@ export function GalaxyCanvas({
       }
     };
 
+    // #19: living-sky twinkle — a capped (~30fps) redraw loop, only when motion is
+    // allowed AND the user is actively interacting. The loop self-cancels after a
+    // short idle window so a still galaxy burns no CPU/GPU (audit P1: previously
+    // repainted forever even while a user read an article); any pan/zoom/hover/
+    // click wakes it instantly. requestAnimationFrame auto-throttles in background tabs.
+    const IDLE_MS = 2500;
+    let rafId = 0;
+    let lastFrame = 0;
+    let lastInteraction = performance.now();
+    function wake() {
+      lastInteraction = performance.now();
+      if (rafId === 0 && !reducedMotionRef.current) {
+        lastFrame = performance.now();
+        rafId = requestAnimationFrame(tick);
+      }
+    }
+    function tick(now: number) {
+      if (reducedMotionRef.current || now - lastInteraction > IDLE_MS) {
+        rafId = 0; // idle (or reduced motion granted mid-session): stop rescheduling
+        return;
+      }
+      // Cap dt so a backgrounded tab doesn't fast-forward the twinkle phase.
+      twinkleTimeRef.current += Math.min(64, now - lastFrame);
+      lastFrame = now;
+      render();
+      rafId = requestAnimationFrame(tick);
+    }
+
     const resize = () => {
+      wake();
       dpr = window.devicePixelRatio || 1;
       const rect = canvas.getBoundingClientRect();
       width = rect.width;
@@ -155,6 +201,7 @@ export function GalaxyCanvas({
       .on('zoom', (event) => {
         transformRef.current = event.transform;
         clearHover();
+        wake();
         render();
       });
     zoomRef.current = zoomBehavior;
@@ -173,11 +220,13 @@ export function GalaxyCanvas({
     };
 
     const onClick = (event: MouseEvent) => {
+      wake();
       const [wx, wy] = toWorld(event);
       onSelect(hitTest(currentPoints(), wx, wy, screenHitRadius(transformRef.current.k)));
     };
 
     const onMove = (event: MouseEvent) => {
+      wake();
       const [wx, wy] = toWorld(event);
       const points = currentPoints();
       const id = hitTest(points, wx, wy, screenHitRadius(transformRef.current.k));
@@ -214,19 +263,9 @@ export function GalaxyCanvas({
       void document.fonts.ready.then(() => renderRef.current?.());
     }
 
-    // #19: living-sky twinkle — a capped (~30fps) redraw loop, only when motion
-    // is allowed. requestAnimationFrame auto-throttles in background tabs.
-    let rafId = 0;
-    let lastFrame = 0;
-    const tick = (now: number) => {
-      rafId = requestAnimationFrame(tick);
-      if (now - lastFrame < 33) return;
-      lastFrame = now;
-      render();
-    };
-    if (!prefersReducedMotion()) {
-      rafId = requestAnimationFrame(tick);
-    }
+    // #19: living-sky twinkle starts on mount (motion allowed) and after any
+    // interaction via wake(); it self-cancels once idle (see tick above).
+    if (!reducedMotionRef.current) wake();
 
     return () => {
       renderRef.current = null;
@@ -259,7 +298,10 @@ export function GalaxyCanvas({
       .duration(motionDuration(500))
       .call(
         zoomBehavior.transform,
-        zoomIdentity.translate(rect.width / 2, rect.height / 2).scale(k).translate(-target.x, -target.y),
+        zoomIdentity
+          .translate(rect.width / 2, rect.height / 2)
+          .scale(k)
+          .translate(-target.x, -target.y),
       );
   }, [focus, positions]);
 
@@ -270,10 +312,7 @@ export function GalaxyCanvas({
     const rect = canvas.getBoundingClientRect();
     const rest = zoomIdentity.translate(rect.width / 2, rect.height / 2).scale(0.8);
     restTransformRef.current = rest;
-    select(canvas)
-      .transition()
-      .duration(motionDuration(450))
-      .call(zoomBehavior.transform, rest);
+    select(canvas).transition().duration(motionDuration(450)).call(zoomBehavior.transform, rest);
   };
 
   const hoveredMeta = hovered ? meta.get(hovered.id) : undefined;
@@ -287,7 +326,12 @@ export function GalaxyCanvas({
         aria-label="Interactive galaxy map of IT knowledge articles"
       />
       {hovered && hoveredMeta && hovered.id !== selectedId && (
-        <div className="star-tooltip" style={{ left: hovered.x, top: hovered.y }} role="status">
+        <div
+          className="star-tooltip"
+          style={{ left: hovered.x, top: hovered.y }}
+          role="tooltip"
+          aria-hidden="true"
+        >
           <strong>{hoveredMeta.title}</strong>
           <span>{hoveredMeta.summary}</span>
         </div>

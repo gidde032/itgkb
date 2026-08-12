@@ -3,7 +3,17 @@ import { computeConstellationLinks } from './links';
 import type { Article } from '../content/types';
 
 function art(id: string, constellation: string, tags: string[]): Article {
-  return { id, title: id, constellation, tags, summary: 's', stub: false, related: [], body: '', sourceName: `${id}.md` };
+  return {
+    id,
+    title: id,
+    constellation,
+    tags,
+    summary: 's',
+    stub: false,
+    related: [],
+    body: '',
+    sourceName: `${id}.md`,
+  };
 }
 
 describe('computeConstellationLinks', () => {
@@ -13,7 +23,7 @@ describe('computeConstellationLinks', () => {
       art('a2', 'alpha', ['t1']),
       art('b1', 'beta', ['t1']),
     ]);
-    expect(links).toEqual([{ a: 'a1', b: 'a2', strength: 1 }]);
+    expect(links).toEqual([{ a: 'a1', b: 'a2' }]);
   });
 
   it('caps degree at 2 per star, keeping the strongest pairs (sky-chart sparsity)', () => {
@@ -26,7 +36,9 @@ describe('computeConstellationLinks', () => {
     const hubDegree = links.filter((l) => l.a === 'hub' || l.b === 'hub').length;
     expect(hubDegree).toBeLessThanOrEqual(2);
     // Strongest pair (hub↔n1, 3 shared tags) must survive the cap.
-    expect(links.some((l) => (l.a === 'hub' && l.b === 'n1') || (l.a === 'n1' && l.b === 'hub'))).toBe(true);
+    expect(
+      links.some((l) => (l.a === 'hub' && l.b === 'n1') || (l.a === 'n1' && l.b === 'hub')),
+    ).toBe(true);
   });
 
   it('is deterministic for equal-strength pairs', () => {
@@ -35,6 +47,8 @@ describe('computeConstellationLinks', () => {
   });
 
   it('returns no links for tagless or unrelated stars', () => {
-    expect(computeConstellationLinks([art('a', 'alpha', []), art('b', 'alpha', ['q'])])).toEqual([]);
+    expect(computeConstellationLinks([art('a', 'alpha', []), art('b', 'alpha', ['q'])])).toEqual(
+      [],
+    );
   });
 });

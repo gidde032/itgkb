@@ -2,11 +2,15 @@
 
 Status: APPROVED v1 (2026-07-17) with amendments: budgets softened to sanity
 checks; no AI/semantic features in any near-term version; prototype speed
-prioritized.
-Maintainer: solo (Carlson IT Service Center student employee)
-Repo visibility: private. No hosting. Sharing model: coworkers get repo access
-and run locally (`git clone` → `npm install` → `npm run dev`); README must
-make this a 3-command experience.
+prioritized. Amendments since: repo is public with a live GitHub Pages demo
+(M1); constellation taxonomy remapped to a vendor-neutral set + Security for
+the public v1.0.0 line (M2/M4); content is organization-agnostic and
+`npm run check:sensitivity` reports violations (advisory until #24 lands);
+FR-2 frontmatter relaxed so `tags`/`stub`/`related` are optional with defaults.
+Maintainer: solo.
+Repo visibility: public, with a live demo on GitHub Pages. Sharing model: anyone
+clones and runs locally (`git clone` → `npm install` → `npm run dev`); README
+makes this a 3-command experience.
 
 ---
 
@@ -18,12 +22,12 @@ category, proximity reflects topical similarity, and a search bar dims
 non-matching stars in place. Part Wikipedia, part star chart — visually inspired
 by Constellate, adapted from imported chat logs to curated IT support articles.
 
-**Target user.** The maintainer (and eventually coworkers at the Carlson IT
-Service Center): student IT support employees looking up procedures mid-ticket
-and new hires ramping up.
+**Target user.** IT support practitioners — student employees looking up
+procedures mid-ticket and new hires ramping up — and the maintainer.
 
-**Success criteria (MVP).** All 20 seed articles render as stars in 6
-constellations; stub articles are visually distinct; clicking a star opens the
+**Success criteria (MVP).** All seed articles render as stars across the
+constellation taxonomy (vendor-neutral, 7 clusters for the public v1.0.0 line);
+stub articles are visually distinct; clicking a star opens the
 full article with rendered markdown; search filters/dims in place across
 title/tags/summary/body; the galaxy pans and zooms smoothly; content is
 authored in plain markdown files that are trivial to add/edit.
@@ -34,17 +38,17 @@ integration, AI authoring assistant, analytics, multi-user contribution flow.
 
 ## 2. Stack
 
-| Layer | Choice | Rationale |
-|---|---|---|
-| Build/runtime | Vite + React 18 + TypeScript | Fastest path to working; standard for maintainer's prior projects; extensibility hooks (AI search, TDX) need a real app structure, not a single-file build |
-| Galaxy rendering | HTML `<canvas>` 2D, custom renderer | Glow, dimming, constellation lines, and labels are crisp and cheap in canvas; no WebGL/Three.js risk in MVP. Depth cues via z-jitter, parallax on pan, size/brightness falloff ("2.5D") |
-| Layout simulation | `d3-force` (+ `d3-zoom` for pan/zoom) | Battle-tested force simulation; curated anchors + tag-similarity links; runs once at load, positions cached |
-| Article content | Markdown files with YAML frontmatter, one per article, loaded via Vite `import.meta.glob(..., { query: '?raw' })` | Human-editable, git-diffable, zero build script; natural path to PR-based contribution later |
-| Frontmatter parsing | Tiny in-repo parser (or `js-yaml` if edge cases demand) | Frontmatter schema is small and controlled |
-| Markdown rendering | `react-markdown` | Standard, safe (no `dangerouslySetInnerHTML`) |
-| State | React state + context; no state library | 20–100 articles; keep it light |
-| Testing | Vitest + React Testing Library | Vite-native, fast |
-| Lint/format | ESLint + Prettier | Standard gates |
+| Layer               | Choice                                                                                                            | Rationale                                                                                                                                                                               |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Build/runtime       | Vite + React 18 + TypeScript                                                                                      | Fastest path to working; standard for maintainer's prior projects; extensibility hooks (AI search, TDX) need a real app structure, not a single-file build                              |
+| Galaxy rendering    | HTML `<canvas>` 2D, custom renderer                                                                               | Glow, dimming, constellation lines, and labels are crisp and cheap in canvas; no WebGL/Three.js risk in MVP. Depth cues via z-jitter, parallax on pan, size/brightness falloff ("2.5D") |
+| Layout simulation   | `d3-force` (+ `d3-zoom` for pan/zoom)                                                                             | Battle-tested force simulation; curated anchors + tag-similarity links; runs once at load, positions cached                                                                             |
+| Article content     | Markdown files with YAML frontmatter, one per article, loaded via Vite `import.meta.glob(..., { query: '?raw' })` | Human-editable, git-diffable, zero build script; natural path to PR-based contribution later                                                                                            |
+| Frontmatter parsing | Tiny in-repo parser (or `js-yaml` if edge cases demand)                                                           | Frontmatter schema is small and controlled                                                                                                                                              |
+| Markdown rendering  | `react-markdown`                                                                                                  | Standard, safe (no `dangerouslySetInnerHTML`)                                                                                                                                           |
+| State               | React state + context; no state library                                                                           | 20–100 articles; keep it light                                                                                                                                                          |
+| Testing             | Vitest + React Testing Library                                                                                    | Vite-native, fast                                                                                                                                                                       |
+| Lint/format         | ESLint + Prettier                                                                                                 | Standard gates                                                                                                                                                                          |
 
 **Rendering-swap contract:** the layout engine outputs plain
 `{ id, x, y, z }` positions consumed by a renderer interface. A future 3D
@@ -56,10 +60,12 @@ positions, not a rewrite.
 - **FR-1** The tool must load all articles from `content/articles/*.md` at
   startup and reject none silently (invalid articles produce a visible console
   error and are excluded with a warning).
-- **FR-2** Each article must carry frontmatter: `id`, `title`, `constellation`,
-  `tags[]`, `summary`, `stub` (bool, default false), `related[]` (article ids).
-  Body sections follow the article template (Diagnostic Steps, Resolution
-  Steps, Notes/Edge Cases as applicable).
+- **FR-2** Each article must carry frontmatter. Required: `id`, `title`,
+  `constellation`, `summary`. Optional with defaults: `tags[]` (default `[]`),
+  `stub` (bool, default false), `related[]` (article ids, default `[]`). Body
+  sections follow the article template (Diagnostic Steps, Resolution Steps,
+  Notes/Edge Cases as applicable). The validator enforces the required fields;
+  `tags`/`stub`/`related` are checked for type when present.
 - **FR-3** The galaxy view must render one star per article, clustered into its
   constellation's region, with constellation labels and intra-cluster
   connecting lines between closely related stars (constellation line art).
@@ -117,13 +123,13 @@ skeleton; only test coverage and content validation are hard gates.
 ### Article frontmatter schema
 
 ```yaml
-id: gcal-event-couldnt-update        # unique, kebab-case
-title: 'Google Calendar: "Event couldn''t be updated" error'
-constellation: google-workspace       # one of the constellation ids
-tags: [google-calendar, sharing, external-domains, admin-console]
+id: clear-stale-port-lock # unique, kebab-case; must match the filename
+title: 'Clearing a stale port lock on a shared service'
+constellation: dev-environment # one of the constellation ids (see below)
+tags: [ports, processes, troubleshooting]
 summary: One-to-two sentence summary shown on hover.
 stub: false
-related: [gcal-cannot-be-shown, gcal-external-sharing]
+related: [kill-localhost-processes]
 ```
 
 Body: markdown with conventional H2 sections — `## Diagnostic Steps`,
@@ -131,19 +137,21 @@ Body: markdown with conventional H2 sections — `## Diagnostic Steps`,
 (validation checks frontmatter only); template lives in
 `content/TEMPLATE.md`.
 
-### Constellations (6, per kickoff decision)
+### Constellations (vendor-neutral taxonomy, v1.0.0)
 
-| id | Name | Seed stars |
-|---|---|---|
-| google-workspace | Google Workspace | 1–6 |
-| tdx | TDX Ticketing | 7–9 |
-| dev-environment | Development Environment | 10–14, **17** (moved from Networking per kickoff) |
-| networking | Networking & Connectivity | 15–16 |
-| account-access | Account & Access | 18 (stub) |
-| hardware | Hardware & Peripherals | 19–20 (stubs) |
+| id                 | Name                 | Catalog prefix |
+| ------------------ | -------------------- | -------------- |
+| workspace-email    | Workspace & Email    | GW             |
+| ticketing-itsm     | Ticketing & ITSM     | TIX            |
+| dev-environment    | Dev Environment      | DEV            |
+| networking         | Networking           | NET            |
+| accounts-identity  | Accounts & Identity  | IAM            |
+| hardware-endpoints | Hardware & Endpoints | HW             |
+| security           | Security             | SEC            |
 
-Constellation config (`content/constellations.json`): id, display name, anchor
-position (curated), accent color.
+Constellation config (`content/constellations.json`): `id`, display `name`,
+catalog `prefix`, anchor position (curated), and accent `color`. The validator
+checks each entry has all five fields.
 
 ### Module boundaries
 
@@ -155,12 +163,15 @@ src/
   galaxy/         canvas renderer, interaction (d3-zoom), hover/click hit-testing
   article/        article panel, markdown rendering, related-link navigation
   app/            shell, state, list-view fallback
+  util/           shared low-level helpers (hashing, tag-overlap) used across layers
 content/
   articles/*.md   the knowledge base
   constellations.json
   TEMPLATE.md
 scripts/
-  validate-content.mjs
+  validate-content.mjs   content gate (FR-11)
+  validate-lib.mjs       shared validation logic (CLI + runtime loader)
+  check-sensitivity.mjs  vendor-neutral content report (advisory until #24)
 ```
 
 **Contracts:** `LayoutProvider.layout(articles, constellations) →
@@ -174,17 +185,17 @@ only — it never inspects article bodies.
   Vitest), content pipeline (loader, parser, validation script), 5 real
   articles authored, basic galaxy: stars at curated-force positions, pan/zoom,
   click opens panel with rendered markdown. Gates defined and measured here
-  (Step 3 of bootstrap folds in). *Usable: browse a mini-KB in a galaxy.*
+  (Step 3 of bootstrap folds in). _Usable: browse a mini-KB in a galaxy._
 - **Phase 2 — Constellations & star craft.** Cluster regions, labels, accent
   colors, intra-cluster line art, glow rendering, hover previews, stub
   styling, depth cues (z-jitter, parallax, brightness falloff), reset-view.
-  *Usable: the galaxy looks like the vision.*
+  _Usable: the galaxy looks like the vision._
 - **Phase 3 — Search.** Overlay search bar, in-place dim/highlight across all
   fields, keystroke budget met, related-article navigation (FR-7).
-  *Usable: find any article in seconds.*
+  _Usable: find any article in seconds._
 - **Phase 4 — Full content + list-view fallback.** All 20 seed articles
   authored (14 rich + 6 stubs), narrow-viewport list fallback, content
-  validation wired into gates. *Usable: the real KB, anywhere.*
+  validation wired into gates. _Usable: the real KB, anywhere._
 - **Phase 5 — Hardening pass (end-of-version).** Not a phase: dual-lens audit
   (spec-drift + user-friction), ranked findings, maintainer picks slices.
   Ends with v0.1.0 tag. Red-pen content review by maintainer happens here or

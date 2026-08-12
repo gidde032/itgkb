@@ -1,14 +1,14 @@
 import type { Article } from '../content/types';
+import { sharedTagCount } from '../util/tags';
 
 export interface StarLink {
   a: string;
   b: string;
-  strength: number;
 }
 
-function sharedTags(a: Article, b: Article): number {
-  const set = new Set(a.tags);
-  return b.tags.reduce((n, t) => n + (set.has(t) ? 1 : 0), 0);
+/** Ranked candidate pair; `strength` ranks pairs but is not needed at draw time. */
+interface Pair extends StarLink {
+  strength: number;
 }
 
 /**
@@ -18,13 +18,13 @@ function sharedTags(a: Article, b: Article): number {
  * chain-like figures of real star charts instead of dense webs.
  */
 export function computeConstellationLinks(articles: Article[]): StarLink[] {
-  const pairs: StarLink[] = [];
+  const pairs: Pair[] = [];
   for (let i = 0; i < articles.length; i++) {
     for (let j = i + 1; j < articles.length; j++) {
       const a = articles[i];
       const b = articles[j];
       if (a.constellation !== b.constellation) continue;
-      const strength = sharedTags(a, b);
+      const strength = sharedTagCount(a, b);
       if (strength > 0) pairs.push({ a: a.id, b: b.id, strength });
     }
   }
@@ -36,7 +36,7 @@ export function computeConstellationLinks(articles: Article[]): StarLink[] {
     const da = degree.get(p.a) ?? 0;
     const db = degree.get(p.b) ?? 0;
     if (da < 2 && db < 2) {
-      links.push(p);
+      links.push({ a: p.a, b: p.b });
       degree.set(p.a, da + 1);
       degree.set(p.b, db + 1);
     }

@@ -30,7 +30,10 @@ export function assembleContent(
     errors = errors.concat(fileErrors);
   }
   const { errors: collectionErrors, excludedSources } = analyzeCollection(
-    articles.map((a) => ({ fm: a as unknown as Record<string, unknown>, sourceName: a.sourceName })),
+    articles.map((a) => ({
+      fm: a as unknown as Record<string, unknown>,
+      sourceName: a.sourceName,
+    })),
     constellations,
   );
   errors = errors.concat(collectionErrors);

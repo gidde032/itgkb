@@ -39,16 +39,28 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
   globalThis.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver;
 }
 
-// jsdom lacks matchMedia; stub with a test-controllable narrow flag (NF-7 tests).
+// jsdom lacks matchMedia; stub with test-controllable narrow / reduced-motion
+// flags. Listeners are keyed by query so a change to one flag dispatches every
+// registered listener with the matches value correct for ITS OWN query.
 let narrowViewport = false;
 let reducedMotion = false;
-const mqlListeners = new Set<(e: { matches: boolean }) => void>();
+const mqlListeners = new Map<string, Set<(e: { matches: boolean }) => void>>();
+function matchesFor(query: string): boolean {
+  return query.includes('prefers-reduced-motion') ? reducedMotion : narrowViewport;
+}
+function dispatchAll() {
+  for (const [query, set] of mqlListeners) {
+    const m = matchesFor(query);
+    for (const l of set) l({ matches: m });
+  }
+}
 (globalThis as Record<string, unknown>).__setNarrowViewport = (v: boolean) => {
   narrowViewport = v;
-  for (const l of mqlListeners) l({ matches: v });
+  dispatchAll();
 };
 (globalThis as Record<string, unknown>).__setReducedMotion = (v: boolean) => {
   reducedMotion = v;
+  dispatchAll();
 };
 beforeEach(() => {
   narrowViewport = false;
@@ -58,13 +70,18 @@ Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn((query: string) => ({
     get matches() {
-      // Query-aware stub: viewport queries follow the narrow flag,
-      // prefers-reduced-motion follows its own flag (A1 tests).
-      return query.includes('prefers-reduced-motion') ? reducedMotion : narrowViewport;
+      return matchesFor(query);
     },
     media: query,
-    addEventListener: (_t: string, l: (e: { matches: boolean }) => void) => mqlListeners.add(l),
-    removeEventListener: (_t: string, l: (e: { matches: boolean }) => void) => mqlListeners.delete(l),
+    addEventListener: (type: string, l: (e: { matches: boolean }) => void) => {
+      if (type !== 'change') return;
+      if (!mqlListeners.has(query)) mqlListeners.set(query, new Set());
+      mqlListeners.get(query)!.add(l);
+    },
+    removeEventListener: (type: string, l: (e: { matches: boolean }) => void) => {
+      if (type !== 'change') return;
+      mqlListeners.get(query)?.delete(l);
+    },
     addListener: () => {},
     removeListener: () => {},
     onchange: null,

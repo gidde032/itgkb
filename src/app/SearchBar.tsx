@@ -25,6 +25,7 @@ export function SearchBar({
   return (
     <div className="search-bar">
       <input
+        id="article-search"
         type="search"
         value={query}
         placeholder="Search articles…"
