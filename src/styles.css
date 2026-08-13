@@ -546,6 +546,12 @@ body,
 }
 
 @media (max-width: 899px) {
+  .search-bar {
+    top: 3.85rem;
+  }
+  .list-view {
+    top: 7rem;
+  }
   .article-panel {
     width: 100vw;
     border-left: none;

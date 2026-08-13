@@ -42,7 +42,7 @@ describe('App search integration (FR-8, FR-7)', () => {
     fireEvent.change(screen.getByRole('searchbox', { name: 'Search articles' }), {
       target: { value: 'traceroute' },
     });
-    // Phase 4 content: 'traceroute' matches its own article + umn-network-architecture.
+    // 'traceroute' matches traceroute-reading-output and network-architecture.
     expect(screen.getByRole('status')).toHaveTextContent(/2 stars/);
   });
 

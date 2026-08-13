@@ -4,6 +4,8 @@
 
 **▶ Live demo: https://gidde032.github.io/itgkb/**
 
+![IT Knowledge Galaxy](docs/galaxy-preview.png)
+
 An explorable, vendor-neutral IT knowledge base rendered as a galaxy: every
 article is a star, stars cluster into constellations by category, and proximity
 means topical similarity. Part Wikipedia, part star chart.
@@ -57,8 +59,8 @@ employer/team names, internal hostnames, intranet URLs, or PII.
 - `npm run gates:quality` — the gate chain without the build (used by the deploy
   job, which builds separately with the Pages base path).
 - `npm test` — test suite only.
-- `npm run check:sensitivity` — content-sensitivity report (advisory; becomes a
-  hard gate once the seed articles are fully generalized — tracked in #24).
+- `npm run check:sensitivity` — content-sensitivity gate: no org-specific data,
+  internal hostnames, or unresolved `(verify)` markers. Hard gate in `gates`.
 
 ## Architecture
 
