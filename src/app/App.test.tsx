@@ -7,9 +7,9 @@ describe('App integration', () => {
   it('loads real content with zero errors (FR-1 on the shipped article set)', () => {
     const { articles, constellations, errors } = loadContent();
     expect(errors).toEqual([]);
-    // M4 #25: 40 vendor-generic articles across 7 constellations, all populated,
+    // M4 #25: 41 vendor-generic articles across 7 constellations, all populated,
     // no stubs.
-    expect(articles).toHaveLength(40);
+    expect(articles).toHaveLength(41);
     expect(constellations).toHaveLength(7);
     expect(articles.filter((a) => a.stub)).toHaveLength(0);
     // Every constellation now has at least one article.
