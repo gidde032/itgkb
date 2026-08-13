@@ -1,11 +1,11 @@
 ---
 id: gcal-external-sharing
 title: 'Google Calendar: External domain sharing restrictions'
-constellation: google-workspace
+constellation: workspace-email
 tags: [google-calendar, sharing, external-domains, admin-console, policy]
 summary:
-  How UMN's Workspace admin policy controls whether calendar events can be shared with
-  non-umn.edu addresses, and where to check it.
+  How your Workspace admin policy controls whether calendar events can be shared with external
+  addresses, and where to check it.
 stub: false
 related: [gcal-event-couldnt-update, gcal-cannot-be-shown]
 ---
@@ -13,17 +13,16 @@ related: [gcal-event-couldnt-update, gcal-cannot-be-shown]
 ## Summary
 
 Whether a calendar event can be shared with an external address is governed by the Google
-Workspace admin policy for the UMN domain, not by anything the individual user controls.
-Symptoms of a policy restriction look like per-event errors or missing visibility, which is why
-users rarely suspect the real cause.
+Workspace admin policy for your organization's domain, not by anything the individual user
+controls. Symptoms of a policy restriction look like per-event errors or missing visibility,
+which is why users rarely suspect the real cause.
 
 ## Diagnostic Steps
 
-1. Identify the external address type: another university's `.edu` (usually its own Workspace
-   domain), a personal Gmail, or a non-Google address (including some international domains,
-   e.g. `.cn` corporate mail).
+1. Identify the external address type: another organization's Workspace domain, a personal
+   Gmail, or a non-Google address (including some international corporate domains).
 2. Check the admin policy location: Admin Console → Apps → Google Workspace → Calendar →
-   Sharing settings (requires admin access — student employees typically escalate for this).
+   Sharing settings (requires admin access — front-line technicians typically escalate for this).
 3. Confirm what the policy allows: external sharing may be limited to free/busy only, or
    allowed with a warning, per organizational unit.
 
@@ -36,8 +35,6 @@ users rarely suspect the real cause.
 
 ## Notes / Edge Cases
 
-- Common scenarios: sharing with other-university `.edu` addresses usually works (both sides
-  are Workspace); personal Gmail works but with visibility warnings; non-Google addresses get
-  invites by email only.
-- Draft note: authored from summarized ticket history; verify current Admin Console path
-  wording before citing to users.
+- Common scenarios: sharing with another organization's Workspace addresses usually works (both
+  sides are Workspace); personal Gmail works but with visibility warnings; non-Google addresses
+  get invites by email only.

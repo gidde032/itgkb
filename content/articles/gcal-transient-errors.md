@@ -1,7 +1,7 @@
 ---
 id: gcal-transient-errors
 title: 'Google Calendar: Transient errors and spontaneous resolution'
-constellation: google-workspace
+constellation: workspace-email
 tags: [google-calendar, transient, triage, closure-notes, rate-limiting]
 summary:
   Handling tickets where a Calendar error disappears overnight with no intervention — how to

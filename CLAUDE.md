@@ -20,10 +20,9 @@ npm install + npm run dev. Planning truth lives in GitHub Issues/PRs/milestones.
 - Public content is vendor-generic (M4 line): no organization-specific data
   (employer/team names, internal hostnames, intranet URLs), no PII/emails, and
   no unresolved `(verify)` / `[NEEDS VERIFICATION]` markers in shipped articles.
-  `npm run check:sensitivity` reports violations; it is advisory now and becomes
-  a hard gate once the seed articles are generalized (M4 #24). Do not invent
-  organization-specific facts (hostnames, exact policy text) — mark uncertain
-  details with "(verify)" until verified.
+  `npm run check:sensitivity` enforces this — it is wired into `npm run gates`
+  (M4 #24). Draft articles may use `(verify)` markers while researching, but
+  they must be resolved before merge or the gate fails.
 
 ## Workflow
 

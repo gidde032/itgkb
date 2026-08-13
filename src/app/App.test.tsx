@@ -7,15 +7,19 @@ describe('App integration', () => {
   it('loads real content with zero errors (FR-1 on the shipped article set)', () => {
     const { articles, constellations, errors } = loadContent();
     expect(errors).toEqual([]);
-    // Phase 4 contract: the complete seed set — exact counts, not minimums.
-    expect(articles).toHaveLength(20);
-    expect(constellations).toHaveLength(6);
-    // Red-pen pass: 3 TDX articles promoted from stub to real content;
-    // account-access, printer, hardware-intake remain stubs pending
-    // [NEEDS VERIFICATION] answers from the Service Center.
-    expect(articles.filter((a) => a.stub)).toHaveLength(3);
+    // M4 #25: 40 vendor-generic articles across 7 constellations, all populated,
+    // no stubs.
+    expect(articles).toHaveLength(40);
+    expect(constellations).toHaveLength(7);
+    expect(articles.filter((a) => a.stub)).toHaveLength(0);
+    // Every constellation now has at least one article.
     for (const c of constellations) {
       expect(articles.some((a) => a.constellation === c.id)).toBe(true);
+    }
+    // Every article belongs to a defined constellation (no orphans).
+    const constellationIds = new Set(constellations.map((c) => c.id));
+    for (const a of articles) {
+      expect(constellationIds.has(a.constellation)).toBe(true);
     }
   });
 

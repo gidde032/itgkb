@@ -1,43 +1,61 @@
 ---
 id: printer-troubleshooting
-title: 'Printer troubleshooting: Common Carlson issues'
-constellation: hardware
+title: 'Printer troubleshooting and setup'
+constellation: hardware-endpoints
 tags: [printers, drivers, print-queue, network-printing, hardware]
 summary:
-  General diagnostic framework for the recurring printer problems — drivers, discovery,
-  stuck queues, jams — pending Carlson-specific hardware details.
-stub: true
-related: [hardware-intake]
+  A diagnostic framework for the recurring printer problems — drivers, discovery, stuck queues,
+  jams — plus how to add a network printer on macOS and Windows.
+stub: false
+related: []
 ---
 
 ## Summary
 
-Printer issues cluster into four buckets: driver installation, network discovery, stuck
-queues, and physical problems (jams, toner). The general diagnostics below hold anywhere;
-the Carlson specifics (models, hostnames, print management) must be filled in.
+Printer issues cluster into four buckets: driver installation, network discovery, stuck queues,
+and physical problems. Work them in that order, and reproduce from a second machine early — one
+machine failing points at drivers/queue, all machines failing points at the printer or network.
 
 ## Diagnostic Framework
 
-1. **Driver installation** — standard flows: macOS System Settings → Printers & Scanners →
-   add by IP or Bonjour; Windows Settings → Bluetooth & devices → Printers. [NEEDS
-   VERIFICATION] — Carlson driver sources and whether a deployment tool pushes drivers.
-2. **Network discovery** — printer not appearing usually means wrong network/VLAN or
-   discovery protocol blocked; adding by IP bypasses discovery. [NEEDS VERIFICATION] —
-   Carlson printer IPs/hostnames and whether a managed print service (PaperCut, Pharos, or
-   similar) fronts them, which changes the entire setup flow.
-3. **Stuck queue** — macOS/Linux: `lpq` to inspect, `lprm -` to clear; Windows:
-   `net stop spooler && net start spooler`, then clear `C:\Windows\System32\spool\PRINTERS`
-   if needed.
-4. **Physical issues** — jams and toner. [NEEDS VERIFICATION] — whether student employees
-   clear jams/replace toner directly or submit a facilities/hardware request, per printer
-   model.
+1. **Driver installation** — a wrong or missing driver shows up as garbled output, missing
+   trays/duplex options, or an "unable to install" error. macOS usually pulls the right driver
+   automatically over AirPrint/IPP; Windows uses a built-in class driver or the manufacturer's
+   package. If features are missing, install the manufacturer's full driver rather than the
+   generic one.
+2. **Network discovery** — a printer that never appears usually means the client is on a
+   different network/VLAN from the printer, or a discovery protocol (Bonjour/mDNS, WSD) is
+   blocked. Adding the printer by IP address bypasses discovery entirely and is the reliable
+   fallback (see setup below).
+3. **Stuck queue** — a job wedged at the front blocks everything behind it. macOS/Linux: `lpq`
+   to inspect, `lprm -` to clear the queue. Windows: `net stop spooler && net start spooler`,
+   then delete files in `C:\Windows\System32\spool\PRINTERS` if a job won't clear.
+4. **Physical issues** — jams, low/empty toner, and paper-feed faults. Clear the paper path
+   fully (front and rear access), reseat consumables, and power-cycle; a printer that reports a
+   jam after the path is clear usually has a sensor flag stuck by a torn scrap.
 
-## Resolution Steps
+## Adding a network printer
 
-[NEEDS VERIFICATION] — per-model quick reference once Carlson's deployed printer makes and
-models are documented (each model's jam-clearing path and consumables differ).
+### macOS
+
+System Settings → Printers & Scanners → **Add Printer, Scanner, or Fax**. Pick the printer from
+the Default (Bonjour) list, or use the **IP** tab and enter the address with the right protocol
+(IPP is the safe default; LPD or HP JetDirect/Socket for older devices), then choose the driver.
+
+### Windows — via the printer directory
+
+Settings → Bluetooth & devices → **Printers & scanners → Add device**. When it doesn't appear,
+choose **"The printer that I want isn't listed" → "Find a printer in the directory"** and search
+the shared printer directory by name or location, then add it.
+
+### Windows — via a print server
+
+In the Run dialog or File Explorer address bar, enter `\\print-server\printer-name` to connect to
+a shared queue and install its driver automatically. Alternatively use Add Printer → **"Select a
+shared printer by name"** and type the `\\server\queue` path.
 
 ## Notes / Edge Cases
 
-- Reproduce from a second machine before blaming the user's device: one machine failing =
-  driver/queue; all machines failing = printer or network side.
+- Adding by IP is the most robust setup when discovery is flaky, but it pins the printer to an
+  address — if the printer is on DHCP without a reservation, the queue breaks when the lease
+  changes. Prefer a hostname or a reserved address.
