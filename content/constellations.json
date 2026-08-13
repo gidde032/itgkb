@@ -1,8 +1,9 @@
 [
   { "id": "workspace-email", "name": "Workspace & Email", "prefix": "GW", "anchor": { "x": -320, "y": -160 }, "color": "#e4b363" },
-  { "id": "ticketing-itsm", "name": "Ticketing & ITSM", "prefix": "TIX", "anchor": { "x": 340, "y": -200 }, "color": "#e2985c" },
-  { "id": "networking", "name": "Networking", "prefix": "NET", "anchor": { "x": 300, "y": 140 }, "color": "#4fc2b0" },
-  { "id": "accounts-identity", "name": "Accounts & Identity", "prefix": "IAM", "anchor": { "x": 60, "y": -300 }, "color": "#7e8ce8" },
-  { "id": "hardware-endpoints", "name": "Hardware & Endpoints", "prefix": "HW", "anchor": { "x": -380, "y": 180 }, "color": "#c77fd0" },
-  { "id": "security", "name": "Security", "prefix": "SEC", "anchor": { "x": 380, "y": 10 }, "color": "#dd6070" }
+  { "id": "collaboration-meetings", "name": "Collaboration & Meetings", "prefix": "MTG", "anchor": { "x": 360, "y": -180 }, "color": "#e2985c" },
+  { "id": "files-storage", "name": "Files & Storage", "prefix": "FLS", "anchor": { "x": -60, "y": 300 }, "color": "#7cc97a" },
+  { "id": "networking", "name": "Networking", "prefix": "NET", "anchor": { "x": 260, "y": 260 }, "color": "#4fc2b0" },
+  { "id": "accounts-identity", "name": "Accounts & Identity", "prefix": "IAM", "anchor": { "x": 40, "y": -320 }, "color": "#7e8ce8" },
+  { "id": "hardware-endpoints", "name": "Hardware & Endpoints", "prefix": "HW", "anchor": { "x": -400, "y": 120 }, "color": "#c77fd0" },
+  { "id": "security", "name": "Security", "prefix": "SEC", "anchor": { "x": 400, "y": 80 }, "color": "#dd6070" }
 ]
