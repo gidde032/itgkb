@@ -1,0 +1,28 @@
+node_modules
+dist
+coverage
+*.local
+.migration-working
+internal/
+
+# Agent / local tooling (must not land in the public repo)
+.claude/
+CLAUDE.md
+
+# Environment
+.env
+.env.*
+
+# Build & tool caches
+*.log
+*.tsbuildinfo
+.eslintcache
+.vite/
+*.zip
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/

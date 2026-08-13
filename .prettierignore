@@ -1,0 +1,10 @@
+dist
+coverage
+node_modules
+package-lock.json
+
+# Authored article content (prose) and static design mockups stay out of
+# format enforcement; format:check covers all src/, scripts/, and project docs.
+content/articles/
+content/constellations.json
+design/mockups/

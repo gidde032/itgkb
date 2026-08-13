@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>itgkb — accent alternatives</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;1,6..72,500&family=Hanken+Grotesk:wght@400;500&family=Archivo+Narrow:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{ color-scheme:dark; --ink:#060a14; --panel:#0e1626; --line:#1d2942; --line2:#2a3860;
+    --starlight:#e9eef8; --text:#d3dcf0; --dim:#8593b0; --faint:#5c6884;
+    --serif:'Newsreader',serif; --sans:'Hanken Grotesk',system-ui,sans-serif; --chart:'Archivo Narrow',sans-serif; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:#04060c; color:var(--text); font-family:var(--sans); padding:24px clamp(12px,3vw,40px) 70px; }
+  .wrap{ max-width:1140px; margin:0 auto; }
+  h1{ font-family:var(--chart); font-weight:700; font-size:.8rem; letter-spacing:.28em; text-transform:uppercase; color:#E4B363; }
+  .hint{ color:var(--dim); font-size:.87rem; line-height:1.55; max-width:78ch; margin:0 0 20px; }
+  .grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .cell{ border:1px solid var(--line); border-radius:10px; overflow:hidden;
+    background:linear-gradient(180deg, rgba(14,22,38,.96), rgba(9,15,26,.96)); }
+  .cap{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid var(--line);
+    background:radial-gradient(120% 120% at 20% 0%, #101a30, #0a1120); }
+  .cap .nm{ font-family:var(--chart); font-weight:700; font-size:.62rem; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); }
+  .cap .hex{ font-family:var(--chart); font-weight:600; font-size:.6rem; letter-spacing:.08em; }
+  .chip{ width:26px; height:16px; border-radius:3px; border:1px solid #0007; display:inline-block; vertical-align:middle; margin-left:8px; }
+  .body{ padding:16px; }
+  .mark{ font-family:var(--serif); font-weight:600; font-size:1.6rem; color:var(--starlight); line-height:1; }
+  .mark i{ font-style:italic; color:var(--a); font-weight:500; }
+  .eyebrow{ font-family:var(--chart); font-weight:600; font-size:.7rem; letter-spacing:.18em; text-transform:uppercase; color:var(--a); margin-top:14px; }
+  .eyebrow span{ color:var(--dim); }
+  .title{ font-family:var(--serif); font-weight:600; font-size:1.15rem; color:var(--starlight); line-height:1.2; margin:6px 0 12px; }
+  .starline{ display:flex; align-items:center; gap:9px; margin:10px 0; }
+  .star{ width:9px; height:9px; border-radius:50%; background:#fbf6ee; box-shadow:0 0 10px 3px color-mix(in srgb, var(--a) 70%, transparent); }
+  .cid{ font-family:var(--chart); font-weight:600; font-size:.68rem; letter-spacing:.05em; color:var(--a); }
+  .hud{ font-family:var(--chart); font-weight:600; font-size:.62rem; letter-spacing:.14em; text-transform:uppercase; color:var(--faint); margin:8px 0; }
+  .hud b{ color:var(--a); font-weight:600; }
+  .link{ font-family:var(--serif); font-size:.98rem; color:var(--text); border-top:1px solid var(--line); padding-top:9px; margin-top:6px; }
+  .link::before{ content:'→ '; color:var(--a); }
+  .note{ font-family:var(--chart); font-weight:600; font-size:.56rem; letter-spacing:.1em; text-transform:uppercase; margin-top:12px; }
+  .ok{ color:#8FB870; } .warn{ color:#E0B84A; } .bad{ color:#E8806B; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>itgkb · accent alternatives</h1>
+  <p class="hint">Everything else is locked (Newsreader · Archivo Narrow cartographic · shape language · catalog/HUD signature).
+  Only the accent changes here — shown on the real signature elements (wordmark, eyebrow, catalog ID, HUD, link arrow) over the panel background.
+  Note the small-size legibility flag at the bottom of each.</p>
+
+  <div class="grid">
+    <div class="cell" style="--a:#E4B363">
+      <div class="cap"><span class="nm">0 · Amber (current)</span><span class="hex" style="color:#E4B363">#E4B363<span class="chip" style="background:#E4B363"></span></span></div>
+      <div class="body"><div class="mark"><i>it</i>gkb</div><div class="eyebrow">ITG-014 <span>·</span> Workspace</div>
+        <div class="title">Calendar event won&rsquo;t update</div>
+        <div class="starline"><span class="star"></span><span class="cid">ITG-014</span></div>
+        <div class="hud">RA 14h · <b>17 OBJECTS</b> · 6 FIELDS</div><div class="link">Event can&rsquo;t be shown</div>
+        <div class="note ok">Legible at small size ✓</div></div>
+    </div>
+
+    <div class="cell" style="--a:#F2A0A6">
+      <div class="cap"><span class="nm">1 · Coral pink</span><span class="hex" style="color:#F2A0A6">#F2A0A6<span class="chip" style="background:#F2A0A6"></span></span></div>
+      <div class="body"><div class="mark"><i>it</i>gkb</div><div class="eyebrow">ITG-014 <span>·</span> Workspace</div>
+        <div class="title">Calendar event won&rsquo;t update</div>
+        <div class="starline"><span class="star"></span><span class="cid">ITG-014</span></div>
+        <div class="hud">RA 14h · <b>17 OBJECTS</b> · 6 FIELDS</div><div class="link">Event can&rsquo;t be shown</div>
+        <div class="note ok">Legible at small size ✓</div></div>
+    </div>
+
+    <div class="cell" style="--a:#A6C6E8">
+      <div class="cap"><span class="nm">2 · Powder blue</span><span class="hex" style="color:#A6C6E8">#A6C6E8<span class="chip" style="background:#A6C6E8"></span></span></div>
+      <div class="body"><div class="mark"><i>it</i>gkb</div><div class="eyebrow">ITG-014 <span>·</span> Workspace</div>
+        <div class="title">Calendar event won&rsquo;t update</div>
+        <div class="starline"><span class="star"></span><span class="cid">ITG-014</span></div>
+        <div class="hud">RA 14h · <b>17 OBJECTS</b> · 6 FIELDS</div><div class="link">Event can&rsquo;t be shown</div>
+        <div class="note warn">Legible ✓ but reads cool/close to base</div></div>
+    </div>
+
+    <div class="cell" style="--a:#93E0C1">
+      <div class="cap"><span class="nm">3 · Mint</span><span class="hex" style="color:#93E0C1">#93E0C1<span class="chip" style="background:#93E0C1"></span></span></div>
+      <div class="body"><div class="mark"><i>it</i>gkb</div><div class="eyebrow">ITG-014 <span>·</span> Workspace</div>
+        <div class="title">Calendar event won&rsquo;t update</div>
+        <div class="starline"><span class="star"></span><span class="cid">ITG-014</span></div>
+        <div class="hud">RA 14h · <b>17 OBJECTS</b> · 6 FIELDS</div><div class="link">Event can&rsquo;t be shown</div>
+        <div class="note ok">Legible ✓ (a touch teal-adjacent)</div></div>
+    </div>
+
+    <div class="cell" style="--a:#5FB87F">
+      <div class="cap"><span class="nm">4 · Forest (lifted)</span><span class="hex" style="color:#5FB87F">#5FB87F<span class="chip" style="background:#5FB87F"></span></span></div>
+      <div class="body"><div class="mark"><i>it</i>gkb</div><div class="eyebrow">ITG-014 <span>·</span> Workspace</div>
+        <div class="title">Calendar event won&rsquo;t update</div>
+        <div class="starline"><span class="star"></span><span class="cid">ITG-014</span></div>
+        <div class="hud">RA 14h · <b>17 OBJECTS</b> · 6 FIELDS</div><div class="link">Event can&rsquo;t be shown</div>
+        <div class="note warn">Viable lifted green ✓ — deeper #3E7A50 muddy at 11px</div></div>
+    </div>
+
+    <div class="cell" style="--a:#2f4a86">
+      <div class="cap"><span class="nm">5 · Navy (demo)</span><span class="hex" style="color:#6E86c0">#2F4A86<span class="chip" style="background:#2F4A86"></span></span></div>
+      <div class="body"><div class="mark"><i>it</i>gkb</div><div class="eyebrow">ITG-014 <span>·</span> Workspace</div>
+        <div class="title">Calendar event won&rsquo;t update</div>
+        <div class="starline"><span class="star"></span><span class="cid">ITG-014</span></div>
+        <div class="hud">RA 14h · <b>17 OBJECTS</b> · 6 FIELDS</div><div class="link">Event can&rsquo;t be shown</div>
+        <div class="note bad">Fails on dark — accent vanishes ✗ (works as background only)</div></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
