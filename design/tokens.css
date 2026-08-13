@@ -27,8 +27,8 @@
 
   /* ---- Constellations (7) — star/label/line colors ---- */
   --c-workspace: #e4b363; /* Workspace & Email */
-  --c-ticketing: #e2985c; /* Ticketing & ITSM */
-  --c-dev: #7cc97a; /* Dev Environment */
+  --c-collaboration: #e2985c; /* Collaboration & Meetings */
+  --c-files: #7cc97a; /* Files & Storage */
   --c-networking: #4fc2b0; /* Networking */
   --c-accounts: #7e8ce8; /* Accounts & Identity */
   --c-hardware: #c77fd0; /* Hardware & Endpoints */

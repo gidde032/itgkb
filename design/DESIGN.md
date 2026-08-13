@@ -47,15 +47,19 @@ telemetry — the meaning is the point.
 
 **Constellations (7)** — used for star fill, halo, constellation lines, labels:
 
-| id                   | name                 | token            | hex       |
-| -------------------- | -------------------- | ---------------- | --------- |
-| `workspace-email`    | Workspace & Email    | `--c-workspace`  | `#E4B363` |
-| `ticketing-itsm`     | Ticketing & ITSM     | `--c-ticketing`  | `#E2985C` |
-| `dev-environment`    | Dev Environment      | `--c-dev`        | `#7CC97A` |
-| `networking`         | Networking           | `--c-networking` | `#4FC2B0` |
-| `accounts-identity`  | Accounts & Identity  | `--c-accounts`   | `#7E8CE8` |
-| `hardware-endpoints` | Hardware & Endpoints | `--c-hardware`   | `#C77FD0` |
-| `security`           | Security             | `--c-security`   | `#DD6070` |
+| id                       | name                     | token               | hex       |
+| ------------------------ | ------------------------ | ------------------- | --------- |
+| `workspace-email`        | Workspace & Email        | `--c-workspace`     | `#E4B363` |
+| `collaboration-meetings` | Collaboration & Meetings | `--c-collaboration` | `#E2985C` |
+| `files-storage`          | Files & Storage          | `--c-files`         | `#7CC97A` |
+| `networking`             | Networking               | `--c-networking`    | `#4FC2B0` |
+| `accounts-identity`      | Accounts & Identity      | `--c-accounts`      | `#7E8CE8` |
+| `hardware-endpoints`     | Hardware & Endpoints     | `--c-hardware`      | `#C77FD0` |
+| `security`               | Security                 | `--c-security`      | `#DD6070` |
+
+> M4 update: the M2-era `ticketing-itsm` and `dev-environment` clusters were
+> retired; **Collaboration & Meetings** and **Files & Storage** took their
+> palette slots. See §7 for the id history.
 
 Contrast: all text/instrument colors target **WCAG AA** on `--ink`/`--haze` at
 their used sizes. `--instrument` and `--brand` verified legible at the 11px
@@ -97,7 +101,7 @@ All gated by `prefers-reduced-motion` (hard off when requested).
 ## 6. Signature elements
 
 1. **Catalog IDs** — per-constellation prefixed ids (`GW-001`, `SEC-001`, …),
-   numbered per constellation. Prefixes: GW/TIX/DEV/NET/IAM/HW/SEC. On the
+   numbered per constellation. Prefixes: GW/MTG/FLS/NET/IAM/HW/SEC. On the
    canvas they render beside stars **bracketed, in the constellation colour,
    body font** (refined in M3 #16 for legibility). The panel eyebrow uses the
    `--instrument` sky colour. On-star label behaviour: the bracketed id shows
@@ -120,6 +124,12 @@ NOT changed in M2 to keep the 20 current articles valid):
 - `account-access` → `accounts-identity`
 - `hardware` → `hardware-endpoints`
 - _(new)_ `security` — no articles yet; M4 authors them.
+
+M4 delivery diverged from this M2 plan: `ticketing-itsm` (from `tdx`) and
+`dev-environment` were **retired**, **Files & Storage** (`files-storage`, FLS)
+and **Collaboration & Meetings** (`collaboration-meetings`, MTG) were **added**,
+and the seed set was generalized and expanded to 40 vendor-generic articles. The
+§2 table is the shipped taxonomy.
 
 ## 8. Deferred to implementation (not decided in M2)
 

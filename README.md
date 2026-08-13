@@ -39,7 +39,7 @@ return home.
 4. Reload the dev server. Your star is in the galaxy.
 
 `constellation` must be one of the ids in `content/constellations.json`
-(`workspace-email`, `ticketing-itsm`, `dev-environment`, `networking`,
+(`workspace-email`, `collaboration-meetings`, `files-storage`, `networking`,
 `accounts-identity`, `hardware-endpoints`, `security`). That file also holds each
 constellation's display name, catalog prefix, anchor position, and accent color.
 

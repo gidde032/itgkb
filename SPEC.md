@@ -93,8 +93,10 @@ positions, not a rewrite.
   every article for required frontmatter fields, unique ids, known
   constellation ids, and that every `related` id resolves. It must exit
   non-zero on any violation.
-- **FR-12** The MVP ships with the 20 seed articles: 17 rich (14 original +
-  3 promoted from stubs in red-pen pass 1) and 3 stubs (18–20).
+- **FR-12** The v1.0.0 line ships 40 vendor-generic articles across the 7
+  constellations (§5), with no stubs. Content is enforced vendor-neutral by
+  `npm run check:sensitivity` — no organization-specific data or unresolved
+  `(verify)`/`[NEEDS VERIFICATION]` markers.
 
 ## 4. Non-functional budgets
 
@@ -125,11 +127,11 @@ skeleton; only test coverage and content validation are hard gates.
 ```yaml
 id: clear-stale-port-lock # unique, kebab-case; must match the filename
 title: 'Clearing a stale port lock on a shared service'
-constellation: dev-environment # one of the constellation ids (see below)
+constellation: networking # one of the constellation ids (see below)
 tags: [ports, processes, troubleshooting]
 summary: One-to-two sentence summary shown on hover.
 stub: false
-related: [kill-localhost-processes]
+related: [dns-problems]
 ```
 
 Body: markdown with conventional H2 sections — `## Diagnostic Steps`,
@@ -139,15 +141,15 @@ Body: markdown with conventional H2 sections — `## Diagnostic Steps`,
 
 ### Constellations (vendor-neutral taxonomy, v1.0.0)
 
-| id                 | Name                 | Catalog prefix |
-| ------------------ | -------------------- | -------------- |
-| workspace-email    | Workspace & Email    | GW             |
-| ticketing-itsm     | Ticketing & ITSM     | TIX            |
-| dev-environment    | Dev Environment      | DEV            |
-| networking         | Networking           | NET            |
-| accounts-identity  | Accounts & Identity  | IAM            |
-| hardware-endpoints | Hardware & Endpoints | HW             |
-| security           | Security             | SEC            |
+| id                     | Name                     | Catalog prefix |
+| ---------------------- | ------------------------ | -------------- |
+| workspace-email        | Workspace & Email        | GW             |
+| collaboration-meetings | Collaboration & Meetings | MTG            |
+| files-storage          | Files & Storage          | FLS            |
+| networking             | Networking               | NET            |
+| accounts-identity      | Accounts & Identity      | IAM            |
+| hardware-endpoints     | Hardware & Endpoints     | HW             |
+| security               | Security                 | SEC            |
 
 Constellation config (`content/constellations.json`): `id`, display `name`,
 catalog `prefix`, anchor position (curated), and accent `color`. The validator
