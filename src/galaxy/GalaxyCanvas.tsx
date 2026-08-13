@@ -1,13 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { select } from 'd3-selection';
 import 'd3-transition'; // side-effect: patches selection.transition for smooth reset (FR-9)
 import { zoom, zoomIdentity, type ZoomTransform, type ZoomBehavior } from 'd3-zoom';
 import type { Article, Constellation } from '../content/types';
 import type { StarPosition } from '../layout/types';
-import { computeConstellationLinks } from './links';
+import { computeConstellationLinks, computeRelatedLinks } from './links';
 import { displayPositions } from './display';
 import { motionDuration, prefersReducedMotion } from '../app/motion';
-import { ResetIcon } from '../ui/icons';
+import { ResetIcon, RelatedLinesIcon } from '../ui/icons';
 import { drawGalaxy, hitTest, screenHitRadius, makeDust, type StarMeta } from './draw';
 
 export interface GalaxyCanvasProps {
@@ -40,9 +40,14 @@ export function GalaxyCanvas({
   // P3-F1: selection + search state are draw-time inputs, not setup inputs.
   // Keeping them in refs lets keystrokes re-render without tearing down zoom,
   // listeners, and the ResizeObserver on every change.
-  const drawStateRef = useRef<{ selectedId: string | null; matchIds: ReadonlySet<string> | null }>({
+  const drawStateRef = useRef<{
+    selectedId: string | null;
+    matchIds: ReadonlySet<string> | null;
+    showRelatedOverlay: boolean;
+  }>({
     selectedId,
     matchIds,
+    showRelatedOverlay: false,
   });
   const renderRef = useRef<(() => void) | null>(null);
   const hudRef = useRef<HTMLSpanElement>(null);
@@ -53,8 +58,16 @@ export function GalaxyCanvas({
   // seamlessly after an idle pause (no phase jump from wall-clock time).
   const twinkleTimeRef = useRef(0);
 
+  // #39: related-lines overlay toggle state.
+  const [showRelatedOverlay, setShowRelatedOverlay] = useState(false);
+  const toggleRelatedOverlay = useCallback(() => setShowRelatedOverlay((v) => !v), []);
+
+  const colorByConstellation = useMemo(
+    () => new Map(constellations.map((c) => [c.id, c.color])),
+    [constellations],
+  );
+
   const meta = useMemo(() => {
-    const colorByConstellation = new Map(constellations.map((c) => [c.id, c.color]));
     const prefixByConstellation = new Map(constellations.map((c) => [c.id, c.prefix]));
     // Catalog ids number per constellation: GW-001, SEC-001, ...
     const counters = new Map<string, number>();
@@ -75,9 +88,20 @@ export function GalaxyCanvas({
         ];
       }),
     );
-  }, [articles, constellations]);
+  }, [articles, constellations, colorByConstellation]);
 
-  const links = useMemo(() => computeConstellationLinks(articles), [articles]);
+  // #39: compute constellation links with positions for orphan rescue.
+  const links = useMemo(() => {
+    const posMap = new Map(positions.map((p) => [p.id, { x: p.x, y: p.y }]));
+    return computeConstellationLinks(articles, posMap);
+  }, [articles, positions]);
+
+  // #39: compute related-article links from frontmatter.
+  const relatedLinks = useMemo(
+    () => computeRelatedLinks(articles, colorByConstellation),
+    [articles, colorByConstellation],
+  );
+
   const dust = useMemo(() => makeDust(140), []);
 
   // P14: keep the cached reduced-motion flag current. One listener fires only on
@@ -123,7 +147,13 @@ export function GalaxyCanvas({
         ctx,
         width,
         height,
-        { points: currentPoints(), meta, links, dust: currentDust() },
+        {
+          points: currentPoints(),
+          meta,
+          links,
+          relatedLinks,
+          dust: currentDust(),
+        },
         constellations,
         transformRef.current,
         drawStateRef.current.selectedId,
@@ -131,6 +161,7 @@ export function GalaxyCanvas({
         drawStateRef.current.matchIds,
         reducedMotion ? 0 : twinkleTimeRef.current,
         reducedMotion ? 0 : 0.3,
+        drawStateRef.current.showRelatedOverlay,
       );
       ctx.restore();
 
@@ -276,13 +307,28 @@ export function GalaxyCanvas({
       observer.disconnect();
       selection.on('.zoom', null);
     };
-  }, [positions, meta, links, dust, constellations, onSelect]);
+  }, [positions, meta, links, relatedLinks, dust, constellations, onSelect]);
 
-  // P3-F1: cheap re-draw when selection/search change — no setup teardown.
+  // P3-F1: cheap re-draw when selection/search/overlay change — no setup teardown.
   useEffect(() => {
-    drawStateRef.current = { selectedId, matchIds };
+    drawStateRef.current = { selectedId, matchIds, showRelatedOverlay };
     renderRef.current?.();
-  }, [selectedId, matchIds]);
+  }, [selectedId, matchIds, showRelatedOverlay]);
+
+  // #39: keyboard shortcut — R toggles related-lines overlay.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      // Ignore when typing in an input/textarea or when modifier keys are held.
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        setShowRelatedOverlay((v) => !v);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   // FR-7: fly to a star when a focus request arrives (related-link nav, search Enter).
   useEffect(() => {
@@ -340,6 +386,16 @@ export function GalaxyCanvas({
         <span ref={hudRef}>RA 00h 00m · DEC +00°</span> · <b>{articles.length} OBJECTS</b> ·{' '}
         {constellations.length} FIELDS
       </div>
+      <button
+        type="button"
+        className="related-toggle"
+        aria-pressed={showRelatedOverlay}
+        onClick={toggleRelatedOverlay}
+        title="Toggle related-article lines (R)"
+      >
+        <RelatedLinesIcon />
+        Related lines
+      </button>
       <button type="button" className="reset-view" onClick={resetView}>
         <ResetIcon />
         Reset view

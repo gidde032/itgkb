@@ -144,7 +144,8 @@ body,
 
 /* ---------------- Overlay buttons ---------------- */
 .reset-view,
-.view-toggle {
+.view-toggle,
+.related-toggle {
   position: absolute;
   z-index: 3;
   display: inline-flex;
@@ -170,11 +171,18 @@ body,
   top: 1rem;
   right: 1rem;
 }
+.related-toggle {
+  top: 3.2rem;
+  right: 1rem;
+}
 .reset-view:hover,
 .reset-view:focus-visible,
 .view-toggle:hover,
 .view-toggle:focus-visible,
-.view-toggle[aria-pressed='true'] {
+.view-toggle[aria-pressed='true'],
+.related-toggle:hover,
+.related-toggle:focus-visible,
+.related-toggle[aria-pressed='true'] {
   color: var(--starlight);
   border-color: var(--dim);
 }
