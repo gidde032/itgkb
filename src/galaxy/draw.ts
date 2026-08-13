@@ -230,15 +230,6 @@ export function drawGalaxy(
 
   // Related-article lines: dashed, gradient from source to target constellation color.
   // Drawn when: (a) the overlay toggle is on, or (b) a star is selected (its related lines only).
-  const selectedRelated =
-    selectedId && !showRelatedOverlay
-      ? new Set(
-          scene.relatedLinks
-            .filter((l) => l.a === selectedId || l.b === selectedId)
-            .map((l) => `${l.a}|${l.b}`),
-        )
-      : null;
-
   if (showRelatedOverlay || selectedId) {
     ctx.setLineDash([6 / transform.k, 4 / transform.k]);
     for (const link of scene.relatedLinks) {
@@ -273,8 +264,6 @@ export function drawGalaxy(
     ctx.globalAlpha = 1;
     ctx.lineWidth = 1 / transform.k;
   }
-  // Suppress unused-variable lint for selectedRelated — kept for potential future use.
-  void selectedRelated;
 
   const labelCandidates: LabelCandidate[] = [];
   for (const p of scene.points) {
