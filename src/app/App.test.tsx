@@ -7,12 +7,15 @@ describe('App integration', () => {
   it('loads real content with zero errors (FR-1 on the shipped article set)', () => {
     const { articles, constellations, errors } = loadContent();
     expect(errors).toEqual([]);
-    // M4 #25 (in progress): authoring new vendor-generic content across 7
-    // constellations (ticketing-itsm cut; Files & Storage + Collaboration &
-    // Meetings added). Security still awaits its batch. No stubs.
-    expect(articles.length).toBeGreaterThanOrEqual(20);
+    // M4 #25: 40 vendor-generic articles across 7 constellations, all populated,
+    // no stubs.
+    expect(articles).toHaveLength(40);
     expect(constellations).toHaveLength(7);
     expect(articles.filter((a) => a.stub)).toHaveLength(0);
+    // Every constellation now has at least one article.
+    for (const c of constellations) {
+      expect(articles.some((a) => a.constellation === c.id)).toBe(true);
+    }
     // Every article belongs to a defined constellation (no orphans).
     const constellationIds = new Set(constellations.map((c) => c.id));
     for (const a of articles) {
