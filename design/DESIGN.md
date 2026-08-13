@@ -131,14 +131,50 @@ and **Collaboration & Meetings** (`collaboration-meetings`, MTG) were **added**,
 and the seed set was generalized and expanded to 40 vendor-generic articles. The
 §2 table is the shipped taxonomy.
 
-## 8. Deferred to implementation (not decided in M2)
+## 8. Line-drawing methodology (#39)
+
+### Constellation lines (FR-3)
+
+Intra-constellation links produce the chain-like figures of real star charts.
+
+1. **Greedy tag-overlap pass.** All same-constellation article pairs are ranked
+   by shared-tag count (descending). Pairs are accepted greedily while both
+   endpoints have degree < 2, producing sparse chains rather than dense webs.
+2. **Orphan rescue.** After the greedy pass, any star with degree 0 (no tag
+   overlap with any sibling) is connected to its spatially nearest sibling in
+   the same constellation. The function accepts an optional positions map for
+   this purpose; without positions it falls back to the highest-degree sibling.
+   This guarantees every star renders with at least one constellation line.
+
+### Related-article lines (#39)
+
+Cross-article links derived from `related` frontmatter arrays. Visually
+distinct from constellation lines:
+
+- **Dashed stroke** (constellation lines are solid).
+- **Gradient color** from source constellation accent to target constellation
+  accent, making cross-constellation relationships visually legible.
+- **Lower base opacity** than constellation lines (0.2 vs 0.18).
+- **Two visibility modes:**
+  - _On-selection:_ when a star is clicked, its related lines are drawn with
+    emphasized weight/opacity (0.55, 1.8px).
+  - _Toggle-able overlay:_ a button (top-right, below the list-view toggle)
+    or the `R` keyboard shortcut shows all related lines at baseline
+    opacity. When both overlay and selection are active, the selected star's
+    lines are emphasized over the baseline.
+- **Dimming during search:** if either endpoint is outside the match set, the
+  related line dims (same behavior as constellation lines).
+- **Deduplication:** bidirectional frontmatter references (A lists B, B lists A)
+  produce a single drawn line.
+
+## 9. Deferred to implementation (not decided in M2)
 
 - Exact star glow/bloom/depth rendering params (M3, canvas).
 - Whether catalog IDs show always vs on hover/zoom (M3 interaction).
 - `content/constellations.json` + article remap and the Security cluster's
   content (M4).
 
-## 9. Reference mockups (`design/mockups/`)
+## 10. Reference mockups (`design/mockups/`)
 
 - `directions.html` — the 3-direction panel (A Deep Field / B Observatory / C Vivid).
 - `refined-a.html` — base A + first typography/shape refinement (Fraunces era).
@@ -147,7 +183,7 @@ and the seed set was generalized and expanded to 40 vendor-generic articles. The
 - `accent-explore.html`, `accent-explore-2.html`, `accent-split.html` — accent hue + split rounds.
 - `final.html` — **the ratified system**, whole (V1 accents + 7 constellations).
 
-## 10. Decision register
+## 11. Decision register
 
 | decision                                            | state    | note                                         |
 | --------------------------------------------------- | -------- | -------------------------------------------- |

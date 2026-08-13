@@ -1,6 +1,6 @@
 import type { Constellation } from '../content/types';
 import type { ZoomTransform } from 'd3-zoom';
-import type { StarLink } from './links';
+import type { StarLink, RelatedLink } from './links';
 import type { DisplayPoint } from './display';
 import { hashString } from '../util/hash';
 
@@ -148,6 +148,7 @@ export interface Scene {
   points: DisplayPoint[];
   meta: Map<string, StarMeta>;
   links: StarLink[];
+  relatedLinks: RelatedLink[];
   dust: DisplayPoint[];
 }
 
@@ -164,6 +165,7 @@ export function drawGalaxy(
   matchIds: ReadonlySet<string> | null,
   time = 0,
   twinkleAmp = 0,
+  showRelatedOverlay = false,
 ): void {
   ctx.save();
   ctx.clearRect(0, 0, width, height);
@@ -206,7 +208,7 @@ export function drawGalaxy(
     ctx.textAlign = 'center';
     ctx.font = "600 13px 'Archivo Narrow', system-ui, sans-serif";
     ctx.fillStyle = `${c.color}66`;
-    ctx.fillText(c.name.toUpperCase().split('').join('  '), c.anchor.x, c.anchor.y - 120);
+    ctx.fillText(c.name.toUpperCase().split('').join('  '), c.anchor.x, c.anchor.y - 120);
   }
 
   const pointById = new Map(scene.points.map((p) => [p.id, p]));
@@ -225,6 +227,54 @@ export function drawGalaxy(
     ctx.lineTo(b.x, b.y);
     ctx.stroke();
   }
+
+  // Related-article lines: dashed, gradient from source to target constellation color.
+  // Drawn when: (a) the overlay toggle is on, or (b) a star is selected (its related lines only).
+  const selectedRelated =
+    selectedId && !showRelatedOverlay
+      ? new Set(
+          scene.relatedLinks
+            .filter((l) => l.a === selectedId || l.b === selectedId)
+            .map((l) => `${l.a}|${l.b}`),
+        )
+      : null;
+
+  if (showRelatedOverlay || selectedId) {
+    ctx.setLineDash([6 / transform.k, 4 / transform.k]);
+    for (const link of scene.relatedLinks) {
+      const a = pointById.get(link.a);
+      const b = pointById.get(link.b);
+      if (!a || !b) continue;
+
+      const isSelected = link.a === selectedId || link.b === selectedId;
+      // When overlay is off and a star is selected, only draw that star's related lines.
+      if (!showRelatedOverlay && !isSelected) continue;
+
+      const linkDimmed = matchIds !== null && (!matchIds.has(link.a) || !matchIds.has(link.b));
+      // Emphasize the selected star's related lines (brighter, thicker).
+      const emphasized = isSelected && selectedId !== null;
+      const baseAlpha = linkDimmed ? 0.06 : emphasized ? 0.55 : 0.2;
+
+      ctx.lineWidth = (emphasized ? 1.8 : 1) / transform.k;
+      ctx.globalAlpha = baseAlpha;
+
+      // Gradient from source constellation color to target constellation color.
+      const grad = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
+      grad.addColorStop(0, link.colorA);
+      grad.addColorStop(1, link.colorB);
+      ctx.strokeStyle = grad;
+
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+    ctx.lineWidth = 1 / transform.k;
+  }
+  // Suppress unused-variable lint for selectedRelated — kept for potential future use.
+  void selectedRelated;
 
   const labelCandidates: LabelCandidate[] = [];
   for (const p of scene.points) {

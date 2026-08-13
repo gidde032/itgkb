@@ -37,6 +37,17 @@ export function StarIcon(): JSX.Element {
   );
 }
 
+export function RelatedLinesIcon(): JSX.Element {
+  // Two dots connected by a dashed diagonal — represents inter-article links.
+  return (
+    <svg {...base}>
+      <circle cx="5" cy="19" r="2.5" />
+      <circle cx="19" cy="5" r="2.5" />
+      <line x1="7" y1="17" x2="17" y2="7" strokeDasharray="3 2" />
+    </svg>
+  );
+}
+
 export function ResetIcon(): JSX.Element {
   return (
     <svg {...base}>
