@@ -165,7 +165,10 @@ export function analyzeCollection(entries, constellations) {
   for (const { fm, sourceName } of entries) {
     if (Array.isArray(fm.related)) {
       for (const rid of fm.related) {
-        if (typeof rid === 'string' && !seen.has(rid)) {
+        if (typeof rid === 'string' && rid === fm.id) {
+          // Self-references would render as degenerate zero-length lines (M1).
+          errors.push(`${sourceName}: related id "${rid}" is a self-reference`);
+        } else if (typeof rid === 'string' && !seen.has(rid)) {
           errors.push(`${sourceName}: related id "${rid}" does not resolve to any article`);
         }
       }

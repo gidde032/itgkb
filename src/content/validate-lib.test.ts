@@ -58,6 +58,15 @@ describe('validateCollection', () => {
     );
     expect(errs.join(' ')).toMatch(/does not resolve/);
   });
+  // M1 regression (v1.1 audit): an article listing its own id in `related` is
+  // a content error — it would render as a degenerate zero-length line.
+  it('flags self-referencing related ids (M1)', () => {
+    const errs = validateCollection(
+      [{ fm: { ...good, related: ['a-one'] }, sourceName: 'a-one.md' }],
+      constellations,
+    );
+    expect(errs.join(' ')).toMatch(/self-reference/);
+  });
 });
 
 // F3 regression (reviewer: data-pipeline, severity Medium): frontmatter block

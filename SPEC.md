@@ -94,7 +94,8 @@ positions, not a rewrite.
   constellation ids, and that every `related` id resolves. It must exit
   non-zero on any violation.
 - **FR-12** The v1.0.0 line ships 40 vendor-generic articles across the 7
-  constellations (§5), with no stubs. Content is enforced vendor-neutral by
+  constellations (§5), with no stubs (41 as of v1.1). Content is enforced
+  vendor-neutral by
   `npm run check:sensitivity` — no organization-specific data or unresolved
   `(verify)`/`[NEEDS VERIFICATION]` markers.
 
@@ -134,10 +135,10 @@ stub: false
 related: [dns-problems]
 ```
 
-Body: markdown with conventional H2 sections — `## Diagnostic Steps`,
-`## Resolution Steps`, `## Notes / Edge Cases`. Not machine-enforced in MVP
-(validation checks frontmatter only); template lives in
-`content/TEMPLATE.md`.
+Body: markdown with conventional H2 sections — `## Summary`,
+`## Diagnostic Steps`, `## Resolution Steps`, `## Notes / Edge Cases`. Not
+machine-enforced in MVP (validation checks frontmatter only); template lives
+in `content/TEMPLATE.md`.
 
 ### Constellations (vendor-neutral taxonomy, v1.0.0)
 

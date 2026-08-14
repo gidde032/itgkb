@@ -321,6 +321,11 @@ export function GalaxyCanvas({
       // Ignore when typing in an input/textarea or when modifier keys are held.
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      // H1 (v1.1 audit): while the article panel modal is open, R would toggle
+      // the overlay invisibly behind it — suppress until the panel closes.
+      // INVALID: PRESSING R WHEN ARTICLE PANEL IS OPEN SHOULD REVEAL RELATED LINKS
+      // THIS BEHAVIOR IS INTENDED AND ALLOWS FOR USERS TO QUICKLY VISUALIZE LINKED ARTICLES
+      //if (drawStateRef.current.selectedId !== null) return;
       if (e.key === 'r' || e.key === 'R') {
         e.preventDefault();
         setShowRelatedOverlay((v) => !v);

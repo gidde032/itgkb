@@ -21,13 +21,19 @@ npm run dev
 
 Open the printed localhost URL.
 
-**Finding articles fast:** type in the search bar — non-matching stars dim in
-place. Press Enter to jump to the top match, Escape to clear. On desktop, the
-"List view" button switches to a flat searchable list grouped by constellation.
-On narrow screens (<900 px) the list is shown automatically.
+**Finding articles fast:** type in the search bar — non-matching stars and
+lines dim in place. Press Enter to jump to the top match, Escape to clear. On
+desktop, the "List view" button switches to a flat searchable list grouped by
+constellation. On narrow screens (<900 px) the list is shown automatically.
 
 Click a star to read its article. Drag to pan, scroll to zoom, "Reset view" to
 return home.
+
+**Related-article lines:** dashed lines connect articles that reference each
+other in their `related` frontmatter, colored as a gradient from the source
+constellation to the target constellation. Click a star to emphasize its
+related lines, press `R` (or the "Related lines" button, top right) to show
+every related line across the galaxy at once.
 
 ## Add or edit an article
 

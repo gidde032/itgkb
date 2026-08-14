@@ -47,6 +47,34 @@ describe('computeConstellationLinks', () => {
     }
   });
 
+  // L4 regression (v1.1 audit): the greedy pass itself must respect the
+  // degree-2 cap. Crafted so every star earns a link from the greedy pass (no
+  // orphan rescue): a reaches degree 2 early, so a↔d — despite shared tags —
+  // must be REJECTED. Without the cap, a would end at degree 3.
+  it('greedy pass alone leaves no star above degree 2 (weak pair rejected)', () => {
+    const links = computeConstellationLinks([
+      art('a', 'alpha', ['t1', 't2', 't9']),
+      art('b', 'alpha', ['t1', 't2']),
+      art('c', 'alpha', ['t2']),
+      art('d', 'alpha', ['t9', 't8']),
+      art('e', 'alpha', ['t8']),
+    ]);
+    // Greedy: a↔b (2 shared) then a↔c, b↔c, d↔e; a↔d rejected — a is full.
+    expect(links).toHaveLength(4);
+    expect(links.some((l) => (l.a === 'a' && l.b === 'd') || (l.a === 'd' && l.b === 'a'))).toBe(
+      false,
+    );
+    const degree = new Map<string, number>();
+    for (const l of links) {
+      degree.set(l.a, (degree.get(l.a) ?? 0) + 1);
+      degree.set(l.b, (degree.get(l.b) ?? 0) + 1);
+    }
+    for (const id of ['a', 'b', 'c', 'd', 'e']) {
+      expect(degree.get(id)).toBeLessThanOrEqual(2);
+      expect(degree.get(id)).toBeGreaterThanOrEqual(1);
+    }
+  });
+
   it('is deterministic for equal-strength pairs', () => {
     const input = [art('x', 'alpha', ['t']), art('y', 'alpha', ['t']), art('z', 'alpha', ['t'])];
     expect(computeConstellationLinks(input)).toEqual(computeConstellationLinks(input));
@@ -186,5 +214,13 @@ describe('computeRelatedLinks', () => {
     const links = computeRelatedLinks(articles, colors);
     const keys = links.map((l) => `${l.a}|${l.b}`);
     expect(keys).toEqual([...keys].sort());
+  });
+
+  // M1 regression (v1.1 audit): an article listing its own id in `related`
+  // must not produce a degenerate self-link (zero-length gradient line).
+  it('ignores a self-referencing related entry', () => {
+    const articles = [art('a', 'alpha', [], ['a', 'b']), art('b', 'beta', [])];
+    const links = computeRelatedLinks(articles, colors);
+    expect(links).toEqual([{ a: 'a', b: 'b', colorA: '#aaa', colorB: '#bbb' }]);
   });
 });

@@ -10,37 +10,58 @@ function makeRecordingCtx(): {
   fillTexts: () => string[];
   setLineDashCalls: () => number[][];
   createLinearGradientCalls: () => number[][];
+  /** Gradient stops per createLinearGradient call, in call order. */
+  linearGradientStops: () => Array<[number, string][]>;
+  /** Snapshot of strokeStyle/globalAlpha/lineWidth captured at each stroke() call. */
+  strokes: () => Array<{ style: unknown; alpha: unknown; width: unknown }>;
 } {
   const fillText = vi.fn();
   const setLineDash = vi.fn();
-  const createLinearGradient = vi.fn();
   const gradient = { addColorStop: vi.fn() };
-  createLinearGradient.mockReturnValue(gradient);
-  const ctx = new Proxy(
-    { fillText, setLineDash, createLinearGradient },
-    {
-      get(target: Record<string, unknown>, prop: string) {
-        if (prop in target) return target[prop];
-        if (prop === 'createRadialGradient') {
-          return vi.fn(() => gradient);
-        }
-        // Approximate metrics: 6px per character is enough to drive truncation.
-        if (prop === 'measureText') return (t: string) => ({ width: String(t).length * 6 });
-        if (!(prop in target)) target[prop] = vi.fn();
-        return target[prop];
-      },
-      set(target: Record<string, unknown>, prop: string, value: unknown) {
-        target[prop] = value;
-        return true;
-      },
+  // v1.1 audit: per-call gradient + stroke-state recording so line tests can
+  // assert gradient direction and dim/emphasis alpha precisely.
+  const stopsPerGradient: Array<[number, string][]> = [];
+  const createLinearGradient = vi.fn((...coords: number[]) => {
+    void coords;
+    const stops: Array<[number, string]> = [];
+    const g = { addColorStop: vi.fn((o: number, c: string) => stops.push([o, c])) };
+    stopsPerGradient.push(stops);
+    return g;
+  });
+  const strokeSnapshots: Array<{ style: unknown; alpha: unknown; width: unknown }> = [];
+  const store: Record<string, unknown> = { fillText, setLineDash, createLinearGradient };
+  const stroke = vi.fn(() => {
+    strokeSnapshots.push({
+      style: store.strokeStyle,
+      alpha: store.globalAlpha,
+      width: store.lineWidth,
+    });
+  });
+  store.stroke = stroke;
+  const ctx = new Proxy(store, {
+    get(target: Record<string, unknown>, prop: string) {
+      if (prop in target) return target[prop];
+      if (prop === 'createRadialGradient') {
+        return vi.fn(() => gradient);
+      }
+      // Approximate metrics: 6px per character is enough to drive truncation.
+      if (prop === 'measureText') return (t: string) => ({ width: String(t).length * 6 });
+      if (!(prop in target)) target[prop] = vi.fn();
+      return target[prop];
     },
-  ) as unknown as CanvasRenderingContext2D;
+    set(target: Record<string, unknown>, prop: string, value: unknown) {
+      target[prop] = value;
+      return true;
+    },
+  }) as unknown as CanvasRenderingContext2D;
   return {
     ctx,
     fillTexts: () => fillText.mock.calls.map((c) => String(c[0])),
     setLineDashCalls: () => setLineDash.mock.calls.map((c) => c[0] as number[]),
     createLinearGradientCalls: () =>
       createLinearGradient.mock.calls.map((c) => c as unknown as number[]),
+    linearGradientStops: () => stopsPerGradient,
+    strokes: () => strokeSnapshots,
   };
 }
 
@@ -225,5 +246,164 @@ describe('related lines (#39)', () => {
     // Only 1 linear gradient for the related line (s1↔s2).
     // Note: createLinearGradient is also not called for constellation lines, so count should be 1.
     expect(createLinearGradientCalls().length).toBe(1);
+  });
+
+  // L1 regression: the gradient contract is source-color → target-color. A swap
+  // would previously pass because only the call count was asserted.
+  it('runs the gradient from the source color (stop 0) to the target color (stop 1)', () => {
+    const { ctx, linearGradientStops } = makeRecordingCtx();
+    drawGalaxy(
+      ctx,
+      800,
+      600,
+      relatedScene,
+      constellations,
+      transformAt(1),
+      null,
+      null,
+      null,
+      0,
+      0,
+      true,
+    );
+    const stops = linearGradientStops().at(-1)!;
+    expect(stops[0]).toEqual([0, '#aaa']);
+    expect(stops[1]).toEqual([1, '#bbb']);
+  });
+
+  // L1 regression: emphasized (selected-star) related lines must be visibly
+  // different — higher alpha (0.55 vs 0.2) and thicker (1.8 vs 1).
+  it('emphasizes a selected star’s related lines (alpha 0.55, width 1.8)', () => {
+    const { ctx, strokes } = makeRecordingCtx();
+    drawGalaxy(
+      ctx,
+      800,
+      600,
+      relatedScene,
+      constellations,
+      transformAt(1),
+      's1',
+      null,
+      null,
+      0,
+      0,
+      false,
+    );
+    // relatedScene has no constellation links, so the related line is the first
+    // stroke; the LAST stroke is the selected star's emphasis ring.
+    const related = strokes()[0];
+    expect(related.alpha).toBe(0.55);
+    expect(related.width).toBe(1.8);
+  });
+
+  it('draws non-emphasized overlay lines at base alpha 0.2 and width 1', () => {
+    const { ctx, strokes } = makeRecordingCtx();
+    drawGalaxy(
+      ctx,
+      800,
+      600,
+      relatedScene,
+      constellations,
+      transformAt(1),
+      null,
+      null,
+      null,
+      0,
+      0,
+      true,
+    );
+    const related = strokes().at(-1)!;
+    expect(related.alpha).toBe(0.2);
+    expect(related.width).toBe(1);
+  });
+
+  // H3 regression: lines dim during search. A related line with an endpoint
+  // outside the match set drops to 0.06 alpha; a fully-matching one stays 0.2.
+  it('dims related lines to 0.06 alpha during search when an endpoint is unmatched', () => {
+    const { ctx, strokes } = makeRecordingCtx();
+    drawGalaxy(
+      ctx,
+      800,
+      600,
+      relatedScene,
+      constellations,
+      transformAt(1),
+      null,
+      null,
+      new Set(['s1']),
+      0,
+      0,
+      true,
+    );
+    expect(strokes().at(-1)!.alpha).toBe(0.06);
+  });
+
+  it('keeps matched related lines at full alpha during search', () => {
+    const { ctx, strokes } = makeRecordingCtx();
+    drawGalaxy(
+      ctx,
+      800,
+      600,
+      relatedScene,
+      constellations,
+      transformAt(1),
+      null,
+      null,
+      new Set(['s1', 's2']),
+      0,
+      0,
+      true,
+    );
+    expect(strokes().at(-1)!.alpha).toBe(0.2);
+  });
+});
+
+// H3 regression: constellation lines dim during search too. drawGalaxy uses
+// `${color}10` for dimmed vs `${color}2e` for normal constellation strokes.
+describe('constellation line dimming during search (H3)', () => {
+  const linkedScene = {
+    points: [
+      { id: 's1', x: 10, y: 10, z: 0.5 },
+      { id: 's2', x: 100, y: 100, z: 0.5 },
+    ],
+    meta: new Map([
+      ['s1', { color: '#ffaa00', stub: false, title: 'A', summary: 's', catalog: 'GW-001' }],
+      ['s2', { color: '#ffaa00', stub: false, title: 'B', summary: 's', catalog: 'GW-002' }],
+    ]),
+    links: [{ a: 's1', b: 's2' }],
+    relatedLinks: [],
+    dust: [],
+  };
+
+  it('dims the stroke when an endpoint is outside the match set', () => {
+    const { ctx, strokes } = makeRecordingCtx();
+    drawGalaxy(
+      ctx,
+      800,
+      600,
+      linkedScene,
+      constellations,
+      transformAt(1),
+      null,
+      null,
+      new Set(['s1']),
+    );
+    expect(strokes().at(-1)!.style).toBe('#ffaa0010');
+  });
+
+  it('keeps the normal stroke when both endpoints match', () => {
+    const { ctx, strokes } = makeRecordingCtx();
+    drawGalaxy(
+      ctx,
+      800,
+      600,
+      linkedScene,
+      constellations,
+      transformAt(1),
+      null,
+      null,
+      new Set(['s1', 's2']),
+    );
+    expect(strokes().at(-1)!.style).toBe('#ffaa002e');
   });
 });
