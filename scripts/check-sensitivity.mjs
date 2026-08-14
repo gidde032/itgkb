@@ -1,9 +1,9 @@
 // Content-sensitivity gate (M4 #22): the public repo must not carry
-// organization-specific data (Carlson/UMN/TDX names, internal hostnames),
+// organization-specific data (org/university names, internal hostnames),
 // email addresses, or unresolved (verify)/[NEEDS VERIFICATION] markers.
 //
-// Report-only for now — NOT yet wired into `npm run gates`. It becomes a hard
-// gate once the seed articles are generalized (#24). Run: npm run check:sensitivity
+// Hard gate — wired into `npm run gates` via `gates:quality` (M4 #24).
+// Run: npm run check:sensitivity
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';

@@ -154,7 +154,8 @@ distinct from constellation lines:
 - **Dashed stroke** (constellation lines are solid).
 - **Gradient color** from source constellation accent to target constellation
   accent, making cross-constellation relationships visually legible.
-- **Lower base opacity** than constellation lines (0.2 vs 0.18).
+- **Higher base opacity** than constellation lines (0.2 vs 0.18) so the sparse
+  dashed strokes stay legible over the solid constellation web.
 - **Two visibility modes:**
   - _On-selection:_ when a star is clicked, its related lines are drawn with
     emphasized weight/opacity (0.55, 1.8px).

@@ -122,6 +122,7 @@ export function computeRelatedLinks(
 
   for (const article of articles) {
     for (const targetId of article.related) {
+      if (targetId === article.id) continue; // self-reference: no degenerate link (M1)
       if (!articleIds.has(targetId)) continue;
       const key = article.id < targetId ? `${article.id}|${targetId}` : `${targetId}|${article.id}`;
       if (seen.has(key)) continue;
