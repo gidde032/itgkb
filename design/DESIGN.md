@@ -184,17 +184,57 @@ distinct from constellation lines:
 - `accent-explore.html`, `accent-explore-2.html`, `accent-split.html` — accent hue + split rounds.
 - `final.html` — **the ratified system**, whole (V1 accents + 7 constellations).
 
-## 11. Decision register
+## 11. Decision register| decision | state | note |
 
-| decision                                            | state    | note                                         |
 | --------------------------------------------------- | -------- | -------------------------------------------- |
-| Base direction A (Deep Field)                       | RATIFIED | over B Observatory / C Vivid                 |
-| Serif = Newsreader                                  | RATIFIED | over Fraunces / Instrument Serif             |
-| Body = Hanken Grotesk                               | RATIFIED |                                              |
-| Instrument = Archivo Narrow (non-mono cartographic) | RATIFIED | monospace rejected as the "AI tell"          |
+| Base direction A (Deep Field) | RATIFIED | over B Observatory / C Vivid |
+| Serif = Newsreader | RATIFIED | over Fraunces / Instrument Serif |
+| Body = Hanken Grotesk | RATIFIED | |
+| Instrument = Archivo Narrow (non-mono cartographic) | RATIFIED | monospace rejected as the "AI tell" |
 | Accents = coral `#F2A0A6` + sky `#8FC2EE`, V1 split | RATIFIED | over amber; navy/mint/powder/forest rejected |
-| Shape: no pills, bracketed tags, squared fields     | RATIFIED |                                              |
-| 7 constellations, neutral names + Security          | RATIFIED |                                              |
-| Motion language                                     | RATIFIED | parallax / fly-to / hover / subtle twinkle   |
-| Dark-only for v1.0.0                                | RATIFIED | light mode deferred                          |
-| Light/daytime theme                                 | DEFERRED | post-1.0                                     |
+| Shape: no pills, bracketed tags, squared fields | RATIFIED | |
+| 7 constellations, neutral names + Security | RATIFIED | |
+| Motion language | RATIFIED | parallax / fly-to / hover / subtle twinkle |
+| Dark-only for v1.0.0 | RATIFIED | light mode deferred |
+| Light/daytime theme | DEFERRED | post-1.0 |
+| 3D showcase = third view, active segment coral | RATIFIED | #31 decision record 2026-08-20; amber re-rejected for UI state (`#E4B363` is Workspace & Email data color) |
+| Related lines always-on in 3D as dashed arcs | RATIFIED | gradient arcs; `R` shortcut + overlay stay galaxy-only |
+| 3D star glow = additive sprites, no postprocessing | RATIFIED | over bloom (dependency weight, generic glow look) |
+
+## 12. 3D showcase view (#31)
+
+Third view mode — the "3D" segment of the List · Galaxy · 3D control. Full
+design contract: issue #31 decision record (2026-08-20). Key surface rules:
+
+- **Active state.** Active segment carries the coral `--brand` accent; the
+  palette's only amber (`#E4B363`) stays reserved as Workspace & Email's data
+  color. Squared segments in the previous single-toggle's position, house
+  button language (Archivo Narrow caps, icon + label).
+- **Depth.** Same x,y as the 2D galaxy; deterministic z-expansion from curated
+  per-constellation `depth { z, spread }` in `constellations.json`. The
+  transform sits downstream of the `LayoutProvider` seam so a semantic layout
+  (#29) composes unchanged.
+- **Lines.** Constellation chains stay straight and solid. Related-article
+  lines are always on in 3D as dashed gradient arcs (source → target
+  constellation color); arc elevation varies with chord length and intervening
+  stars (hash-seeded, deterministic). Emphasized on selection, dimmed during
+  search. The `R` shortcut and Related-lines overlay remain galaxy-only.
+- **Stars.** Additive sprite glow from math-generated DataTextures — no
+  post-processing; per-star states mirror the 2D grammar (search dim, stub =
+  dimmer core + dashed ring, selection = solid coral ring).
+- **Labels.** Bracketed catalog ids (`[GW-001]`) as DOM overlays anchored to
+  3D positions, with the 2D-parity reveal rules: id on hover/selection/close
+  camera, title appended on hover/selection, suppressed for search
+  non-matches. Constellation name chips are clickable framing targets.
+- **Instrument layer.** The HUD reads AZ/EL (camera azimuth/elevation about
+  the orbit target) in place of the galaxy's RA/DEC; object/field counts
+  unchanged.
+- **Motion.** Idle auto-orbit (on by default, house-style toggle) yields
+  instantly to input, resumes after ~2s stillness, hard-off under
+  `prefers-reduced-motion` (live-subscribed). Fly-to and framing moves ease
+  ~0.7s or snap under reduced motion. Render loop drops to on-demand at rest —
+  a still showcase burns no GPU.
+- **Availability.** Lazy chunk (~236 KB gz measured; sanity ceiling ~275 KB —
+  NF-4 measures initial payload only). Fallback is an announced status region.
+  Without WebGL the 3D segment is disabled with a visually-hidden reason; the
+  control is hidden under 900px (NF-7 list override).
