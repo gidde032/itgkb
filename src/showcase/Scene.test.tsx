@@ -367,6 +367,25 @@ describe('Scene label projector (#31 decision 10)', () => {
     expect(other).toBeNull();
   });
 
+  // Deep-zoom title parity (maintainer request 2026-08-21): close enough, the
+  // one-line title shows on nearby labels without hover/selection — the 3D
+  // counterpart of the 2D galaxy's k > 1.6 rule.
+  it('shows titles on nearby labels when the camera is close, hides them when far', () => {
+    const { container } = renderScene();
+    const title = container.querySelector<HTMLElement>('[data-id="a"] .s-label__title');
+    const park = (z: number) => {
+      h.camera!.position.set(0, 0, z);
+      h.camera!.lookAt(0, 0, 0);
+      h.camera!.updateMatrixWorld(true);
+    };
+    park(200); // inside CLOSE_TITLE_DIST (300)
+    tick(0.1);
+    expect(title?.style.display).toBe('inline');
+    park(500); // label still revealed (650) but past the title threshold
+    tick(0.2);
+    expect(title?.style.display).toBe('none');
+  });
+
   // Review repair regression (contract #3): 2D parity — search-dimmed stars
   // carry no label, even when hovered/selected.
   it('suppresses labels for search-dimmed stars even when selected', () => {

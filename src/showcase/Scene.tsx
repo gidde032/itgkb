@@ -6,7 +6,6 @@ import * as THREE from 'three';
 import type { CatalogStarMeta } from '../content/catalog';
 import type { RelatedArc, Vec3 } from './arcGeometry';
 import { framePoints, frameStar, DEFAULT_VIEW_DIR, type Frame } from './framing';
-import { GLOBE_RADIUS } from './globe';
 import { prefersReducedMotion } from '../app/motion';
 import { getGlowTexture, getRingTexture, getDashedRingTexture, dustPositions3D } from './textures';
 
@@ -20,6 +19,9 @@ import { getGlowTexture, getRingTexture, getDashedRingTexture, dustPositions3D }
 const ORBIT_RESUME_MS = 2200;
 /** Camera closer than this to a star reveals its catalog label (2D-parity rule). */
 export const LABEL_REVEAL_DIST = 650;
+/** Camera closer than this shows one-line titles on nearby labels — the 3D
+ *  counterpart of the 2D galaxy's deep-zoom (k > 1.6) title rule. */
+export const CLOSE_TITLE_DIST = 300;
 const STAR_CORE = '#fbf6ee';
 const SELECT_RING_COLOR = '#f2a0a6';
 const TWEEN_S = 0.7;
@@ -371,12 +373,16 @@ function LabelProjector({
       // non-matches the same way).
       const dimmed = matchIds !== null && !matchIds.has(id);
       const emphasized = !dimmed && (id === selectedId || id === hoveredId);
-      const near =
-        camera.position.distanceTo(distScratch.set(p[0], p[1], p[2])) < LABEL_REVEAL_DIST;
+      const dist = camera.position.distanceTo(distScratch.set(p[0], p[1], p[2]));
+      const near = dist < LABEL_REVEAL_DIST;
       const placed = place(el, p, 12, -8);
       el.classList.toggle('s-label--on', placed && !dimmed && (emphasized || near));
+      // Title rule mirrors the 2D galaxy (deep-zoom parity, maintainer
+      // request 2026-08-21): the one-line title shows on hover/selection, or
+      // for every label once the camera is close enough — the 3D counterpart
+      // of the 2D k > 1.6 deep-zoom threshold.
       const title = el.querySelector<HTMLElement>('.s-label__title');
-      if (title) title.style.display = emphasized ? 'inline' : 'none';
+      if (title) title.style.display = emphasized || dist < CLOSE_TITLE_DIST ? 'inline' : 'none';
     }
 
     for (const [cid, p] of chipPosById) {
@@ -470,14 +476,6 @@ export function Scene(props: SceneProps): JSX.Element {
     <>
       <color attach="background" args={['#070b14']} />
       <fogExp2 attach="fog" args={['#070b14', 0.00022]} />
-      {/* The ball of night (repair Q2a): a barely-lighter sphere just inside
-          the star shell so the globe reads as a solid object from any angle.
-          raycast disabled — it must never intercept star clicks; the near-side
-          stars sit on/above it and the far side occludes naturally. */}
-      <mesh raycast={() => null}>
-        <sphereGeometry args={[GLOBE_RADIUS - 32, 48, 32]} />
-        <meshBasicMaterial color="#0d1526" />
-      </mesh>
       <Dust count={420} />
       {/* Constellation line art: straight, solid — star-chart chains (decision 3). */}
       {solidLinks.map((l) => {
