@@ -35,6 +35,14 @@ constellation to the target constellation. Click a star to emphasize its
 related lines, press `R` (or the "Related lines" button, top right) to show
 every related line across the galaxy at once.
 
+**3D view:** the view switcher (List · Galaxy · 3D) adds a three-dimensional
+showcase. Stars expand into depth based on constellation `depth` settings;
+related-article arcs curve through space and constellation lines carry over
+from the 2D galaxy. Hover for tooltips, click to open the article panel,
+drag to orbit, scroll to zoom — the AZ/EL readout tracks your camera. The 3D
+segment is hidden automatically if WebGL is unavailable. The renderer is
+lazy-loaded and does not affect the initial page load.
+
 ## Add or edit an article
 
 1. Copy `content/TEMPLATE.md` into `content/articles/<your-id>.md`. The filename
@@ -80,9 +88,9 @@ where positions or search results come from:
   `LayoutProvider` (`src/layout/types.ts`) yields star positions and a
   `SearchProvider` (`src/search/types.ts`) yields match state. Smarter backends
   can be swapped in later without touching the UI.
-- **Renderer.** The galaxy consumes positions and match state only; it never
-  inspects article bodies. This keeps the near-term build to text search with no
-  AI/semantic features.
+- **Renderers.** Three view modes share the same positions and match state: the
+  2D galaxy (default), a flat list, and a lazy-loaded 3D showcase (WebGL-gated,
+  ~236 KB gz). None of them inspect article bodies.
 
 The visual system (color, type, the cartographic "instrument" layer of catalog
 IDs and a coordinate HUD) is defined in `design/DESIGN.md`; `design/tokens.css`
