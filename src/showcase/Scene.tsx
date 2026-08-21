@@ -78,12 +78,15 @@ function Dust({ count }: { count: number }): JSX.Element {
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <points geometry={geometry} frustumCulled={false}>
+      {/* Bugfix (2026-08-21 review): dust MUST NOT attenuate with distance — a
+          point near the camera ballooned to ~90% of the screen and blocked the
+          view. Constant pixel size + a shell outside the camera's reach. */}
       <pointsMaterial
-        size={2.6}
+        size={2.5}
         color="#aebcd8"
         transparent
-        opacity={0.45}
-        sizeAttenuation
+        opacity={0.4}
+        sizeAttenuation={false}
         depthWrite={false}
       />
     </points>
@@ -113,7 +116,7 @@ function StarObject({
   onHover,
   onSelectStar,
 }: StarProps): JSX.Element {
-  const glowScale = emphasized ? 26 : 19;
+  const glowScale = emphasized ? 29 : 21;
   const glowOpacity = dimmed ? 0.07 : meta.stub ? 0.38 : emphasized ? 1 : 0.85;
   const coreOpacity = dimmed ? 0.15 : meta.stub ? 0.6 : 1;
   const over = (e: ThreeEvent<PointerEvent>) => {
@@ -130,12 +133,7 @@ function StarObject({
   };
   return (
     <group position={position}>
-      <sprite
-        scale={[glowScale, glowScale, 1]}
-        onPointerOver={over}
-        onPointerOut={out}
-        onClick={click}
-      >
+      <sprite scale={[glowScale, glowScale, 1]}>
         <spriteMaterial
           map={getGlowTexture()}
           color={meta.color}
@@ -145,9 +143,16 @@ function StarObject({
           depthWrite={false}
         />
       </sprite>
-      <mesh onPointerOver={over} onPointerOut={out} onClick={click}>
-        <sphereGeometry args={[meta.stub ? 1.9 : 2.5, 10, 10]} />
+      <mesh>
+        <sphereGeometry args={[meta.stub ? 2.3 : 3, 10, 10]} />
         <meshBasicMaterial color={STAR_CORE} transparent opacity={coreOpacity} />
+      </mesh>
+      {/* Generous invisible hit target (2026-08-21 fix): a dedicated
+          transparent sphere keeps far-view clicking easy without depending on
+          the glow sprite's visual opacity. */}
+      <mesh onPointerOver={over} onPointerOut={out} onClick={click}>
+        <sphereGeometry args={[8, 8, 8]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
       {meta.stub && (
         <sprite scale={[11, 11, 1]}>
@@ -522,7 +527,7 @@ export function Scene(props: SceneProps): JSX.Element {
         enableDamping
         dampingFactor={0.08}
         rotateSpeed={0.55}
-        minDistance={140}
+        minDistance={25}
         maxDistance={3400}
         autoRotateSpeed={0.4}
       />

@@ -4,7 +4,7 @@ import type { Article, Constellation } from '../content/types';
 import type { StarPosition } from '../layout/types';
 import { catalogMeta, constellationColors } from '../content/catalog';
 import { computeConstellationLinks, computeRelatedLinks } from '../galaxy/links';
-import { expandDepth } from './depth';
+import { projectGlobe, GLOBE_RADIUS } from './globe';
 import { relatedArcs, type Vec3 } from './arcGeometry';
 import { framePoints, boundingSphere } from './framing';
 import { Scene, type FrameRequest, type SolidLink } from './Scene';
@@ -67,7 +67,7 @@ export function ShowcaseCanvas({
   }, []);
 
   const positions3D = useMemo(
-    () => expandDepth(positions, articles, constellations),
+    () => projectGlobe(positions, articles, constellations),
     [positions, articles, constellations],
   );
   const meta = useMemo(() => catalogMeta(articles, constellations), [articles, constellations]);
@@ -99,13 +99,16 @@ export function ShowcaseCanvas({
     return byC;
   }, [articles, constellations, positions3D]);
 
-  // Constellation chips float above their figure's bounding sphere (decision 13).
+  // Constellation chips float outward from the globe above their figure
+  // (decision 13) — along the figure-center direction, not world-up.
   const chipPosById = useMemo(() => {
     const m = new Map<string, Vec3>();
     for (const [cid, pts] of pointsByConstellation) {
       if (pts.length === 0) continue;
       const { center, radius } = boundingSphere(pts);
-      m.set(cid, [center[0], center[1] + radius + 70, center[2]]);
+      const l = Math.hypot(center[0], center[1], center[2]) || 1;
+      const r = GLOBE_RADIUS + radius + 60;
+      m.set(cid, [(center[0] / l) * r, (center[1] / l) * r, (center[2] / l) * r]);
     }
     return m;
   }, [pointsByConstellation]);

@@ -210,10 +210,13 @@ design contract: issue #31 decision record (2026-08-20). Key surface rules:
   palette's only amber (`#E4B363`) stays reserved as Workspace & Email's data
   color. Squared segments in the previous single-toggle's position, house
   button language (Archivo Narrow caps, icon + label).
-- **Depth.** Same x,y as the 2D galaxy; deterministic z-expansion from curated
-  per-constellation `depth { z, spread }` in `constellations.json`. The
-  transform sits downstream of the `LayoutProvider` seam so a semantic layout
-  (#29) composes unchanged.
+- **Globe.** Celestial-globe projection (starglobe reference): each
+  constellation sits ON the sphere, direction derived from its curated anchor;
+  local force-layout offsets become tangent-plane figure spread (tag affinity
+  preserved); shell thickness from the hash parallax z. Downstream of the
+  `LayoutProvider` seam so a semantic layout (#29) composes unchanged.
+  Supersedes the earlier flat-with-depth-offsets plan (maintainer direction,
+  2026-08-21 — no config surface change; anchors drive it).
 - **Lines.** Constellation chains stay straight and solid. Related-article
   lines are always on in 3D as dashed gradient arcs (source → target
   constellation color); arc elevation varies with chord length and intervening

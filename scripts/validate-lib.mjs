@@ -129,23 +129,6 @@ export function validateConstellations(constellations) {
     ) {
       errors.push(`${src}: "anchor" must be { x: number, y: number }`);
     }
-    // #31: optional showcase depth placement — type-checked only when present
-    // (same optional-with-defaults pattern as tags/stub/related).
-    const dep = c.depth;
-    if (dep !== undefined) {
-      if (
-        typeof dep !== 'object' ||
-        dep === null ||
-        Array.isArray(dep) ||
-        typeof dep.z !== 'number' ||
-        !Number.isFinite(dep.z) ||
-        typeof dep.spread !== 'number' ||
-        !Number.isFinite(dep.spread) ||
-        dep.spread < 0
-      ) {
-        errors.push(`${src}: "depth" must be { z: number, spread: number >= 0 } when present`);
-      }
-    }
   });
   return errors;
 }

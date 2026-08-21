@@ -76,7 +76,9 @@ export function dustPositions3D(count: number): Float32Array {
     const v = (h2 % 1000) / 999 - 0.5;
     const w = (h3 % 1000) / 999 - 0.5;
     const len = Math.hypot(u, v, w) || 1;
-    const radius = 500 + (h4 % 1000) * 1.0;
+    // Bugfix (2026-08-21): keep the shell OUTSIDE the camera's orbit range so
+    // no dust point can sit near the lens (see Scene Dust note).
+    const radius = 900 + (h4 % 1000) * 0.9;
     out[i * 3] = (u / len) * radius;
     out[i * 3 + 1] = (v / len) * radius * 0.7; // slightly flattened halo
     out[i * 3 + 2] = (w / len) * radius;

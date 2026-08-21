@@ -180,28 +180,4 @@ describe('validateConstellations (P7)', () => {
   it('rejects an empty array', () => {
     expect(validateConstellations([]).join(' ')).toMatch(/non-empty array/);
   });
-
-  // #31: optional depth placement — type-checked when present, optional otherwise.
-  describe('optional depth field (#31)', () => {
-    it('accepts a well-formed depth object', () => {
-      const errs = validateConstellations([{ ...good[0], depth: { z: -120, spread: 100 } }]);
-      expect(errs).toEqual([]);
-    });
-    it('accepts absent depth (2D-only constellations stay valid)', () => {
-      const errs = validateConstellations(good);
-      expect(errs).toEqual([]);
-    });
-    it('rejects depth with non-number coordinates', () => {
-      const errs = validateConstellations([{ ...good[0], depth: { z: 'deep', spread: 100 } }]);
-      expect(errs.join(' ')).toMatch(/depth/);
-    });
-    it('rejects a negative spread', () => {
-      const errs = validateConstellations([{ ...good[0], depth: { z: 0, spread: -5 } }]);
-      expect(errs.join(' ')).toMatch(/depth/);
-    });
-    it('rejects a non-object depth', () => {
-      const errs = validateConstellations([{ ...good[0], depth: 42 }]);
-      expect(errs.join(' ')).toMatch(/depth/);
-    });
-  });
 });

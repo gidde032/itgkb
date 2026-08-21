@@ -1,9 +1,9 @@
 [
-  { "id": "workspace-email", "name": "Workspace & Email", "prefix": "GW", "anchor": { "x": -320, "y": -160 }, "color": "#e4b363", "depth": { "z": -180, "spread": 120 } },
-  { "id": "collaboration-meetings", "name": "Collaboration & Meetings", "prefix": "MTG", "anchor": { "x": 360, "y": -180 }, "color": "#e2985c", "depth": { "z": 130, "spread": 120 } },
-  { "id": "files-storage", "name": "Files & Storage", "prefix": "FLS", "anchor": { "x": -60, "y": 300 }, "color": "#7cc97a", "depth": { "z": -40, "spread": 110 } },
-  { "id": "networking", "name": "Networking", "prefix": "NET", "anchor": { "x": 260, "y": 260 }, "color": "#4fc2b0", "depth": { "z": 150, "spread": 130 } },
-  { "id": "accounts-identity", "name": "Accounts & Identity", "prefix": "IAM", "anchor": { "x": 40, "y": -320 }, "color": "#7e8ce8", "depth": { "z": -120, "spread": 100 } },
-  { "id": "hardware-endpoints", "name": "Hardware & Endpoints", "prefix": "HW", "anchor": { "x": -400, "y": 120 }, "color": "#c77fd0", "depth": { "z": 60, "spread": 110 } },
-  { "id": "security", "name": "Security", "prefix": "SEC", "anchor": { "x": 400, "y": 80 }, "color": "#dd6070", "depth": { "z": 250, "spread": 110 } }
+  { "id": "workspace-email", "name": "Workspace & Email", "prefix": "GW", "anchor": { "x": -320, "y": -160 }, "color": "#e4b363" },
+  { "id": "collaboration-meetings", "name": "Collaboration & Meetings", "prefix": "MTG", "anchor": { "x": 360, "y": -180 }, "color": "#e2985c" },
+  { "id": "files-storage", "name": "Files & Storage", "prefix": "FLS", "anchor": { "x": -60, "y": 300 }, "color": "#7cc97a" },
+  { "id": "networking", "name": "Networking", "prefix": "NET", "anchor": { "x": 260, "y": 260 }, "color": "#4fc2b0" },
+  { "id": "accounts-identity", "name": "Accounts & Identity", "prefix": "IAM", "anchor": { "x": 40, "y": -320 }, "color": "#7e8ce8" },
+  { "id": "hardware-endpoints", "name": "Hardware & Endpoints", "prefix": "HW", "anchor": { "x": -400, "y": 120 }, "color": "#c77fd0" },
+  { "id": "security", "name": "Security", "prefix": "SEC", "anchor": { "x": 400, "y": 80 }, "color": "#dd6070" }
 ]

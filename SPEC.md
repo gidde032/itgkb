@@ -54,9 +54,10 @@ integration, AI authoring assistant, analytics, multi-user contribution flow.
 `{ id, x, y, z }` positions consumed by a renderer interface. The 3D
 "showcase" view (#31, react-three-fiber v8 — the line pairing with the pinned
 React 18) is a third renderer against the same positions, not a rewrite: a
-lazy-loaded chunk that derives real depth deterministically from curated
-per-constellation `depth` values, never a new LayoutProvider, so a future
-semantic layout (#29 / OQ-2) flows through unchanged.
+lazy-loaded chunk that projects the constellations onto a celestial globe
+(figure directions derived from the curated anchors; local force-layout
+offsets become tangent-plane figure spread), never a new LayoutProvider, so a
+future semantic layout (#29 / OQ-2) flows through unchanged.
 
 ## 3. Functional requirements
 
@@ -162,10 +163,9 @@ in `content/TEMPLATE.md`.
 
 Constellation config (`content/constellations.json`): `id`, display `name`,
 catalog `prefix`, anchor position (curated), and accent `color`. The validator
-checks each entry has all five fields. Optional: `depth: { z, spread }` — the
-curated 3D depth offset and intra-figure spread consumed by the showcase view
-(#31); type-checked when present, the same optional-with-defaults pattern as
-article `tags`/`stub`/`related`.
+checks each entry has all five fields. The showcase view derives its globe
+placement from these same anchors (one sphere direction per constellation; no
+extra fields).
 
 ### Module boundaries
 
@@ -175,7 +175,7 @@ src/
   layout/         LayoutProvider interface; CuratedForceLayout (d3-force) impl
   search/         SearchProvider interface; TextSearch impl
   galaxy/         canvas renderer, interaction (d3-zoom), hover/click hit-testing
-  showcase/       3D renderer (#31): depth expansion, arc geometry, camera
+  showcase/       3D renderer (#31): globe projection, arc geometry, camera
                   framing, r3f scene, DOM label projection — lazy chunk
   article/        article panel, markdown rendering, related-link navigation
   app/            shell, state, list-view fallback

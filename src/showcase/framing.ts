@@ -67,7 +67,7 @@ export function framePoints(
   points: readonly Vec3[],
   viewDir: Vec3 = DEFAULT_VIEW_DIR,
   fovDeg = 50,
-  margin = 1.15,
+  margin = 1.05,
 ): Frame {
   const { center, radius } = boundingSphere(points);
   const dist = framingDistance(Math.max(radius, 1), fovDeg, margin);
@@ -82,7 +82,7 @@ export function frameStar(
   star: Vec3,
   viewDir: Vec3,
   fovDeg = 50,
-  framingRadius = 130,
+  framingRadius = 70,
   margin = 1.15,
 ): Frame {
   const dir = norm(viewDir);
