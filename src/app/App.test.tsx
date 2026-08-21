@@ -196,6 +196,9 @@ describe('view-mode segmented control (A4, #31 decision 11)', () => {
       const threeD = screen.getByRole('button', { name: '3D' });
       expect(threeD).toBeDisabled();
       expect(threeD).toHaveAttribute('title', '3D view requires WebGL');
+      // Review repair regression (a11y #2): the exclusion reason must be
+      // present as text in the control group, not only in the title tooltip.
+      expect(screen.getByText(/does not support WebGL/i)).toBeInTheDocument();
       // Galaxy remains the default and reachable.
       expect(
         screen.getByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' }),

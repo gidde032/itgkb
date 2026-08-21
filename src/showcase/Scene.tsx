@@ -58,6 +58,8 @@ export interface SceneProps {
   starLabelRef: React.RefObject<HTMLDivElement>;
   chipLabelRef: React.RefObject<HTMLDivElement>;
   orbitEnabled: boolean;
+  /** Live prefers-reduced-motion value (subscribed, not snapshotted). */
+  reducedMotion: boolean;
   setAnimating: (v: boolean) => void;
   onHover: (id: string | null, clientX: number, clientY: number) => void;
   onSelectStar: (id: string) => void;
@@ -71,6 +73,9 @@ function Dust({ count }: { count: number }): JSX.Element {
     g.setAttribute('position', new THREE.BufferAttribute(dustPositions3D(count), 3));
     return g;
   }, [count]);
+  // Review repair (correctness #4): the geometry is created outside JSX, so r3f
+  // will not auto-dispose it — each List↔3D round trip leaked one GPU buffer.
+  useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <points geometry={geometry} frustumCulled={false}>
       <pointsMaterial
@@ -215,7 +220,9 @@ function CameraRig({
       lastSeqRef.current = req.seq;
       // Frame from the CURRENT view direction so the move feels continuous
       // with where the user is looking (reset returns to the default bearing).
-      const dir: Vec3 = DEFAULT_VIEW_DIR;
+      // Review repair (correctness #1 / contract #1): copy the constant —
+      // mutating DEFAULT_VIEW_DIR in place corrupted every later reset.
+      const dir: Vec3 = [...DEFAULT_VIEW_DIR];
       if (controls) {
         const d = dirScratch.current.subVectors(camera.position, controls.target);
         if (d.lengthSq() > 1e-6) {
@@ -274,6 +281,11 @@ function CameraRig({
         tweenRef.current = null;
         setAnimating(false);
       }
+    } else {
+      // Review repair (correctness #2): self-heal the render-loop flag — if no
+      // tween is running, nothing needs 'always'. setState with the same value
+      // is a React no-op, so this is free per frame.
+      setAnimating(false);
     }
 
     // HUD (throttled): azimuth/elevation of the camera about the orbit target —
@@ -303,6 +315,7 @@ interface LabelProjectorProps {
   chipLabelRef: SceneProps['chipLabelRef'];
   selectedId: string | null;
   hoveredId: string | null;
+  matchIds: SceneProps['matchIds'];
   positionById: SceneProps['positionById'];
   chipPosById: ReadonlyMap<string, Vec3>;
 }
@@ -312,6 +325,7 @@ function LabelProjector({
   chipLabelRef,
   selectedId,
   hoveredId,
+  matchIds,
   positionById,
   chipPosById,
 }: LabelProjectorProps): JSX.Element | null {
@@ -346,11 +360,15 @@ function LabelProjector({
     for (const [id, p] of positionById) {
       const el = starEls.current?.get(id);
       if (!el) continue;
-      const emphasized = id === selectedId || id === hoveredId;
+      // Review repair (contract #3): 2D parity — search-dimmed stars carry no
+      // label, even when hovered/selected (draw.ts suppresses labels for
+      // non-matches the same way).
+      const dimmed = matchIds !== null && !matchIds.has(id);
+      const emphasized = !dimmed && (id === selectedId || id === hoveredId);
       const near =
         camera.position.distanceTo(distScratch.set(p[0], p[1], p[2])) < LABEL_REVEAL_DIST;
       const placed = place(el, p, 12, -8);
-      el.classList.toggle('s-label--on', placed && (emphasized || near));
+      el.classList.toggle('s-label--on', placed && !dimmed && (emphasized || near));
       const title = el.querySelector<HTMLElement>('.s-label__title');
       if (title) title.style.display = emphasized ? 'inline' : 'none';
     }
@@ -360,6 +378,22 @@ function LabelProjector({
       if (!el) continue;
       const placed = place(el, p, 0, -16);
       el.style.display = placed ? 'block' : 'none';
+    }
+
+    // Review repair (a11y #1): a focused chip rotating behind the camera is
+    // display:none'd out of the accessibility tree, which would drop focus to
+    // <body>. Redirect focus to the first still-visible chip before that
+    // happens so keyboard users keep their place.
+    const active = document.activeElement;
+    if (
+      active instanceof HTMLElement &&
+      active.classList.contains('c-label') &&
+      active.style.display === 'none'
+    ) {
+      const firstVisible = Array.from(chipEls.current?.values() ?? []).find(
+        (el) => el.style.display !== 'none',
+      );
+      firstVisible?.focus();
     }
   });
   return null;
@@ -385,6 +419,7 @@ export function Scene(props: SceneProps): JSX.Element {
     chipLabelRef,
     chipPosById,
     orbitEnabled,
+    reducedMotion,
     setAnimating,
     onHover,
     onSelectStar,
@@ -392,15 +427,17 @@ export function Scene(props: SceneProps): JSX.Element {
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
 
   // Decision 5: idle auto-orbit — on while enabled, yields instantly to input,
-  // resumes after stillness, hard-off under reduced motion.
+  // resumes after stillness, hard-off under reduced motion. Review repair
+  // (a11y #7 / correctness #3): reduced motion arrives as a live prop (the
+  // wrapper subscribes to the media query), not a mount-time snapshot, so an
+  // OS preference change mid-session takes effect immediately.
   useEffect(() => {
     const c = controlsRef.current;
     if (!c) return;
-    const reduced = prefersReducedMotion();
     let paused = false;
     let timer: number | undefined;
     const apply = () => {
-      c.autoRotate = orbitEnabled && !reduced && !paused;
+      c.autoRotate = orbitEnabled && !reducedMotion && !paused;
     };
     const onStart = () => {
       paused = true;
@@ -421,7 +458,7 @@ export function Scene(props: SceneProps): JSX.Element {
       c.removeEventListener('end', onEnd);
       if (timer) window.clearTimeout(timer);
     };
-  }, [orbitEnabled]);
+  }, [orbitEnabled, reducedMotion]);
 
   return (
     <>
@@ -503,6 +540,7 @@ export function Scene(props: SceneProps): JSX.Element {
         chipLabelRef={chipLabelRef}
         selectedId={selectedId}
         hoveredId={hoveredId}
+        matchIds={matchIds}
         positionById={positionById}
         chipPosById={chipPosById}
       />

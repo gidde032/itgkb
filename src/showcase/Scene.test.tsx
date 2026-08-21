@@ -58,6 +58,7 @@ vi.mock('@react-three/drei', async () => {
 });
 
 import { Scene, type FrameRequest } from './Scene';
+import { DEFAULT_VIEW_DIR } from './framing';
 
 const meta = new Map([
   ['a', { color: '#e4b363', stub: false, title: 'Alpha', summary: 'sa', catalog: 'GW-001' }],
@@ -116,7 +117,10 @@ function baseProps() {
           ] as [number, number, number][],
         ],
       ]),
-      chipPosById: new Map([['gw', [50, 160, 10] as [number, number, number]]]),
+      chipPosById: new Map([
+        ['gw', [0, 0, 50] as [number, number, number]],
+        ['far', [0, 0, 300] as [number, number, number]],
+      ]),
       allPoints: [
         [0, 0, 0],
         [100, 50, 20],
@@ -126,6 +130,7 @@ function baseProps() {
       starLabelRef,
       chipLabelRef,
       orbitEnabled: true,
+      reducedMotion: false,
       setAnimating: vi.fn(),
       onHover: vi.fn(),
       onSelectStar: vi.fn(),
@@ -149,6 +154,9 @@ function renderScene(overrides: Record<string, unknown> = {}) {
       <div ref={refs.chipLabelRef}>
         <button data-id="gw" className="c-label" type="button">
           Workspace
+        </button>
+        <button data-id="far" className="c-label" type="button">
+          Far Side
         </button>
       </div>
       <Scene {...merged} />
@@ -195,6 +203,13 @@ describe('Scene orbit management (#31 decision 5)', () => {
 
   it('disables auto-orbit when the toggle is off', () => {
     renderScene({ orbitEnabled: false });
+    expect(h.controls?.autoRotate).toBe(false);
+  });
+
+  // Review repair regression (a11y #7 / correctness #3): reduced motion is a
+  // live value; orbit must be hard-off even with the toggle on.
+  it('hard-disables auto-orbit when reduced motion is requested', () => {
+    renderScene({ reducedMotion: true });
     expect(h.controls?.autoRotate).toBe(false);
   });
 });
@@ -270,6 +285,49 @@ describe('Scene camera rig (#31 decisions 4, 13)', () => {
     tick(0.4);
     expect(refs.hudRef.current?.textContent).toMatch(/^AZ \d+\.\d+° · EL [−+]\d+\.\d+°$/);
   });
+
+  // Review repair regression (correctness #1 / contract #1): the rig used to
+  // mutate the shared DEFAULT_VIEW_DIR constant, so after any directional
+  // fly-to, "Reset view" returned to the captured bearing, not the default.
+  it('reset returns to the default bearing after a directional fly-to', () => {
+    const { props } = renderScene();
+    // Point the camera far away from the default bearing before the fly-to.
+    h.camera!.position.set(500, 0, 500);
+    h.controls!.target.set(0, 0, 0);
+    h.camera!.lookAt(0, 0, 0);
+    h.camera!.updateMatrixWorld(true);
+    (props.frameRef as { current: FrameRequest | null }).current = {
+      seq: 1,
+      kind: 'star',
+      id: 'a',
+    };
+    tick(0.1);
+    tick(1.0);
+    // Reset must restore the DEFAULT_VIEW_DIR bearing (≈ (0, 0.33, 0.94)),
+    // not the (0.707, 0, 0.707) bearing captured during the fly-to.
+    (props.frameRef as { current: FrameRequest | null }).current = {
+      seq: 2,
+      kind: 'scene',
+    };
+    tick(1.1);
+    tick(2.0);
+    const dir = new THREE.Vector3().subVectors(h.camera!.position, h.controls!.target).normalize();
+    const expected = new THREE.Vector3(
+      DEFAULT_VIEW_DIR[0],
+      DEFAULT_VIEW_DIR[1],
+      DEFAULT_VIEW_DIR[2],
+    ).normalize();
+    expect(dir.dot(expected)).toBeGreaterThan(0.99);
+  });
+
+  // Review repair regression (correctness #2): the animating flag used to be
+  // clearable only by a completed frame request, pinning frameloop='always'.
+  it('self-heals the animating flag when no tween is running', () => {
+    const setAnimating = vi.fn();
+    renderScene({ setAnimating });
+    tick(0.1); // no request issued, no tween running
+    expect(setAnimating).toHaveBeenCalledWith(false);
+  });
 });
 
 describe('Scene label projector (#31 decision 10)', () => {
@@ -307,5 +365,36 @@ describe('Scene label projector (#31 decision 10)', () => {
     const other = container.querySelector<HTMLElement>('[data-id="b"] .s-label__title');
     expect(title?.style.display).toBe('inline');
     expect(other).toBeNull();
+  });
+
+  // Review repair regression (contract #3): 2D parity — search-dimmed stars
+  // carry no label, even when hovered/selected.
+  it('suppresses labels for search-dimmed stars even when selected', () => {
+    const { container } = renderScene({ selectedId: 'a', matchIds: new Set(['b']) });
+    h.camera!.position.set(0, 50, 200);
+    h.camera!.lookAt(0, 0, 0);
+    h.camera!.updateMatrixWorld(true);
+    tick(0.1);
+    expect(container.querySelector('[data-id="a"]')?.classList.contains('s-label--on')).toBe(false);
+  });
+
+  // Review repair regression (a11y #1): a focused constellation chip that
+  // rotates behind the camera is hidden — focus must be redirected, not
+  // dropped to <body>.
+  it('moves focus off a chip that rotates behind the camera', () => {
+    const { container } = renderScene();
+    const far = container.querySelector<HTMLElement>('[data-id="far"]');
+    const near = container.querySelector<HTMLElement>('[data-id="gw"]');
+    far!.focus();
+    expect(document.activeElement).toBe(far);
+    // Camera close to origin looking at it: 'gw' (z=50) stays in front,
+    // 'far' (z=300) is behind the camera.
+    h.camera!.position.set(0, 50, 200);
+    h.camera!.lookAt(0, 0, 0);
+    h.camera!.updateMatrixWorld(true);
+    tick(0.5);
+    expect(far!.style.display).toBe('none');
+    expect(near!.style.display).toBe('block');
+    expect(document.activeElement).toBe(near);
   });
 });

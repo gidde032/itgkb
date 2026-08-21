@@ -135,6 +135,14 @@ export function App(): JSX.Element {
               <CubeIcon />
               3D
             </button>
+            {/* Review repair (a11y #2): a disabled button skips tab focus and
+                title is not reliably announced — carry the exclusion reason in
+                the control group itself for screen-reader and keyboard users. */}
+            {!webglAvailable && (
+              <span className="visually-hidden">
+                The 3D view is unavailable because this browser does not support WebGL.
+              </span>
+            )}
           </div>
         )}
         {showList ? (
@@ -147,7 +155,9 @@ export function App(): JSX.Element {
         ) : showShowcase ? (
           <Suspense
             fallback={
-              <div className="galaxy-wrap" aria-label="Loading 3D view">
+              // Review repair (a11y #5): role="status" announces the chunk
+              // fetch to assistive tech instead of silent content swapping.
+              <div className="galaxy-wrap" role="status">
                 <span className="showcase-loading">Loading 3D view…</span>
               </div>
             }

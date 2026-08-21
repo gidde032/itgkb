@@ -9,6 +9,7 @@ import { relatedArcs, type Vec3 } from './arcGeometry';
 import { framePoints, boundingSphere } from './framing';
 import { Scene, type FrameRequest, type SolidLink } from './Scene';
 import { OrbitIcon, ResetIcon } from '../ui/icons';
+import { prefersReducedMotion } from '../app/motion';
 
 /**
  * 3D showcase renderer (#31). Same public contract as GalaxyCanvas — consumes
@@ -48,7 +49,22 @@ export function ShowcaseCanvas({
   const [orbitOn, setOrbitOn] = useState(true);
   // Drives the render loop: 'always' while orbiting or tweening, 'demand' at
   // rest — a still showcase burns no GPU, matching the galaxy's idle discipline.
-  const [animating, setAnimating] = useState(true);
+  // Review repair (correctness #2): starts false. It previously started true
+  // and was only cleared by a completed frame request, so a user who never
+  // triggered one kept the loop at 'always' forever. The rig also self-heals
+  // it to false on any frame with no tween running.
+  const [animating, setAnimating] = useState(false);
+  // Review repair (a11y #7/#8, correctness #3): live reduced-motion value —
+  // the frameloop and the orbit rig must react to OS preference changes
+  // mid-session, not a mount-time snapshot.
+  const [reducedMotion, setReducedMotion] = useState(prefersReducedMotion);
+  useEffect(() => {
+    const mql = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => setReducedMotion(mql.matches);
+    update();
+    mql.addEventListener('change', update);
+    return () => mql.removeEventListener('change', update);
+  }, []);
 
   const positions3D = useMemo(
     () => expandDepth(positions, articles, constellations),
@@ -174,7 +190,7 @@ export function ShowcaseCanvas({
           camera={{ fov: 50, near: 2, far: 12000, position: initialFrame.position }}
           dpr={[1, 2]}
           gl={{ antialias: true }}
-          frameloop={orbitOn || animating ? 'always' : 'demand'}
+          frameloop={(orbitOn && !reducedMotion) || animating ? 'always' : 'demand'}
           onPointerMissed={() => onSelect(null)}
         >
           <Scene
@@ -194,6 +210,7 @@ export function ShowcaseCanvas({
             starLabelRef={starLabelRef}
             chipLabelRef={chipLabelRef}
             orbitEnabled={orbitOn}
+            reducedMotion={reducedMotion}
             setAnimating={setAnimating}
             onHover={onHover}
             onSelectStar={onSelect}

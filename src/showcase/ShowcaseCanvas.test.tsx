@@ -5,11 +5,13 @@ import type { ReactNode } from 'react';
 // Wrapper-level test: the Scene subtree and r3f's Canvas are mocked — the
 // chrome (orbit toggle, reset, chips, labels, HUD) is what's under test. The
 // math underneath lives in pure modules with their own unit tests.
+const fiber = vi.hoisted(() => ({ canvasProps: [] as Array<{ frameloop?: string }> }));
 vi.mock('./Scene', () => ({ Scene: () => null }));
 vi.mock('@react-three/fiber', () => ({
-  Canvas: ({ children }: { children?: ReactNode }) => (
-    <div data-testid="r3f-canvas">{children}</div>
-  ),
+  Canvas: (props: { children?: ReactNode; frameloop?: string }) => {
+    fiber.canvasProps.push(props);
+    return <div data-testid="r3f-canvas">{props.children}</div>;
+  },
 }));
 
 import { ShowcaseCanvas } from './ShowcaseCanvas';
@@ -40,6 +42,16 @@ describe('ShowcaseCanvas chrome (#31 decisions 2, 5, 10, 13)', () => {
     expect(orbit).toHaveAttribute('aria-pressed', 'true');
     fireEvent.click(orbit);
     expect(orbit).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  // Review repair regression (correctness #2/#3): the render loop runs
+  // 'always' while orbit is on, and drops to on-demand once orbit is off and
+  // nothing animates — a still showcase must not render continuously.
+  it('runs the frameloop on-demand once orbit is off and nothing animates', () => {
+    renderShowcase();
+    expect(fiber.canvasProps.at(-1)?.frameloop).toBe('always');
+    fireEvent.click(screen.getByRole('button', { name: 'Orbit' }));
+    expect(fiber.canvasProps.at(-1)?.frameloop).toBe('demand');
   });
 
   it('renders a reset-view control in house style', () => {
