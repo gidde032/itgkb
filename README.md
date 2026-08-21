@@ -4,7 +4,7 @@
 
 **▶ Live demo: https://gidde032.github.io/itgkb/**
 
-![IT Knowledge Galaxy](docs/galaxy-preview.png)
+![IT Knowledge Galaxy](assets/galaxy-preview.png)
 
 An explorable, vendor-neutral IT knowledge base rendered as a galaxy: every
 article is a star, stars cluster into constellations by category, and proximity

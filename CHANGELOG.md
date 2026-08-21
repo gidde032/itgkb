@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-08-21 
+
 ### Added
 
 - **Constellation line-drawing (issue #39).** Every star is guaranteed at
@@ -103,6 +105,7 @@ signals topical similarity.
   content validation, and a production build.
 - Reduced-motion support and accessibility hardening.
 
-[Unreleased]: https://github.com/gidde032/itgkb/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/gidde032/itgkb/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/gidde032/itgkb/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/gidde032/itgkb/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/gidde032/itgkb/releases/tag/v0.1.0
