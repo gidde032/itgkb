@@ -51,9 +51,13 @@ integration, AI authoring assistant, analytics, multi-user contribution flow.
 | Lint/format         | ESLint + Prettier                                                                                                 | Standard gates                                                                                                                                                                          |
 
 **Rendering-swap contract:** the layout engine outputs plain
-`{ id, x, y, z }` positions consumed by a renderer interface. A future 3D
-"showcase mode" (react-three-fiber) is a new renderer against the same
-positions, not a rewrite.
+`{ id, x, y, z }` positions consumed by a renderer interface. The 3D
+"showcase" view (#31, react-three-fiber v8 — the line pairing with the pinned
+React 18) is a third renderer against the same positions, not a rewrite: a
+lazy-loaded chunk that projects the constellations onto a celestial globe
+(figure directions derived from the curated anchors; local force-layout
+offsets become tangent-plane figure spread), never a new LayoutProvider, so a
+future semantic layout (#29 / OQ-2) flows through unchanged.
 
 ## 3. Functional requirements
 
@@ -111,15 +115,20 @@ skeleton; only test coverage and content validation are hard gates.
 - **NF-2** Pan/zoom frame rate: **≥ 50 fps** with 100 stars. PROVISIONAL.
 - **NF-3** Search keystroke-to-visual-update: **< 50 ms** at 100 articles.
   PROVISIONAL.
-- **NF-4** Production JS bundle: **< 400 KB gzipped**. PROVISIONAL.
+- **NF-4** Production JS bundle: **< 400 KB gzipped**. PROVISIONAL. Measures
+  initial payload: the 3D showcase renderer (#31) lazy-loads behind the view
+  control with its own sanity ceiling of ~275 KB gzipped (decision record in
+  issue #31; measured 236 KB).
 - **NF-5** Test coverage floor: set by measuring after Phase 1, then ratcheted
   (floor recorded in gate config with rationale inline).
 - **NF-6** Scale target: the design must stay within budgets at **100
   articles** (5× seed set) without architectural change.
 - **NF-7** Graceful degradation: below 900 px viewport width, fall back to a
   searchable list view grouped by constellation (galaxy hidden). On desktop a
-  manual "List view" toggle offers the same fallback as an option. Desktop
-  galaxy is the primary view.
+  manual view control (List · Galaxy · 3D) offers the same fallback as an
+  option; the 3D showcase view is desktop-only and requires WebGL — the 3D
+  segment is disabled with an explanatory note otherwise. Desktop galaxy is
+  the primary view.
 
 ## 5. Schema / design
 
@@ -154,7 +163,9 @@ in `content/TEMPLATE.md`.
 
 Constellation config (`content/constellations.json`): `id`, display `name`,
 catalog `prefix`, anchor position (curated), and accent `color`. The validator
-checks each entry has all five fields.
+checks each entry has all five fields. The showcase view derives its globe
+placement from these same anchors (one sphere direction per constellation; no
+extra fields).
 
 ### Module boundaries
 
@@ -164,6 +175,8 @@ src/
   layout/         LayoutProvider interface; CuratedForceLayout (d3-force) impl
   search/         SearchProvider interface; TextSearch impl
   galaxy/         canvas renderer, interaction (d3-zoom), hover/click hit-testing
+  showcase/       3D renderer (#31): globe projection, arc geometry, camera
+                  framing, r3f scene, DOM label projection — lazy chunk
   article/        article panel, markdown rendering, related-link navigation
   app/            shell, state, list-view fallback
   util/           shared low-level helpers (hashing, tag-overlap) used across layers
@@ -223,7 +236,8 @@ drawing), so they stay serial per the bundling precondition.
 
 ## 8. Open questions (deferred, labeled)
 
-- OQ-1: 3D showcase renderer (react-three-fiber) — later version.
+- OQ-1: RESOLVED — 3D showcase view shipped (#31 / PR #45); design contract
+  ratified in the issue-31 decision record (2026-08-20).
 - OQ-2: Embedding/TF-IDF layout provider — worthwhile at ~50+ articles.
 - OQ-3: Semantic search provider (Anthropic API or local embeddings).
 - OQ-4: ticketing-system integration, analytics, authoring assistant, multi-user

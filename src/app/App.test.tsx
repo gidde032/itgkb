@@ -1,7 +1,17 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { App } from './App';
 import { loadContent } from '../content/load';
+
+// #31: the 3D chunk and WebGL detection are mocked at the App level — the
+// segmented control's mode switching is what's under test here, not WebGL.
+const webglState = vi.hoisted(() => ({ available: true }));
+vi.mock('./webgl', () => ({ hasWebGL: () => webglState.available }));
+vi.mock('../showcase/ShowcaseCanvas', () => ({
+  ShowcaseCanvas: () => (
+    <div data-testid="showcase-canvas" role="img" aria-label="3D showcase map" />
+  ),
+}));
 
 describe('App integration', () => {
   it('loads real content with zero errors (FR-1 on the shipped article set)', () => {
@@ -137,29 +147,74 @@ describe('live viewport switching (P4-F4)', () => {
   });
 });
 
-// A4 regression: desktop users can toggle into the list view and back.
-describe('desktop list toggle (A4)', () => {
-  it('switches to the list and back without a narrow viewport', () => {
+// A4 regression: desktop users can pick the list view and back. Since #31 the
+// single toggle is a three-segment control (List · Galaxy · 3D).
+describe('view-mode segmented control (A4, #31 decision 11)', () => {
+  it('switches to the list and back to the galaxy without a narrow viewport', () => {
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'List view' }));
+    fireEvent.click(screen.getByRole('button', { name: 'List' }));
     expect(
       screen.getByRole('navigation', { name: 'Articles by constellation' }),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' }),
     ).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Galaxy view' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Galaxy' }));
     expect(
       screen.getByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' }),
     ).toBeInTheDocument();
   });
 
-  it('hides the toggle on narrow viewports where the list is forced', () => {
+  it('switches to the 3D showcase and back (lazy chunk mounts, galaxy unmounts)', async () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: '3D' }));
+    // Lazy chunk resolves asynchronously — await it rather than assert sync.
+    expect(await screen.findByTestId('showcase-canvas')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Galaxy' }));
+    expect(
+      screen.getByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId('showcase-canvas')).not.toBeInTheDocument();
+  });
+
+  it('marks the active segment via aria-pressed (coral active state)', () => {
+    render(<App />);
+    expect(screen.getByRole('button', { name: 'Galaxy' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'List' })).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.click(screen.getByRole('button', { name: '3D' }));
+    expect(screen.getByRole('button', { name: '3D' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Galaxy' })).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('disables the 3D segment when WebGL is unavailable (#31 decision 7)', () => {
+    webglState.available = false;
+    try {
+      render(<App />);
+      const threeD = screen.getByRole('button', { name: '3D' });
+      expect(threeD).toBeDisabled();
+      expect(threeD).toHaveAttribute('title', '3D view requires WebGL');
+      // Review repair regression (a11y #2): the exclusion reason must be
+      // present as text in the control group, not only in the title tooltip.
+      expect(screen.getByText(/does not support WebGL/i)).toBeInTheDocument();
+      // Galaxy remains the default and reachable.
+      expect(
+        screen.getByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' }),
+      ).toBeInTheDocument();
+    } finally {
+      webglState.available = true;
+    }
+  });
+
+  it('hides the control on narrow viewports where the list is forced', () => {
     (globalThis as unknown as { __setNarrowViewport: (v: boolean) => void }).__setNarrowViewport(
       true,
     );
     render(<App />);
-    expect(screen.queryByRole('button', { name: 'List view' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'List' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '3D' })).not.toBeInTheDocument();
   });
 });
 

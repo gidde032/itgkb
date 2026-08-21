@@ -56,3 +56,25 @@ export function ResetIcon(): JSX.Element {
     </svg>
   );
 }
+
+export function CubeIcon(): JSX.Element {
+  // Wireframe box in 3/4 perspective — the 3D view mode (#31).
+  return (
+    <svg {...base}>
+      <path d="M12 2.5 20.5 7v10L12 21.5 3.5 17V7L12 2.5Z" />
+      <path d="M12 21.5V12" />
+      <path d="M20.5 7 12 12 3.5 7" />
+    </svg>
+  );
+}
+
+export function OrbitIcon(): JSX.Element {
+  // A body on a tilted orbital ring — the idle auto-orbit toggle (#31).
+  return (
+    <svg {...base}>
+      <ellipse cx="12" cy="12" rx="9.5" ry="4" />
+      <circle cx="12" cy="12" r="2.6" />
+      <circle cx="20" cy="9.4" r="1.4" />
+    </svg>
+  );
+}
