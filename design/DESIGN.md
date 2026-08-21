@@ -237,7 +237,8 @@ design contract: issue #31 decision record (2026-08-20). Key surface rules:
   `prefers-reduced-motion` (live-subscribed). Fly-to and framing moves ease
   ~0.7s or snap under reduced motion. Render loop drops to on-demand at rest —
   a still showcase burns no GPU.
-- **Availability.** Lazy chunk (~236 KB gz measured; sanity ceiling ~275 KB —
-  NF-4 measures initial payload only). Fallback is an announced status region.
-  Without WebGL the 3D segment is disabled with a visually-hidden reason; the
-  control is hidden under 900px (NF-7 list override).
+- **Availability.** Lazy chunk (~230 KB gz measured after the maintainer
+  removed the solid inner sphere; sanity ceiling ~275 KB — NF-4 measures
+  initial payload only). Fallback is an announced status region. Without WebGL
+  the 3D segment is disabled with a visually-hidden reason; the control is
+  hidden under 900px (NF-7 list override).
