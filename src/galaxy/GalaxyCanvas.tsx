@@ -7,8 +7,9 @@ import type { StarPosition } from '../layout/types';
 import { computeConstellationLinks, computeRelatedLinks } from './links';
 import { displayPositions } from './display';
 import { motionDuration, prefersReducedMotion } from '../app/motion';
+import { catalogMeta, constellationColors } from '../content/catalog';
 import { ResetIcon, RelatedLinesIcon } from '../ui/icons';
-import { drawGalaxy, hitTest, screenHitRadius, makeDust, type StarMeta } from './draw';
+import { drawGalaxy, hitTest, screenHitRadius, makeDust } from './draw';
 
 export interface GalaxyCanvasProps {
   articles: Article[];
@@ -62,33 +63,11 @@ export function GalaxyCanvas({
   const [showRelatedOverlay, setShowRelatedOverlay] = useState(false);
   const toggleRelatedOverlay = useCallback(() => setShowRelatedOverlay((v) => !v), []);
 
-  const colorByConstellation = useMemo(
-    () => new Map(constellations.map((c) => [c.id, c.color])),
-    [constellations],
-  );
+  const colorByConstellation = useMemo(() => constellationColors(constellations), [constellations]);
 
-  const meta = useMemo(() => {
-    const prefixByConstellation = new Map(constellations.map((c) => [c.id, c.prefix]));
-    // Catalog ids number per constellation: GW-001, SEC-001, ...
-    const counters = new Map<string, number>();
-    return new Map<string, StarMeta>(
-      articles.map((a) => {
-        const n = (counters.get(a.constellation) ?? 0) + 1;
-        counters.set(a.constellation, n);
-        const prefix = prefixByConstellation.get(a.constellation) ?? 'ITG';
-        return [
-          a.id,
-          {
-            color: colorByConstellation.get(a.constellation) ?? '#ffffff',
-            stub: a.stub,
-            title: a.title,
-            summary: a.summary,
-            catalog: `${prefix}-${String(n).padStart(3, '0')}`,
-          },
-        ];
-      }),
-    );
-  }, [articles, constellations, colorByConstellation]);
+  // Shared with the showcase renderer (#31): catalog ids + colors from one
+  // implementation in content/catalog.ts.
+  const meta = useMemo(() => catalogMeta(articles, constellations), [articles, constellations]);
 
   // #39: compute constellation links with positions for orphan rescue.
   const links = useMemo(() => {

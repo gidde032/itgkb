@@ -9,12 +9,22 @@ import { GalaxyCanvas } from '../galaxy/GalaxyCanvas';
 const ArticlePanel = lazy(() =>
   import('../article/ArticlePanel').then((m) => ({ default: m.ArticlePanel })),
 );
+// #31: the 3D showcase renderer pulls in three.js (~220 KB gz). Same lazy
+// pattern — the chunk loads on the first 3D toggle and is cached after; the
+// cold-load budget (NF-4) measures initial payload only (decision 6).
+const ShowcaseCanvas = lazy(() =>
+  import('../showcase/ShowcaseCanvas').then((m) => ({ default: m.ShowcaseCanvas })),
+);
 import { SearchBar } from './SearchBar';
 import { ListView } from './ListView';
 import { useNarrowViewport } from './useNarrowViewport';
-import { ListIcon, StarIcon } from '../ui/icons';
+import { hasWebGL } from './webgl';
+import { ListIcon, StarIcon, CubeIcon } from '../ui/icons';
 
 const searchProvider = new TextSearch();
+
+/** View modes (#31 decision 11): the segmented control picks one explicitly. */
+type ViewMode = 'galaxy' | 'list' | 'showcase';
 
 export function App(): JSX.Element {
   const content = useMemo(() => loadContent(), []);
@@ -31,9 +41,13 @@ export function App(): JSX.Element {
   const [query, setQuery] = useState('');
   const [focus, setFocus] = useState<{ id: string; seq: number } | null>(null);
   const narrow = useNarrowViewport();
-  // A4: desktop users can opt into the list; narrow viewports force it.
-  const [listMode, setListMode] = useState(false);
-  const showList = narrow || listMode;
+  // A4: desktop users can pick the list; narrow viewports force it (NF-7).
+  const [mode, setMode] = useState<ViewMode>('galaxy');
+  // #31 decision 7: 3D is desktop-only and requires WebGL; without it the
+  // segment renders disabled with a note.
+  const webglAvailable = useMemo(() => hasWebGL(), []);
+  const showList = narrow || mode === 'list';
+  const showShowcase = !showList && mode === 'showcase';
 
   const matches = useMemo(
     () => (query.trim() ? searchProvider.search(query, content.articles) : null),
@@ -91,15 +105,37 @@ export function App(): JSX.Element {
           onClear={clearSearch}
         />
         {!narrow && (
-          <button
-            type="button"
-            className="view-toggle"
-            aria-pressed={listMode}
-            onClick={() => setListMode((v) => !v)}
-          >
-            {listMode ? <StarIcon /> : <ListIcon />}
-            {listMode ? 'Galaxy view' : 'List view'}
-          </button>
+          <div className="mode-switch" role="group" aria-label="View mode">
+            <button
+              type="button"
+              className="mode-switch__seg"
+              aria-pressed={mode === 'list'}
+              onClick={() => setMode('list')}
+            >
+              <ListIcon />
+              List
+            </button>
+            <button
+              type="button"
+              className="mode-switch__seg"
+              aria-pressed={mode === 'galaxy'}
+              onClick={() => setMode('galaxy')}
+            >
+              <StarIcon />
+              Galaxy
+            </button>
+            <button
+              type="button"
+              className="mode-switch__seg"
+              aria-pressed={mode === 'showcase'}
+              disabled={!webglAvailable}
+              title={webglAvailable ? '3D view' : '3D view requires WebGL'}
+              onClick={() => setMode('showcase')}
+            >
+              <CubeIcon />
+              3D
+            </button>
+          </div>
         )}
         {showList ? (
           <ListView
@@ -108,6 +144,24 @@ export function App(): JSX.Element {
             matchIds={matchIds}
             onOpen={flyTo}
           />
+        ) : showShowcase ? (
+          <Suspense
+            fallback={
+              <div className="galaxy-wrap" aria-label="Loading 3D view">
+                <span className="showcase-loading">Loading 3D view…</span>
+              </div>
+            }
+          >
+            <ShowcaseCanvas
+              articles={content.articles}
+              constellations={content.constellations}
+              positions={positions}
+              selectedId={selectedId}
+              onSelect={onSelect}
+              matchIds={matchIds}
+              focus={focus}
+            />
+          </Suspense>
         ) : (
           <GalaxyCanvas
             articles={content.articles}
