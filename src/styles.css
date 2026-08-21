@@ -323,6 +323,16 @@ body,
   text-transform: uppercase;
   color: var(--faint);
 }
+/* The 3D canvas must be explicitly sized like .galaxy-canvas — the 2026-08-21
+   obstruction bug was this rule missing entirely: the unsized wrapper let the
+   WebGL canvas fall back to its intrinsic 150px height, squeezing the whole
+   scene into a strip (PR #45 repair). */
+.showcase-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
 
 /* ---------------- Errors ---------------- */
 .content-errors {

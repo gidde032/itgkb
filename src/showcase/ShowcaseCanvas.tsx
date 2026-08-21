@@ -188,6 +188,10 @@ export function ShowcaseCanvas({
         className="showcase-canvas"
         role="img"
         aria-label="Interactive 3D map of IT knowledge articles"
+        // Sizing is guaranteed inline as well as in styles.css: the 2026-08-21
+        // obstruction bug was this wrapper having NO size anywhere, letting the
+        // WebGL canvas fall back to its intrinsic 150px height (~10% strip).
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
       >
         <Canvas
           camera={{ fov: 50, near: 2, far: 12000, position: initialFrame.position }}

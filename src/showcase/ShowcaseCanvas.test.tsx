@@ -94,4 +94,15 @@ describe('ShowcaseCanvas chrome (#31 decisions 2, 5, 10, 13)', () => {
       screen.getByRole('img', { name: 'Interactive 3D map of IT knowledge articles' }),
     ).toBeInTheDocument();
   });
+
+  // Regression (2026-08-21 obstruction bug): the 3D canvas wrapper went
+  // unsized, letting the WebGL canvas fall back to its intrinsic 150px height
+  // — the whole scene squeezed into a ~10% strip. Sizing is asserted inline so
+  // the guard cannot be defeated by stylesheet loading order.
+  it('sizes the 3D canvas area (no collapse to a 150px strip)', () => {
+    const { container } = renderShowcase();
+    const canvasArea = container.querySelector<HTMLElement>('.showcase-canvas');
+    expect(canvasArea).not.toBeNull();
+    expect(canvasArea!).toHaveStyle({ position: 'absolute', height: '100%', width: '100%' });
+  });
 });

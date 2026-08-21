@@ -20,8 +20,9 @@ function norm(a: Vec3): Vec3 {
   return [a[0] / l, a[1] / l, a[2] / l];
 }
 
-/** Slightly-elevated front-on default view direction for the whole scene. */
-export const DEFAULT_VIEW_DIR: Vec3 = norm([0, 0.35, 1]);
+/** Default view direction for the whole scene — tilted ~24° from above so the
+ *  globe reads as three-dimensional from the first frame (starglobe reference). */
+export const DEFAULT_VIEW_DIR: Vec3 = norm([0, 0.45, 1]);
 
 /** Exact bounding sphere (center = axis-aligned box center, radius = max dist). */
 export function boundingSphere(points: readonly Vec3[]): { center: Vec3; radius: number } {

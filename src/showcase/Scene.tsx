@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import type { CatalogStarMeta } from '../content/catalog';
 import type { RelatedArc, Vec3 } from './arcGeometry';
 import { framePoints, frameStar, DEFAULT_VIEW_DIR, type Frame } from './framing';
+import { GLOBE_RADIUS } from './globe';
 import { prefersReducedMotion } from '../app/motion';
 import { getGlowTexture, getRingTexture, getDashedRingTexture, dustPositions3D } from './textures';
 
@@ -469,6 +470,14 @@ export function Scene(props: SceneProps): JSX.Element {
     <>
       <color attach="background" args={['#070b14']} />
       <fogExp2 attach="fog" args={['#070b14', 0.00022]} />
+      {/* The ball of night (repair Q2a): a barely-lighter sphere just inside
+          the star shell so the globe reads as a solid object from any angle.
+          raycast disabled — it must never intercept star clicks; the near-side
+          stars sit on/above it and the far side occludes naturally. */}
+      <mesh raycast={() => null}>
+        <sphereGeometry args={[GLOBE_RADIUS - 32, 48, 32]} />
+        <meshBasicMaterial color="#0d1526" />
+      </mesh>
       <Dust count={420} />
       {/* Constellation line art: straight, solid — star-chart chains (decision 3). */}
       {solidLinks.map((l) => {
