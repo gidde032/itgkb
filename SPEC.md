@@ -98,7 +98,8 @@ future semantic layout (#29 / OQ-2) flows through unchanged.
   constellation ids, and that every `related` id resolves. It must exit
   non-zero on any violation.
 - **FR-12** The v1.0.0 line ships 40 vendor-generic articles across the 7
-  constellations (§5), with no stubs (41 as of v1.1). Content is enforced
+  constellations (§5), with no stubs (41 as of v1.1; 47 as of the 2026-08-21
+  additions). Content is enforced
   vendor-neutral by
   `npm run check:sensitivity` — no organization-specific data or unresolved
   `(verify)`/`[NEEDS VERIFICATION]` markers.
