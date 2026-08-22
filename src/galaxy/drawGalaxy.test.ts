@@ -14,9 +14,17 @@ function makeRecordingCtx(): {
   linearGradientStops: () => Array<[number, string][]>;
   /** Snapshot of strokeStyle/globalAlpha/lineWidth captured at each stroke() call. */
   strokes: () => Array<{ style: unknown; alpha: unknown; width: unknown }>;
+  /** #29: quadratic-curve path commands (weighted similarity edges). */
+  quadraticCurveCalls: () => number[][];
+  /** #29: straight path commands (unweighted links). */
+  lineToCalls: () => number[][];
 } {
   const fillText = vi.fn();
   const setLineDash = vi.fn();
+  // #29: record curve-vs-straight path commands so weighted similarity edges
+  // and unweighted links can be asserted apart.
+  const quadraticCurveTo = vi.fn();
+  const lineTo = vi.fn();
   const gradient = { addColorStop: vi.fn() };
   // v1.1 audit: per-call gradient + stroke-state recording so line tests can
   // assert gradient direction and dim/emphasis alpha precisely.
@@ -29,7 +37,13 @@ function makeRecordingCtx(): {
     return g;
   });
   const strokeSnapshots: Array<{ style: unknown; alpha: unknown; width: unknown }> = [];
-  const store: Record<string, unknown> = { fillText, setLineDash, createLinearGradient };
+  const store: Record<string, unknown> = {
+    fillText,
+    setLineDash,
+    createLinearGradient,
+    quadraticCurveTo,
+    lineTo,
+  };
   const stroke = vi.fn(() => {
     strokeSnapshots.push({
       style: store.strokeStyle,
@@ -58,6 +72,8 @@ function makeRecordingCtx(): {
     ctx,
     fillTexts: () => fillText.mock.calls.map((c) => String(c[0])),
     setLineDashCalls: () => setLineDash.mock.calls.map((c) => c[0] as number[]),
+    quadraticCurveCalls: () => quadraticCurveTo.mock.calls.map((c) => c as unknown as number[]),
+    lineToCalls: () => lineTo.mock.calls.map((c) => c as unknown as number[]),
     createLinearGradientCalls: () =>
       createLinearGradient.mock.calls.map((c) => c as unknown as number[]),
     linearGradientStops: () => stopsPerGradient,
@@ -405,5 +421,57 @@ describe('constellation line dimming during search (H3)', () => {
       new Set(['s1', 's2']),
     );
     expect(strokes().at(-1)!.style).toBe('#ffaa002e');
+  });
+});
+
+describe('semantic edge rendering (#29)', () => {
+  const twoStars = {
+    points: [
+      { id: 's1', x: 0, y: 0, z: 0.5 },
+      { id: 's2', x: 100, y: 0, z: 0.5 },
+    ],
+    meta: new Map([
+      ['s1', { color: '#ffffff', stub: false, title: 'A', summary: 's', catalog: 'GW-001' }],
+      ['s2', { color: '#ffffff', stub: false, title: 'B', summary: 's', catalog: 'GW-002' }],
+    ]),
+    relatedLinks: [],
+    dust: [],
+  };
+
+  it('draws a weighted similarity edge as a curve with weight-scaled width', () => {
+    const { ctx, quadraticCurveCalls, lineToCalls, strokes } = makeRecordingCtx();
+    drawGalaxy(
+      ctx,
+      800,
+      600,
+      { ...twoStars, links: [{ a: 's1', b: 's2', weight: 0.7 }] },
+      constellations,
+      transformAt(1),
+      null,
+      null,
+      null,
+    );
+    expect(quadraticCurveCalls()).toHaveLength(1);
+    expect(lineToCalls()).toHaveLength(0);
+    // Width = (0.7 + weight·1.5)/k → 0.7 + 1.05 at k=1.
+    expect(strokes().some((s) => Math.abs(Number(s.width) - 1.75) < 1e-9)).toBe(true);
+  });
+
+  it('keeps unweighted links straight and at the classic width', () => {
+    const { ctx, quadraticCurveCalls, lineToCalls, strokes } = makeRecordingCtx();
+    drawGalaxy(
+      ctx,
+      800,
+      600,
+      { ...twoStars, links: [{ a: 's1', b: 's2' }] },
+      constellations,
+      transformAt(1),
+      null,
+      null,
+      null,
+    );
+    expect(quadraticCurveCalls()).toHaveLength(0);
+    expect(lineToCalls()).toHaveLength(1);
+    expect(strokes().some((s) => Number(s.width) === 1)).toBe(true);
   });
 });

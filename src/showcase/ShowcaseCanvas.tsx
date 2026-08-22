@@ -1,11 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import type { Article, Constellation } from '../content/types';
+import type { SemanticEdge } from '../content/semanticMap';
 import type { StarPosition } from '../layout/types';
 import { catalogMeta, constellationColors } from '../content/catalog';
-import { computeConstellationLinks, computeRelatedLinks } from '../galaxy/links';
+import {
+  computeConstellationLinks,
+  computeRelatedLinks,
+  computeSemanticLinks,
+} from '../galaxy/links';
 import { projectGlobe, GLOBE_RADIUS } from './globe';
-import { relatedArcs, type Vec3 } from './arcGeometry';
+import { bentLinkPoints, relatedArcs, type Vec3 } from './arcGeometry';
 import { framePoints, boundingSphere } from './framing';
 import { Scene, type FrameRequest, type SolidLink } from './Scene';
 import { OrbitIcon, ResetIcon } from '../ui/icons';
@@ -22,6 +27,8 @@ export interface ShowcaseCanvasProps {
   articles: Article[];
   constellations: Constellation[];
   positions: StarPosition[];
+  /** #29: semantic similarity edges; null ⇒ curated tag links. */
+  semanticEdges: ReadonlyArray<SemanticEdge> | null;
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   /** FR-8 parity: non-matching stars dim in place. Null = no search. */
@@ -34,6 +41,7 @@ export function ShowcaseCanvas({
   articles,
   constellations,
   positions,
+  semanticEdges,
   selectedId,
   onSelect,
   matchIds,
@@ -114,11 +122,14 @@ export function ShowcaseCanvas({
   }, [pointsByConstellation]);
 
   // Same link computation as the 2D galaxy (orphan rescue uses 2D positions —
-  // the figures' shapes stay identical across modes).
+  // the figures' shapes stay identical across modes). Semantic edges (#29)
+  // replace the curated tag links when the artifact is active.
   const links = useMemo(() => {
     const posMap = new Map(positions.map((p) => [p.id, { x: p.x, y: p.y }]));
-    return computeConstellationLinks(articles, posMap);
-  }, [articles, positions]);
+    return semanticEdges
+      ? computeSemanticLinks(articles, posMap, semanticEdges)
+      : computeConstellationLinks(articles, posMap);
+  }, [articles, positions, semanticEdges]);
 
   const colors = useMemo(() => constellationColors(constellations), [constellations]);
   const relatedLinks = useMemo(() => computeRelatedLinks(articles, colors), [articles, colors]);
@@ -137,6 +148,9 @@ export function ShowcaseCanvas({
           a,
           b,
           color: colors.get(constellationOf.get(l.a) ?? '') ?? '#ffffff',
+          // Weighted similarity links bend gently (#29); rescue/curated lines
+          // stay straight chords.
+          ...(l.weight !== undefined ? { weight: l.weight, points: bentLinkPoints(a, b) } : {}),
         };
       })
       .filter((l): l is SolidLink => l !== null);

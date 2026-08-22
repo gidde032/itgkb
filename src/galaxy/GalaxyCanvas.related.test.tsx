@@ -11,6 +11,7 @@ const baseProps = {
   articles: [],
   constellations: [],
   positions: [] as StarPosition[],
+  semanticEdges: null,
   selectedId: null,
   onSelect: () => {},
   matchIds: null,

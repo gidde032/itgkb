@@ -26,6 +26,7 @@ function renderShowcase(overrides: Record<string, unknown> = {}) {
     articles: content.articles,
     constellations: content.constellations,
     positions,
+    semanticEdges: null,
     selectedId: null,
     onSelect: vi.fn(),
     matchIds: null,

@@ -178,3 +178,50 @@ export function relatedArcs(
   }
   return arcs;
 }
+
+/** Samples for a bent constellation link (fewer than arcs — subtle curvature). */
+const BEND_SEGMENTS = 8;
+/** Bend grows with chord length, capped so knots never loop. */
+const BEND_K = 0.15;
+const BEND_MAX = 70;
+
+/**
+ * #29: sampled quadratic-bezier points for a gently bent, weighted
+ * constellation link — the 3D twin of the galaxy's curved similarity edges.
+ * Direction: the component of +Y perpendicular to the chord (+Z fallback for
+ * vertical chords). Deterministic, crowding-blind (knots are tight by
+ * construction; only the sparse outliers produce long chords).
+ */
+export function bentLinkPoints(a: Vec3, b: Vec3): Vec3[] {
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  const dz = b[2] - a[2];
+  const len = Math.hypot(dx, dy, dz) || 1e-9;
+  let px = -dz;
+  let py = 0;
+  let pz = dx; // cross([0,1,0], d)
+  const pl = Math.hypot(px, py, pz);
+  if (pl < 1e-6) {
+    px = 1;
+    py = 0;
+    pz = 0; // vertical chord — fall back to +X
+  } else {
+    px /= pl;
+    pz /= pl;
+  }
+  const elevation = Math.min(BEND_MAX, len * BEND_K);
+  const mx = (a[0] + b[0]) / 2 + px * elevation;
+  const my = (a[1] + b[1]) / 2 + py * elevation;
+  const mz = (a[2] + b[2]) / 2 + pz * elevation;
+  const points: Vec3[] = [];
+  for (let i = 0; i <= BEND_SEGMENTS; i++) {
+    const t = i / BEND_SEGMENTS;
+    const u = 1 - t;
+    points.push([
+      u * u * a[0] + 2 * u * t * mx + t * t * b[0],
+      u * u * a[1] + 2 * u * t * my + t * t * b[1],
+      u * u * a[2] + 2 * u * t * mz + t * t * b[2],
+    ]);
+  }
+  return points;
+}

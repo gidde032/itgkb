@@ -39,6 +39,10 @@ export interface SolidLink {
   a: Vec3;
   b: Vec3;
   color: string;
+  /** #29: similarity weight in (0,1] — scales width/opacity. */
+  weight?: number;
+  /** #29: precomputed curved samples; falls back to the straight chord. */
+  points?: Vec3[];
 }
 
 export interface SceneProps {
@@ -477,17 +481,21 @@ export function Scene(props: SceneProps): JSX.Element {
       <color attach="background" args={['#070b14']} />
       <fogExp2 attach="fog" args={['#070b14', 0.00022]} />
       <Dust count={420} />
-      {/* Constellation line art: straight, solid — star-chart chains (decision 3). */}
+      {/* Constellation line art: star-chart chains (decision 3). Weighted
+          semantic links (#29) bend gently and carry their weight in width and
+          opacity; unweighted links render exactly as before. */}
       {solidLinks.map((l) => {
         const dim = matchIds !== null && !(matchIds.has(l.idA) && matchIds.has(l.idB));
+        const width = l.weight !== undefined ? 0.7 + l.weight * 1.5 : 1;
+        const opacity = l.weight !== undefined ? 0.14 + l.weight * 0.12 : 0.22;
         return (
           <Line
             key={l.key}
-            points={[l.a, l.b]}
+            points={l.points ?? [l.a, l.b]}
             color={l.color}
-            lineWidth={1}
+            lineWidth={width}
             transparent
-            opacity={dim ? 0.05 : 0.22}
+            opacity={dim ? 0.05 : opacity}
           />
         );
       })}

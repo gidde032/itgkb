@@ -3,8 +3,9 @@ import { select } from 'd3-selection';
 import 'd3-transition'; // side-effect: patches selection.transition for smooth reset (FR-9)
 import { zoom, zoomIdentity, type ZoomTransform, type ZoomBehavior } from 'd3-zoom';
 import type { Article, Constellation } from '../content/types';
+import type { SemanticEdge } from '../content/semanticMap';
 import type { StarPosition } from '../layout/types';
-import { computeConstellationLinks, computeRelatedLinks } from './links';
+import { computeConstellationLinks, computeRelatedLinks, computeSemanticLinks } from './links';
 import { displayPositions } from './display';
 import { motionDuration, prefersReducedMotion } from '../app/motion';
 import { catalogMeta, constellationColors } from '../content/catalog';
@@ -15,6 +16,12 @@ export interface GalaxyCanvasProps {
   articles: Article[];
   constellations: Constellation[];
   positions: StarPosition[];
+  /**
+   * #29: semantic similarity edges from the committed artifact. When present,
+   * line art comes from these (curved, weight-scaled) instead of curated tag
+   * links. Null ⇒ curated mode.
+   */
+  semanticEdges: ReadonlyArray<SemanticEdge> | null;
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   /** FR-8: when a search is active, non-matching stars dim in place. Null = no search. */
@@ -27,6 +34,7 @@ export function GalaxyCanvas({
   articles,
   constellations,
   positions,
+  semanticEdges,
   selectedId,
   onSelect,
   matchIds,
@@ -69,11 +77,15 @@ export function GalaxyCanvas({
   // implementation in content/catalog.ts.
   const meta = useMemo(() => catalogMeta(articles, constellations), [articles, constellations]);
 
-  // #39: compute constellation links with positions for orphan rescue.
+  // #39: constellation links with positions for orphan rescue. In semantic
+  // mode (#29) the artifact's similarity edges are the line art; the curated
+  // builder otherwise produces the tag-affinity chains.
   const links = useMemo(() => {
     const posMap = new Map(positions.map((p) => [p.id, { x: p.x, y: p.y }]));
-    return computeConstellationLinks(articles, posMap);
-  }, [articles, positions]);
+    return semanticEdges
+      ? computeSemanticLinks(articles, posMap, semanticEdges)
+      : computeConstellationLinks(articles, posMap);
+  }, [articles, positions, semanticEdges]);
 
   // #39: compute related-article links from frontmatter.
   const relatedLinks = useMemo(
