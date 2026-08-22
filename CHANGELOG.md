@@ -7,10 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Public, vendor-neutral v1.0.0 line. Work is tracked under milestone v1.0.0
-(issues #22–#28). Documentation and the constellation taxonomy now describe the
-target vendor-neutral state; the seed articles are being generalized in parallel
-(#24) and `npm run check:sensitivity` becomes a hard gate once that lands.
+## [1.1.0] - 2026-08-21
+
+### Added
+
+- **Constellation line-drawing (issue #39).** Every star is guaranteed at
+  least one intra-constellation line: after the greedy tag-overlap pass, orphan
+  stars connect to their nearest spatial sibling. Dashed gradient lines between
+  `related` articles run from the source constellation color to the target
+  constellation color, with two visibility modes — on-selection (clicking a star
+  emphasizes its related lines) and a full-overlay toggle via the `R` key or the
+  "Related lines" button (top right). Lines dim during search. `DESIGN.md` §8
+  documents the line-drawing methodology. 14 new tests.
+- **Content ingestion playbook (issue #23).** `content/INGEST.md` — an
+  agent-agnostic process document covering inputs, constellation routing with
+  keyword mapping, drafting steps, vendor-neutrality rules, the gate checklist,
+  and an end-to-end example run. `content/TEMPLATE.md` updated with the current
+  7-constellation taxonomy. Example article `bluetooth-pairing-issues.md` added
+  (40 → 41 articles).
+- **3D showcase renderer (issue #31).** Third view mode behind the
+  List · Galaxy · 3D switcher. Stars expand into depth from curated `depth`
+  settings in `constellations.json`; related-article lines become arcs curving
+  through 3D space; constellation chains carry over from the 2D galaxy via
+  shared `links.ts`. Full interaction parity: hover tooltips, click to open the
+  article panel, search dimming, camera fly-to. Idle auto-orbit yields to any
+  input. AZ/EL HUD tracks camera orientation. WebGL-gated — 3D segment hidden
+  if WebGL is unavailable. Renderer is lazy-loaded (~236 KB gz); initial payload
+  unchanged. Catalog meta extracted to `src/content/catalog.ts` (behavior-neutral
+  refactor shared with the 2D galaxy).
+- **Six new articles (41 → 47).** Workspace & Email (10), Hardware & Endpoints
+  (8), Networking (7), Files & Storage (6), Security (6), Collaboration &
+  Meetings (5), Accounts & Identity (5).
+
+### Fixed
+
+- Modal key guard: `Escape` and `Enter` no longer fire article-panel actions
+  when a browser dialog is open.
+- Self-referential `related` entries are now rejected by content validation
+  instead of silently passing.
+
+## [1.0.0] - 2026-08-13
+
+Public, vendor-neutral release. All seed articles generalized to
+organization-agnostic content; `npm run check:sensitivity` is a hard gate.
 
 ### Added
 
@@ -27,30 +66,23 @@ target vendor-neutral state; the seed articles are being generalized in parallel
 - **M4 — Vendor-neutral content line.** Content-sensitivity check
   (`npm run check:sensitivity`) and constellation remap to a vendor-neutral
   taxonomy + a Security cluster (#22).
-- **Release audit.** Hardening pass against the shipped master tree: idle-gated
-  the twinkle render loop (no more perpetual repaint while idle), code-split the
-  article panel (lazy `react-markdown`), a full accessibility pass (skip link,
-  `<main>` landmark, focus trap on the article dialog, AA contrast, heading
-  hierarchy), stronger content validation (constellation JSON schema +
-  filename/`id` consistency), and `format:check` wired into the gate.
+- **Release audit.** Idle-gated the twinkle render loop, code-split the article
+  panel (lazy `react-markdown`), a full accessibility pass (skip link, `<main>`
+  landmark, focus trap on the article dialog, AA contrast, heading hierarchy),
+  stronger content validation (constellation JSON schema + filename/`id`
+  consistency), and `format:check` wired into the gate.
 
 ### Changed
 
-- Constellation taxonomy remapped to vendor-neutral ids for the public line:
-  `workspace-email`, `ticketing-itsm`, `dev-environment`, `networking`,
-  `accounts-identity`, `hardware-endpoints`, plus a new `security` cluster.
+- Constellation taxonomy remapped to vendor-neutral ids:
+  `workspace-email`, `collaboration-meetings`, `files-storage`, `networking`,
+  `accounts-identity`, `hardware-endpoints`, `security`.
 - `npm run gates` now runs `format:check` first and reuses `gates:quality`
   (format · typecheck · lint · test+coverage · content validation) before the
   production build.
 - `--faint` token lifted to `#6b7a9a` (4.59:1 on `--ink`) for WCAG AA.
 
-### Notes
-
-- Documentation leads the code on vendor-neutral framing: the taxonomy above is
-  the v1.0.0 target and lands in `content/constellations.json` with the M4
-  content work (#24).
-
-## [0.1.0] - 2026-08-10
+## [0.1.0] - 2026-07-31
 
 Initial release. An explorable IT knowledge base rendered as a galaxy: every
 article is a star, stars cluster into constellations by category, and proximity
@@ -68,17 +100,12 @@ signals topical similarity.
   (automatic on narrow viewports).
 - Layout behind a `LayoutProvider` seam so smarter backends can be swapped in
   without UI changes.
-- 20 seed articles (17 rich, 3 stubs). Details awaiting maintainer verification
-  are marked `(verify)` / `[NEEDS VERIFICATION]`.
+- 20 seed articles (17 rich, 3 stubs).
 - Quality gates (`npm run gates`): typecheck, lint, tests with a coverage floor,
   content validation, and a production build.
 - Reduced-motion support and accessibility hardening.
 
-### Notes
-
-- Some seed articles contain `(verify)` / `[NEEDS VERIFICATION]` markers for
-  organization-specific details pending maintainer red-pen; the M4 line
-  generalizes these (#24).
-
-[Unreleased]: https://github.com/gidde032/itgkb/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/gidde032/itgkb/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/gidde032/itgkb/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/gidde032/itgkb/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/gidde032/itgkb/releases/tag/v0.1.0
