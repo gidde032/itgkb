@@ -285,7 +285,7 @@ describe('buildSemanticMap', () => {
   });
   it('migrates the outlier out of its authored knot', () => {
     const star = build().stars.find((s: { id: string }) => s.id === 'o-out');
-    expect(star.outlier).toBe(true);
+    expect(star!.outlier).toBe(true);
   });
   it('is deterministic end to end', () => {
     expect(JSON.stringify(build())).toBe(JSON.stringify(build()));

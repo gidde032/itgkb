@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { computeConstellationLinks, computeRelatedLinks } from './links';
+import { computeConstellationLinks, computeRelatedLinks, computeSemanticLinks } from './links';
 import type { Article } from '../content/types';
 import { loadContent } from '../content/load';
+import { applySemanticConstellations, loadSemanticMap } from '../content/semanticMap';
+import { SemanticLayout } from '../layout/semanticLayout';
 
 function art(id: string, constellation: string, tags: string[], related: string[] = []): Article {
   return {
@@ -222,5 +224,72 @@ describe('computeRelatedLinks', () => {
     const articles = [art('a', 'alpha', [], ['a', 'b']), art('b', 'beta', [])];
     const links = computeRelatedLinks(articles, colors);
     expect(links).toEqual([{ a: 'a', b: 'b', colorA: '#aaa', colorB: '#bbb' }]);
+  });
+});
+
+describe('computeSemanticLinks (#29)', () => {
+  const pos = (entries: Array<[string, number, number]>) =>
+    new Map(entries.map(([id, x, y]) => [id, { x, y }]));
+
+  it('carries artifact edges through with their weights', () => {
+    const links = computeSemanticLinks(
+      [art('a1', 'alpha', []), art('a2', 'alpha', [])],
+      pos([
+        ['a1', 0, 0],
+        ['a2', 50, 0],
+      ]),
+      [{ a: 'a1', b: 'a2', weight: 0.7 }],
+    );
+    expect(links).toEqual([{ a: 'a1', b: 'a2', weight: 0.7 }]);
+  });
+
+  it('skips unknown and duplicate pairs defensively', () => {
+    const links = computeSemanticLinks(
+      [art('a1', 'alpha', []), art('a2', 'alpha', [])],
+      pos([
+        ['a1', 0, 0],
+        ['a2', 50, 0],
+      ]),
+      [
+        { a: 'a1', b: 'ghost', weight: 0.9 },
+        { a: 'a1', b: 'a1', weight: 0.9 },
+        { a: 'a1', b: 'a2', weight: 0.6 },
+        { a: 'a2', b: 'a1', weight: 0.6 }, // same pair, reversed
+      ],
+    );
+    expect(links.filter((l) => l.weight !== undefined)).toEqual([
+      { a: 'a1', b: 'a2', weight: 0.6 },
+    ]);
+  });
+
+  it('orphan-rescue connects an edgeless star to its nearest mapped sibling', () => {
+    const links = computeSemanticLinks(
+      [art('a1', 'alpha', []), art('a2', 'alpha', []), art('a3', 'alpha', [])],
+      pos([
+        ['a1', 0, 0],
+        ['a2', 10, 0],
+        ['a3', 500, 500],
+      ]),
+      [{ a: 'a1', b: 'a2', weight: 0.8 }],
+    );
+    // a3 has no artifact edge → rescued to its nearest sibling spatially (a2).
+    expect(
+      links.some((l) => (l.a === 'a3' && l.b === 'a2') || (l.a === 'a2' && l.b === 'a3')),
+    ).toBe(true);
+  });
+
+  // Real-content regression twin of the curated zero-orphan test, under the
+  // semantic line art: every article keeps at least one line.
+  it('leaves zero orphans over the real content + committed artifact', () => {
+    const { articles } = loadContent();
+    const map = loadSemanticMap()!;
+    const display = applySemanticConstellations(articles, map);
+    const posMap = new Map(
+      new SemanticLayout(map).layout(articles).map((p) => [p.id, { x: p.x, y: p.y }]),
+    );
+    const links = computeSemanticLinks(display, posMap, map.edges);
+    for (const a of articles) {
+      expect(links.some((l) => l.a === a.id || l.b === a.id)).toBe(true);
+    }
   });
 });

@@ -47,6 +47,7 @@ describe('GalaxyCanvas twinkle loop (P1 idle-gate)', () => {
     articles: [],
     constellations: [],
     positions: [] as StarPosition[],
+    semanticEdges: null,
     selectedId: null,
     onSelect: () => {},
     matchIds: null,
