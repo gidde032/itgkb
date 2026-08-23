@@ -18,7 +18,7 @@ export interface RelatedArc {
   id: string;
   /** Sampled quadratic-bezier points from source to target star. */
   points: Vec3[];
-  /** Per-point RGB in [0,1], lerping source → target constellation color. */
+  /** Per-point linear RGB in [0,1] for Three.js vertex-color buffers. */
   colors: Vec3[];
 }
 
@@ -38,12 +38,17 @@ interface P3 {
   z: number;
 }
 
-/** Parse a #rrggbb constellation color into linear [0,1] RGB. */
+/** Parse a #rrggbb constellation color into display-space sRGB channels. */
 export function hexToRgb01(hex: string): Vec3 {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
   if (!m) return [1, 1, 1];
   const n = Number.parseInt(m[1], 16);
   return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
+}
+
+/** Convert one display-space sRGB channel to linear light for Three.js. */
+export function srgbChannelToLinear(channel: number): number {
+  return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
 }
 
 /** Squared distance from point p to segment ab (closest-point projection). */
@@ -150,10 +155,14 @@ export function relatedArc(
       u * u * aPos.y + 2 * u * t * mid.y + t * t * bPos.y,
       u * u * aPos.z + 2 * u * t * mid.z + t * t * bPos.z,
     ]);
+    // Canvas2D interpolates the CSS endpoint colors in display-space sRGB.
+    // Sample that same gradient first, then convert each sampled channel to
+    // linear light because Three.js vertex-color buffers bypass CSS Color
+    // parsing and are interpreted as already-linear values.
     colors.push([
-      colorA[0] * u + colorB[0] * t,
-      colorA[1] * u + colorB[1] * t,
-      colorA[2] * u + colorB[2] * t,
+      srgbChannelToLinear(colorA[0] * u + colorB[0] * t),
+      srgbChannelToLinear(colorA[1] * u + colorB[1] * t),
+      srgbChannelToLinear(colorA[2] * u + colorB[2] * t),
     ]);
   }
 
@@ -177,4 +186,51 @@ export function relatedArcs(
     arcs.push(relatedArc(link, a, b, others));
   }
   return arcs;
+}
+
+/** Samples for a bent constellation link (fewer than arcs — subtle curvature). */
+const BEND_SEGMENTS = 8;
+/** Bend grows with chord length, capped so knots never loop. */
+const BEND_K = 0.15;
+const BEND_MAX = 70;
+
+/**
+ * #29: sampled quadratic-bezier points for a gently bent, weighted
+ * constellation link — the 3D twin of the galaxy's curved similarity edges.
+ * Direction: the component of +Y perpendicular to the chord (+Z fallback for
+ * vertical chords). Deterministic, crowding-blind (knots are tight by
+ * construction; only the sparse outliers produce long chords).
+ */
+export function bentLinkPoints(a: Vec3, b: Vec3): Vec3[] {
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  const dz = b[2] - a[2];
+  const len = Math.hypot(dx, dy, dz) || 1e-9;
+  let px = -dz;
+  let py = 0;
+  let pz = dx; // cross([0,1,0], d)
+  const pl = Math.hypot(px, py, pz);
+  if (pl < 1e-6) {
+    px = 1;
+    py = 0;
+    pz = 0; // vertical chord — fall back to +X
+  } else {
+    px /= pl;
+    pz /= pl;
+  }
+  const elevation = Math.min(BEND_MAX, len * BEND_K);
+  const mx = (a[0] + b[0]) / 2 + px * elevation;
+  const my = (a[1] + b[1]) / 2 + py * elevation;
+  const mz = (a[2] + b[2]) / 2 + pz * elevation;
+  const points: Vec3[] = [];
+  for (let i = 0; i <= BEND_SEGMENTS; i++) {
+    const t = i / BEND_SEGMENTS;
+    const u = 1 - t;
+    points.push([
+      u * u * a[0] + 2 * u * t * mx + t * t * b[0],
+      u * u * a[1] + 2 * u * t * my + t * t * b[1],
+      u * u * a[2] + 2 * u * t * mz + t * t * b[2],
+    ]);
+  }
+  return points;
 }

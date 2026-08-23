@@ -1,6 +1,13 @@
-import { lazy, Suspense, useCallback, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { loadContent } from '../content/load';
+import {
+  applySemanticConstellations,
+  coversArticles,
+  loadSemanticMap,
+  usesKnownConstellations,
+} from '../content/semanticMap';
 import { CuratedForceLayout } from '../layout/curatedForce';
+import { SemanticLayout } from '../layout/semanticLayout';
 import { TextSearch } from '../search/textSearch';
 import { GalaxyCanvas } from '../galaxy/GalaxyCanvas';
 // P6: the article panel pulls in the react-markdown pipeline (~46% of the JS
@@ -28,18 +35,42 @@ type ViewMode = 'galaxy' | 'list' | 'showcase';
 
 export function App(): JSX.Element {
   const content = useMemo(() => loadContent(), []);
+  // #29 decision 5a: semantic layout is the DEFAULT; the curated force layout
+  // is the fallback when the committed artifact is missing, malformed, or
+  // doesn't cover every article (degenerate safety path, not a user toggle).
+  const semanticMap = useMemo(() => {
+    const map = loadSemanticMap();
+    return map &&
+      coversArticles(map, content.articles) &&
+      usesKnownConstellations(map, content.constellations)
+      ? map
+      : null;
+  }, [content]);
   const positions = useMemo(
-    () => new CuratedForceLayout().layout(content.articles, content.constellations),
-    [content],
+    () =>
+      (semanticMap ? new SemanticLayout(semanticMap) : new CuratedForceLayout()).layout(
+        content.articles,
+        content.constellations,
+      ),
+    [semanticMap, content],
   );
-  const articlesById = useMemo(
-    () => new Map(content.articles.map((a) => [a.id, a])),
-    [content.articles],
+  // #29 decision 3a: when semantic mode is active, articles render under their
+  // MAPPED constellation — one grouping truth across legend, list, panel,
+  // colors, and both renderers. Frontmatter keeps the authored value.
+  const articles = useMemo(
+    () =>
+      semanticMap ? applySemanticConstellations(content.articles, semanticMap) : content.articles,
+    [semanticMap, content],
   );
+  const articlesById = useMemo(() => new Map(articles.map((a) => [a.id, a])), [articles]);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [focus, setFocus] = useState<{ id: string; seq: number } | null>(null);
+  // One overlay preference follows the user between 2D and 3D. Selection-only
+  // related links remain visible when the global overlay is off.
+  const [showRelatedOverlay, setShowRelatedOverlay] = useState(false);
+  const toggleRelatedOverlay = useCallback(() => setShowRelatedOverlay((visible) => !visible), []);
   const narrow = useNarrowViewport();
   // A4: desktop users can pick the list; narrow viewports force it (NF-7).
   const [mode, setMode] = useState<ViewMode>('galaxy');
@@ -50,8 +81,8 @@ export function App(): JSX.Element {
   const showShowcase = !showList && mode === 'showcase';
 
   const matches = useMemo(
-    () => (query.trim() ? searchProvider.search(query, content.articles) : null),
-    [query, content.articles],
+    () => (query.trim() ? searchProvider.search(query, articles) : null),
+    [query, articles],
   );
   const matchIds = useMemo(() => (matches ? new Set(matches.map((m) => m.id)) : null), [matches]);
 
@@ -78,6 +109,26 @@ export function App(): JSX.Element {
     if (matches && matches.length > 0) flyTo(matches[0].id);
   }, [matches, flyTo]);
   const clearSearch = useCallback(() => setQuery(''), []);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLTextAreaElement ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey
+      ) {
+        return;
+      }
+      if (event.key === 'r' || event.key === 'R') {
+        event.preventDefault();
+        toggleRelatedOverlay();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [toggleRelatedOverlay]);
 
   const selected = selectedId ? (articlesById.get(selectedId) ?? null) : null;
 
@@ -147,7 +198,7 @@ export function App(): JSX.Element {
         )}
         {showList ? (
           <ListView
-            articles={content.articles}
+            articles={articles}
             constellations={content.constellations}
             matchIds={matchIds}
             onOpen={flyTo}
@@ -163,24 +214,30 @@ export function App(): JSX.Element {
             }
           >
             <ShowcaseCanvas
-              articles={content.articles}
+              articles={articles}
               constellations={content.constellations}
               positions={positions}
+              semanticEdges={semanticMap?.edges ?? null}
               selectedId={selectedId}
               onSelect={onSelect}
               matchIds={matchIds}
               focus={focus}
+              showRelatedOverlay={showRelatedOverlay}
+              onToggleRelatedOverlay={toggleRelatedOverlay}
             />
           </Suspense>
         ) : (
           <GalaxyCanvas
-            articles={content.articles}
+            articles={articles}
             constellations={content.constellations}
             positions={positions}
+            semanticEdges={semanticMap?.edges ?? null}
             selectedId={selectedId}
             onSelect={onSelect}
             matchIds={matchIds}
             focus={focus}
+            showRelatedOverlay={showRelatedOverlay}
+            onToggleRelatedOverlay={toggleRelatedOverlay}
           />
         )}
       </main>

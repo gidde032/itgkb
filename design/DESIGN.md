@@ -137,14 +137,19 @@ and the seed set was generalized and expanded to 40 vendor-generic articles. The
 
 Intra-constellation links produce the chain-like figures of real star charts.
 
-1. **Greedy tag-overlap pass.** All same-constellation article pairs are ranked
-   by shared-tag count (descending). Pairs are accepted greedily while both
-   endpoints have degree < 2, producing sparse chains rather than dense webs.
-2. **Orphan rescue.** After the greedy pass, any star with degree 0 (no tag
-   overlap with any sibling) is connected to its spatially nearest sibling in
-   the same constellation. The function accepts an optional positions map for
-   this purpose; without positions it falls back to the highest-degree sibling.
-   This guarantees every star renders with at least one constellation line.
+1. **Semantic default (#29).** Revision-pinned MiniLM embeddings are computed at
+   build time. A sparse global semantic similarity graph drives placement only.
+   The displayed line art is a separate similarity-favoured open path inside
+   each computed cluster: every member is connected, endpoints have one line,
+   interior stars have two, and no line crosses mapped constellations. Computed
+   clusters map one-to-one onto the curated names, colors, and catalog prefixes;
+   the same positions, grouping, and paths drive the 2D galaxy and 3D globe.
+2. **Curated fallback.** If the committed semantic artifact is missing,
+   malformed, or incomplete, same-constellation pairs are ranked by
+   shared-tag count and accepted greedily while both endpoints have degree < 2.
+3. **Fallback orphan rescue.** Curated fallback mode connects any degree-zero
+   star to its spatially nearest sibling. Semantic mode needs no runtime rescue:
+   connected paths are enforced in artifact generation, validation, and CI.
 
 ### Related-article lines (#39)
 
@@ -161,8 +166,9 @@ distinct from constellation lines:
     emphasized weight/opacity (0.55, 1.8px).
   - _Toggle-able overlay:_ a button (top-right, below the list-view toggle)
     or the `R` keyboard shortcut shows all related lines at baseline
-    opacity. When both overlay and selection are active, the selected star's
-    lines are emphasized over the baseline.
+    opacity. One default-off setting follows the user between 2D and 3D. When
+    both overlay and selection are active, the selected star's lines are
+    emphasized over the baseline.
 - **Dimming during search:** if either endpoint is outside the match set, the
   related line dims (same behavior as constellation lines).
 - **Deduplication:** bidirectional frontmatter references (A lists B, B lists A)
@@ -198,7 +204,7 @@ distinct from constellation lines:
 | Dark-only for v1.0.0 | RATIFIED | light mode deferred |
 | Light/daytime theme | DEFERRED | post-1.0 |
 | 3D showcase = third view, active segment coral | RATIFIED | #31 decision record 2026-08-20; amber re-rejected for UI state (`#E4B363` is Workspace & Email data color) |
-| Related lines always-on in 3D as dashed arcs | RATIFIED | gradient arcs; `R` shortcut + overlay stay galaxy-only |
+| Related lines share one default-off 2D/3D setting | RATIFIED | dashed gradient arcs; `R` and either view's control update the same state |
 | 3D star glow = additive sprites, no postprocessing | RATIFIED | over bloom (dependency weight, generic glow look) |
 
 ## 12. 3D showcase view (#31)
@@ -217,11 +223,14 @@ design contract: issue #31 decision record (2026-08-20). Key surface rules:
   `LayoutProvider` seam so a semantic layout (#29) composes unchanged.
   Supersedes the earlier flat-with-depth-offsets plan (maintainer direction,
   2026-08-21 — no config surface change; anchors drive it).
-- **Lines.** Constellation chains stay straight and solid. Related-article
-  lines are always on in 3D as dashed gradient arcs (source → target
-  constellation color); arc elevation varies with chord length and intervening
-  stars (hash-seeded, deterministic). Emphasized on selection, dimmed during
-  search. The `R` shortcut and Related-lines overlay remain galaxy-only.
+- **Lines.** Constellation paths stay solid. Related-article lines are dashed
+  gradient arcs (source → target constellation color); arc elevation varies
+  with chord length and intervening stars (hash-seeded, deterministic). Their
+  shared 2D/3D overlay defaults off; selection still reveals that star's arcs.
+  Both views expose the control and `R` changes the same persistent setting.
+  Three.js vertex samples are converted from the same display-space sRGB
+  gradient used in 2D, then encoded as linear-light buffer colors. Opacity and
+  width match 2D exactly. Selected lines emphasize and search dims them.
 - **Stars.** Additive sprite glow from math-generated DataTextures — no
   post-processing; per-star states mirror the 2D grammar (search dim, stub =
   dimmer core + dashed ring, selection = solid coral ring).

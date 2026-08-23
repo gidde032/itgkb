@@ -8,7 +8,9 @@
 
 An explorable, vendor-neutral IT knowledge base rendered as a galaxy: every
 article is a star, stars cluster into constellations by category, and proximity
-means topical similarity. Part Wikipedia, part star chart.
+means topical similarity. A revision-pinned MiniLM model computes the default
+layout at build time; no model, API key, or server ships to the browser. Part
+Wikipedia, part star chart.
 
 ## Run it
 
@@ -33,7 +35,14 @@ return home.
 other in their `related` frontmatter, colored as a gradient from the source
 constellation to the target constellation. Click a star to emphasize its
 related lines, press `R` (or the "Related lines" button, top right) to show
-every related line across the galaxy at once.
+every related line at once. The default-off setting is shared by the 2D and 3D
+views; with it off, selecting a star still reveals that star's related lines.
+
+**Semantic constellation lines:** the default layout groups articles by meaning
+and connects every star in each group through a similarity-favoured open path,
+with no more than two lines per star. The 2D galaxy and 3D globe consume the same
+committed position and path map. If that artifact is unusable, the app falls
+back to the curated tag-and-anchor layout.
 
 **3D view:** the view switcher (List · Galaxy · 3D) adds a three-dimensional
 showcase. Stars expand into depth based on constellation `depth` settings;
@@ -52,7 +61,9 @@ lazy-loaded and does not affect the initial page load.
    and the body sections. Leave `related` empty (`[]`) or list ids of articles
    that already exist — unresolvable ids fail validation.
 3. `npm run validate:content` — fix anything it flags.
-4. Reload the dev server. Your star is in the galaxy.
+4. `npm run build:semantic` — regenerate `content/semantic-map.json` (the first
+   run downloads the pinned model into the gitignored `.cache/` directory).
+5. Reload the dev server. Your star is in the galaxy.
 
 `constellation` must be one of the ids in `content/constellations.json`
 (`workspace-email`, `collaboration-meetings`, `files-storage`, `networking`,
@@ -73,6 +84,10 @@ employer/team names, internal hostnames, intranet URLs, or PII.
 - `npm run gates:quality` — the gate chain without the build (used by the deploy
   job, which builds separately with the Pages base path).
 - `npm test` — test suite only.
+- `npm run build:semantic` — regenerate the committed semantic artifact after
+  changing an article title, summary, tags, or authored constellation.
+- `npm run check:semantic` — validate artifact schema and input freshness
+  without loading the model or requiring network access.
 - `npm run check:sensitivity` — content-sensitivity gate: no org-specific data,
   internal hostnames, or unresolved `(verify)` markers. Hard gate in `gates`.
 
@@ -84,10 +99,10 @@ where positions or search results come from:
 - **Content pipeline.** Articles are markdown files in `content/articles/` with
   validated YAML frontmatter (schema in `SPEC.md` §5). `npm run validate:content`
   is the gate; nothing hardcodes article bodies in components.
-- **Provider seams.** Layout and search sit behind provider interfaces — a
-  `LayoutProvider` (`src/layout/types.ts`) yields star positions and a
-  `SearchProvider` (`src/search/types.ts`) yields match state. Smarter backends
-  can be swapped in later without touching the UI.
+- **Provider seams.** Layout and search sit behind provider interfaces. The
+  default `SemanticLayout` consumes a committed build artifact; the
+  `CuratedForceLayout` remains its automatic fallback. Both yield the same plain
+  star-position contract, while `SearchProvider` yields match state.
 - **Renderers.** Three view modes share the same positions and match state: the
   2D galaxy (default), a flat list, and a lazy-loaded 3D showcase (WebGL-gated,
   ~236 KB gz). None of them inspect article bodies.

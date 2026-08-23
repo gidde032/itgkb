@@ -1,43 +1,55 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import type { Article, Constellation } from '../content/types';
+import type { SemanticEdge } from '../content/semanticMap';
 import type { StarPosition } from '../layout/types';
 import { catalogMeta, constellationColors } from '../content/catalog';
-import { computeConstellationLinks, computeRelatedLinks } from '../galaxy/links';
+import {
+  computeConstellationLinks,
+  computeRelatedLinks,
+  computeSemanticLinks,
+} from '../galaxy/links';
 import { projectGlobe, GLOBE_RADIUS } from './globe';
-import { relatedArcs, type Vec3 } from './arcGeometry';
+import { bentLinkPoints, relatedArcs, type Vec3 } from './arcGeometry';
 import { framePoints, boundingSphere } from './framing';
 import { Scene, type FrameRequest, type SolidLink } from './Scene';
-import { OrbitIcon, ResetIcon } from '../ui/icons';
+import { OrbitIcon, RelatedLinesIcon, ResetIcon } from '../ui/icons';
 import { prefersReducedMotion } from '../app/motion';
 
 /**
  * 3D showcase renderer (#31). Same public contract as GalaxyCanvas — consumes
  * positions + match state only, never article bodies — mounted as a lazy chunk
  * by App (decision 6). Depth comes from the deterministic expansion; related
- * lines are always on as dashed gradient arcs (decision 2); the orbit toggle
- * and reset controls match the galaxy's chrome-button house style (decision 5).
+ * lines share the 2D visibility setting and render as dashed gradient arcs;
+ * the overlay, orbit, and reset controls use the same chrome-button house style.
  */
 export interface ShowcaseCanvasProps {
   articles: Article[];
   constellations: Constellation[];
   positions: StarPosition[];
+  /** #29: semantic similarity edges; null ⇒ curated tag links. */
+  semanticEdges: ReadonlyArray<SemanticEdge> | null;
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   /** FR-8 parity: non-matching stars dim in place. Null = no search. */
   matchIds: ReadonlySet<string> | null;
   /** FR-7 parity: bumping seq flies the camera to the star with this id. */
   focus: { id: string; seq: number } | null;
+  showRelatedOverlay: boolean;
+  onToggleRelatedOverlay: () => void;
 }
 
 export function ShowcaseCanvas({
   articles,
   constellations,
   positions,
+  semanticEdges,
   selectedId,
   onSelect,
   matchIds,
   focus,
+  showRelatedOverlay,
+  onToggleRelatedOverlay,
 }: ShowcaseCanvasProps): JSX.Element {
   const wrapRef = useRef<HTMLDivElement>(null);
   const hudRef = useRef<HTMLSpanElement>(null);
@@ -114,14 +126,26 @@ export function ShowcaseCanvas({
   }, [pointsByConstellation]);
 
   // Same link computation as the 2D galaxy (orphan rescue uses 2D positions —
-  // the figures' shapes stay identical across modes).
+  // the figures' shapes stay identical across modes). Semantic edges (#29)
+  // replace the curated tag links when the artifact is active.
   const links = useMemo(() => {
     const posMap = new Map(positions.map((p) => [p.id, { x: p.x, y: p.y }]));
-    return computeConstellationLinks(articles, posMap);
-  }, [articles, positions]);
+    return semanticEdges
+      ? computeSemanticLinks(articles, semanticEdges)
+      : computeConstellationLinks(articles, posMap);
+  }, [articles, positions, semanticEdges]);
 
   const colors = useMemo(() => constellationColors(constellations), [constellations]);
   const relatedLinks = useMemo(() => computeRelatedLinks(articles, colors), [articles, colors]);
+  const visibleRelatedLinks = useMemo(
+    () =>
+      showRelatedOverlay
+        ? relatedLinks
+        : selectedId === null
+          ? []
+          : relatedLinks.filter((link) => link.a === selectedId || link.b === selectedId),
+    [relatedLinks, selectedId, showRelatedOverlay],
+  );
 
   const solidLinks = useMemo(() => {
     const constellationOf = new Map(articles.map((a) => [a.id, a.constellation]));
@@ -137,6 +161,9 @@ export function ShowcaseCanvas({
           a,
           b,
           color: colors.get(constellationOf.get(l.a) ?? '') ?? '#ffffff',
+          // Weighted similarity links bend gently (#29); rescue/curated lines
+          // stay straight chords.
+          ...(l.weight !== undefined ? { weight: l.weight, points: bentLinkPoints(a, b) } : {}),
         };
       })
       .filter((l): l is SolidLink => l !== null);
@@ -148,7 +175,10 @@ export function ShowcaseCanvas({
     () => new Map(positions3D.map((p) => [p.id, { x: p.x, y: p.y, z: p.z }])),
     [positions3D],
   );
-  const arcs = useMemo(() => relatedArcs(relatedLinks, posObjById), [relatedLinks, posObjById]);
+  const arcs = useMemo(
+    () => relatedArcs(visibleRelatedLinks, posObjById),
+    [visibleRelatedLinks, posObjById],
+  );
 
   const initialFrame = useMemo(() => framePoints(allPoints), [allPoints]);
 
@@ -274,13 +304,23 @@ export function ShowcaseCanvas({
       </div>
       <button
         type="button"
-        className="related-toggle"
+        className="orbit-toggle"
         aria-pressed={orbitOn}
         onClick={() => setOrbitOn((v) => !v)}
         title="Toggle idle auto-orbit"
       >
         <OrbitIcon />
         Orbit
+      </button>
+      <button
+        type="button"
+        className="related-toggle"
+        aria-pressed={showRelatedOverlay}
+        onClick={onToggleRelatedOverlay}
+        title="Toggle related-article lines (R)"
+      >
+        <RelatedLinesIcon />
+        Related lines
       </button>
       <button type="button" className="reset-view" onClick={resetView}>
         <ResetIcon />

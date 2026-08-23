@@ -213,7 +213,9 @@ export function drawGalaxy(
 
   const pointById = new Map(scene.points.map((p) => [p.id, p]));
 
-  // Constellation line art beneath the stars.
+  // Constellation line art beneath the stars. Weighted links (#29 similarity
+  // edges) curve gently and scale width/alpha with their weight; unweighted
+  // links (curated mode, orphan rescue) render exactly as before.
   ctx.lineWidth = 1 / transform.k;
   for (const link of scene.links) {
     const a = pointById.get(link.a);
@@ -221,6 +223,27 @@ export function drawGalaxy(
     if (!a || !b) continue;
     const color = scene.meta.get(link.a)?.color ?? '#ffffff';
     const linkDimmed = matchIds !== null && (!matchIds.has(link.a) || !matchIds.has(link.b));
+    if (link.weight !== undefined) {
+      // Curved edge: control point at the midpoint offset perpendicular by a
+      // fixed fraction of the chord length, side chosen deterministically by
+      // the pair hash so the field reads organic, not combed.
+      const len = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+      const side = hashString(`${link.a}|${link.b}`) % 2 === 0 ? 1 : -1;
+      const bend = len * 0.12 * side;
+      const cx = (a.x + b.x) / 2 + (-(b.y - a.y) / len) * bend;
+      const cy = (a.y + b.y) / 2 + ((b.x - a.x) / len) * bend;
+      const alpha = Math.round(0x18 + link.weight * 0x30)
+        .toString(16)
+        .padStart(2, '0');
+      ctx.lineWidth = (0.7 + link.weight * 1.5) / transform.k;
+      ctx.strokeStyle = linkDimmed ? `${color}10` : `${color}${alpha}`;
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.quadraticCurveTo(cx, cy, b.x, b.y);
+      ctx.stroke();
+      continue;
+    }
+    ctx.lineWidth = 1 / transform.k;
     ctx.strokeStyle = linkDimmed ? `${color}10` : `${color}2e`;
     ctx.beginPath();
     ctx.moveTo(a.x, a.y);

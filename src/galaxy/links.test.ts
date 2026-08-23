@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { computeConstellationLinks, computeRelatedLinks } from './links';
+import { computeConstellationLinks, computeRelatedLinks, computeSemanticLinks } from './links';
 import type { Article } from '../content/types';
 import { loadContent } from '../content/load';
+import { applySemanticConstellations, loadSemanticMap } from '../content/semanticMap';
 
 function art(id: string, constellation: string, tags: string[], related: string[] = []): Article {
   return {
@@ -222,5 +223,50 @@ describe('computeRelatedLinks', () => {
     const articles = [art('a', 'alpha', [], ['a', 'b']), art('b', 'beta', [])];
     const links = computeRelatedLinks(articles, colors);
     expect(links).toEqual([{ a: 'a', b: 'b', colorA: '#aaa', colorB: '#bbb' }]);
+  });
+});
+
+describe('computeSemanticLinks (#29)', () => {
+  it('carries artifact edges through with their weights', () => {
+    const links = computeSemanticLinks(
+      [art('a1', 'alpha', []), art('a2', 'alpha', [])],
+      [{ a: 'a1', b: 'a2', weight: 0.7 }],
+    );
+    expect(links).toEqual([{ a: 'a1', b: 'a2', weight: 0.7 }]);
+  });
+
+  it('skips unknown and duplicate pairs defensively', () => {
+    const links = computeSemanticLinks(
+      [art('a1', 'alpha', []), art('a2', 'alpha', [])],
+      [
+        { a: 'a1', b: 'ghost', weight: 0.9 },
+        { a: 'a1', b: 'a1', weight: 0.9 },
+        { a: 'a1', b: 'a2', weight: 0.6 },
+        { a: 'a2', b: 'a1', weight: 0.6 }, // same pair, reversed
+      ],
+    );
+    expect(links.filter((l) => l.weight !== undefined)).toEqual([
+      { a: 'a1', b: 'a2', weight: 0.6 },
+    ]);
+  });
+
+  it('does not invent runtime rescue edges outside the validated artifact', () => {
+    const links = computeSemanticLinks(
+      [art('a1', 'alpha', []), art('a2', 'alpha', []), art('a3', 'alpha', [])],
+      [{ a: 'a1', b: 'a2', weight: 0.8 }],
+    );
+    expect(links).toEqual([{ a: 'a1', b: 'a2', weight: 0.8 }]);
+  });
+
+  // Real-content regression twin of the curated zero-orphan test, under the
+  // semantic line art: every article keeps at least one line.
+  it('leaves zero orphans over the real content + committed artifact', () => {
+    const { articles } = loadContent();
+    const map = loadSemanticMap()!;
+    const display = applySemanticConstellations(articles, map);
+    const links = computeSemanticLinks(display, map.edges);
+    for (const a of articles) {
+      expect(links.some((l) => l.a === a.id || l.b === a.id)).toBe(true);
+    }
   });
 });

@@ -18,5 +18,24 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
+      # #29: cache the one-time MiniLM download so the regen check below is
+      # fast. Keyed by OS, immutable model revision, and dependency lockfile.
+      - name: Cache semantic model
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          # Immutable model revision + dependency lock hash prevent a cache made
+          # by different model/runtime bytes from masquerading as reproducible.
+          key: semantic-minilm-${{ runner.os }}-751bff37182d-${{ hashFiles('package-lock.json') }}
+      # Output-true freshness (#29 decision 2a): regenerate the semantic map
+      # on Linux and compare exactly against the committed artifact. The offline
+      # check:semantic gate (inside gates, below) proves the inputs match;
+      # this step proves the committed output is what the pinned model
+      # actually produces — every hand-edit and any reproducibility drift fail.
+      - name: Verify semantic map regenerates identically
+        run: |
+          cp content/semantic-map.json /tmp/committed-semantic-map.json
+          npm run build:semantic
+          node scripts/compare-semantic.mjs /tmp/committed-semantic-map.json content/semantic-map.json
       - name: Quality gates (typecheck, lint, test+coverage, content, build)
         run: npm run gates

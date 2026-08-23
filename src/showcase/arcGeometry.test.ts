@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { arcElevation, hexToRgb01, relatedArc, relatedArcs, ARC_SEGMENTS } from './arcGeometry';
+import {
+  arcElevation,
+  hexToRgb01,
+  relatedArc,
+  relatedArcs,
+  srgbChannelToLinear,
+  ARC_SEGMENTS,
+} from './arcGeometry';
 
 const link = { a: 'star-a', b: 'star-b', colorA: '#ff0000', colorB: '#0000ff' };
 
@@ -45,13 +52,13 @@ describe('relatedArc', () => {
     }
   });
 
-  it('lerps vertex colors from source color to target color', () => {
+  it('matches the 2D sRGB gradient before converting samples for Three.js', () => {
     const arc = relatedArc(link, a, b, []);
     expect(arc.colors[0]).toEqual([1, 0, 0]);
     expect(arc.colors[ARC_SEGMENTS]).toEqual([0, 0, 1]);
     const mid = arc.colors[ARC_SEGMENTS / 2];
-    expect(mid[0]).toBeCloseTo(0.5);
-    expect(mid[2]).toBeCloseTo(0.5);
+    expect(mid[0]).toBeCloseTo(srgbChannelToLinear(0.5));
+    expect(mid[2]).toBeCloseTo(srgbChannelToLinear(0.5));
   });
 
   it('lifts the arc midpoint off the chord', () => {

@@ -4,6 +4,12 @@ import { sharedTagCount } from '../util/tags';
 export interface StarLink {
   a: string;
   b: string;
+  /**
+   * #29: similarity weight in (0, 1] on semantic edges — renderers map it to
+   * line width/opacity and a gentle curve. Absent on curated tag-links and
+   * orphan-rescue lines, which render exactly as before.
+   */
+  weight?: number;
 }
 
 export interface RelatedLink {
@@ -57,7 +63,23 @@ export function computeConstellationLinks(
     }
   }
 
-  // Orphan rescue: connect isolated stars to their nearest constellation sibling.
+  rescueOrphans(links, degree, articles, positions);
+
+  return links;
+}
+
+/**
+ * Orphan rescue: connect isolated stars to their nearest constellation
+ * sibling (spatial distance via the optional positions map). Guarantees every
+ * star has at least one constellation line — no orphans. Shared by the
+ * curated and semantic link builders so the invariant has one implementation.
+ */
+function rescueOrphans(
+  links: StarLink[],
+  degree: Map<string, number>,
+  articles: Article[],
+  positions?: ReadonlyMap<string, { x: number; y: number }>,
+): void {
   const byConstellation = new Map<string, Article[]>();
   for (const a of articles) {
     const group = byConstellation.get(a.constellation) ?? [];
@@ -102,7 +124,30 @@ export function computeConstellationLinks(
       }
     }
   }
+}
 
+/**
+ * Semantic constellation lines (#29): the validated artifact's per-group path
+ * edges become the line art. Connectivity and degree <= 2 are generator/gate
+ * contracts, so runtime must not invent rescue edges that could change the
+ * figure or connect mapped constellations.
+ */
+export function computeSemanticLinks(
+  articles: Article[],
+  edges: ReadonlyArray<{ a: string; b: string; weight: number }>,
+): StarLink[] {
+  const known = new Set(articles.map((a) => a.id));
+  const links: StarLink[] = [];
+  const seen = new Set<string>();
+  for (const e of edges) {
+    // The freshness gate validated the artifact; skip unknown/duplicate pairs
+    // defensively so a hand-edited file degrades instead of drawing ghosts.
+    if (!known.has(e.a) || !known.has(e.b) || e.a === e.b) continue;
+    const key = e.a < e.b ? `${e.a}|${e.b}` : `${e.b}|${e.a}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    links.push({ a: e.a, b: e.b, weight: e.weight });
+  }
   return links;
 }
 
