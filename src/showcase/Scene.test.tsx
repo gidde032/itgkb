@@ -19,6 +19,7 @@ const h = vi.hoisted(() => ({
     addEventListener: () => void;
     removeEventListener: () => void;
   } | null,
+  lineProps: [] as Array<Record<string, unknown>>,
 }));
 
 vi.mock('@react-three/fiber', async () => {
@@ -46,7 +47,10 @@ vi.mock('@react-three/drei', async () => {
   };
   h.controls = controls;
   return {
-    Line: () => null,
+    Line: (props: Record<string, unknown>) => {
+      h.lineProps.push(props);
+      return null;
+    },
     OrbitControls: React.forwardRef(function OrbitControls(
       _props: unknown,
       ref: React.ForwardedRef<unknown>,
@@ -140,6 +144,7 @@ function baseProps() {
 }
 
 function renderScene(overrides: Record<string, unknown> = {}) {
+  h.lineProps.length = 0;
   const { props, refs } = baseProps();
   const merged = { ...props, ...overrides };
   const utils = render(
@@ -164,6 +169,22 @@ function renderScene(overrides: Record<string, unknown> = {}) {
   );
   return { ...utils, props: merged, refs };
 }
+
+describe('Scene related-arc styling parity', () => {
+  it('matches the 2D baseline opacity and width', () => {
+    renderScene();
+    const related = h.lineProps.find((props) => props.dashed === true)!;
+    expect(related.opacity).toBe(0.2);
+    expect(related.lineWidth).toBe(1);
+  });
+
+  it('matches the 2D selected opacity and width', () => {
+    renderScene({ selectedId: 'a' });
+    const related = h.lineProps.find((props) => props.dashed === true)!;
+    expect(related.opacity).toBe(0.55);
+    expect(related.lineWidth).toBe(1.8);
+  });
+});
 
 /** Drive every registered useFrame callback at time t. */
 function tick(t: number) {

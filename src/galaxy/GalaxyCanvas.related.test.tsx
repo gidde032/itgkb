@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { useState } from 'react';
+import { describe, expect, it, vi } from 'vitest';
 import { render, fireEvent, screen } from '@testing-library/react';
 import { GalaxyCanvas } from './GalaxyCanvas';
 import type { StarPosition } from '../layout/types';
@@ -16,7 +17,20 @@ const baseProps = {
   onSelect: () => {},
   matchIds: null,
   focus: null,
+  showRelatedOverlay: false,
+  onToggleRelatedOverlay: () => {},
 };
+
+function ControlledGalaxy(): JSX.Element {
+  const [visible, setVisible] = useState(false);
+  return (
+    <GalaxyCanvas
+      {...baseProps}
+      showRelatedOverlay={visible}
+      onToggleRelatedOverlay={() => setVisible((value) => !value)}
+    />
+  );
+}
 
 const overlayButton = () => screen.getByRole('button', { name: /Related lines/ });
 
@@ -28,7 +42,7 @@ describe('related-lines overlay interaction (v1.1 audit H2)', () => {
   });
 
   it('clicking the toggle button flips aria-pressed', () => {
-    render(<GalaxyCanvas {...baseProps} />);
+    render(<ControlledGalaxy />);
     const button = overlayButton();
     fireEvent.click(button);
     expect(button).toHaveAttribute('aria-pressed', 'true');
@@ -36,29 +50,11 @@ describe('related-lines overlay interaction (v1.1 audit H2)', () => {
     expect(button).toHaveAttribute('aria-pressed', 'false');
   });
 
-  it('pressing R toggles the overlay', () => {
-    render(<GalaxyCanvas {...baseProps} />);
-    fireEvent.keyDown(document.body, { key: 'r', bubbles: true });
-    expect(overlayButton()).toHaveAttribute('aria-pressed', 'true');
-    fireEvent.keyDown(document.body, { key: 'R', bubbles: true });
-    expect(overlayButton()).toHaveAttribute('aria-pressed', 'false');
-  });
-
-  it('suppresses R while typing in an input field', () => {
-    render(<GalaxyCanvas {...baseProps} />);
-    const input = document.createElement('input');
-    document.body.appendChild(input);
-    fireEvent.keyDown(input, { key: 'r', bubbles: true });
-    expect(overlayButton()).toHaveAttribute('aria-pressed', 'false');
-    input.remove();
-  });
-
-  it('suppresses R when modifier keys are held (browser shortcuts)', () => {
-    render(<GalaxyCanvas {...baseProps} />);
-    for (const mods of [{ ctrlKey: true }, { metaKey: true }, { altKey: true }]) {
-      fireEvent.keyDown(document.body, { key: 'r', bubbles: true, ...mods });
-    }
-    expect(overlayButton()).toHaveAttribute('aria-pressed', 'false');
+  it('delegates overlay changes to the shared app-level controller', () => {
+    const onToggle = vi.fn();
+    render(<GalaxyCanvas {...baseProps} onToggleRelatedOverlay={onToggle} />);
+    fireEvent.click(overlayButton());
+    expect(onToggle).toHaveBeenCalledOnce();
   });
 
   // H1 regression: the article panel is an aria-modal dialog; keystrokes while

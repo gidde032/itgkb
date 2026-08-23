@@ -1,5 +1,14 @@
-import rawSemanticMap from '../../content/semantic-map.json';
-import type { Article } from './types';
+import type { Article, Constellation } from './types';
+
+// Load as optional raw text rather than a static JSON import. An exact glob can
+// legally match nothing, and malformed JSON stays a string until our guarded
+// parser runs; both cases can therefore reach the curated fallback.
+const semanticMapModules = import.meta.glob<string>('../../content/semantic-map.json', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+});
+const rawSemanticMap = Object.values(semanticMapModules)[0];
 
 /**
  * Build-time semantic-map artifact (#29), committed as
@@ -35,6 +44,7 @@ export interface SemanticMap {
   schemaVersion: number;
   generatorVersion: number;
   model: string;
+  revision: string;
   seed: number;
   inputHash: string;
   stars: SemanticStar[];
@@ -48,35 +58,72 @@ export interface SemanticMap {
  * only job is the fallback decision — a malformed map must degrade to the
  * curated layout, never crash the render.
  */
+const SCHEMA_VERSION = 2;
+const GENERATOR_VERSION = 3;
+const MODEL_ID = 'Xenova/all-MiniLM-L6-v2';
+const MODEL_REVISION = '751bff37182d3f1213fa05d7196b954e230abad9';
+const SEED = 42;
+const GALAXY_MAX_X = 620;
+const GALAXY_MAX_Y = 520;
+
 export function isSemanticMap(v: unknown): v is SemanticMap {
   if (typeof v !== 'object' || v === null) return false;
   const m = v as Record<string, unknown>;
+  if (
+    m.schemaVersion !== SCHEMA_VERSION ||
+    m.generatorVersion !== GENERATOR_VERSION ||
+    m.model !== MODEL_ID ||
+    m.revision !== MODEL_REVISION ||
+    m.seed !== SEED ||
+    typeof m.inputHash !== 'string' ||
+    !/^sha256:[0-9a-f]{64}$/.test(m.inputHash)
+  ) {
+    return false;
+  }
   if (!Array.isArray(m.stars) || m.stars.length === 0 || !Array.isArray(m.edges)) return false;
+  const starIds = new Set<string>();
+  const constellationById = new Map<string, string>();
   for (const s of m.stars) {
     if (typeof s !== 'object' || s === null) return false;
     const star = s as Record<string, unknown>;
     if (
       typeof star.id !== 'string' ||
+      star.id === '' ||
+      starIds.has(star.id) ||
       typeof star.constellation !== 'string' ||
+      star.constellation === '' ||
       typeof star.x !== 'number' ||
       !Number.isFinite(star.x) ||
+      Math.abs(star.x) > GALAXY_MAX_X ||
       typeof star.y !== 'number' ||
       !Number.isFinite(star.y) ||
+      Math.abs(star.y) > GALAXY_MAX_Y ||
       typeof star.z !== 'number' ||
       star.z < 0 ||
       star.z > 1 ||
       typeof star.outlier !== 'boolean' ||
-      typeof star.strength !== 'number'
+      typeof star.strength !== 'number' ||
+      !Number.isFinite(star.strength) ||
+      star.strength < -1 ||
+      star.strength > 1
     ) {
       return false;
     }
+    starIds.add(star.id);
+    constellationById.set(star.id, star.constellation);
   }
+  const edgePairs = new Set<string>();
+  const degree = new Map<string, number>();
+  const adjacency = new Map<string, string[]>();
   for (const e of m.edges) {
     if (typeof e !== 'object' || e === null) return false;
     const edge = e as Record<string, unknown>;
     if (
       typeof edge.a !== 'string' ||
       typeof edge.b !== 'string' ||
+      edge.a === edge.b ||
+      !starIds.has(edge.a) ||
+      !starIds.has(edge.b) ||
       typeof edge.weight !== 'number' ||
       !Number.isFinite(edge.weight) ||
       edge.weight <= 0 ||
@@ -84,19 +131,69 @@ export function isSemanticMap(v: unknown): v is SemanticMap {
     ) {
       return false;
     }
+    const pair = edge.a < edge.b ? `${edge.a}|${edge.b}` : `${edge.b}|${edge.a}`;
+    if (edgePairs.has(pair)) return false;
+    if (constellationById.get(edge.a) !== constellationById.get(edge.b)) return false;
+    edgePairs.add(pair);
+    degree.set(edge.a, (degree.get(edge.a) ?? 0) + 1);
+    degree.set(edge.b, (degree.get(edge.b) ?? 0) + 1);
+    if ((degree.get(edge.a) ?? 0) > 2 || (degree.get(edge.b) ?? 0) > 2) return false;
+    adjacency.set(edge.a, [...(adjacency.get(edge.a) ?? []), edge.b]);
+    adjacency.set(edge.b, [...(adjacency.get(edge.b) ?? []), edge.a]);
+  }
+  const groups = new Map<string, string[]>();
+  for (const [id, constellation] of constellationById) {
+    groups.set(constellation, [...(groups.get(constellation) ?? []), id]);
+  }
+  for (const members of groups.values()) {
+    if (members.length < 2) continue;
+    const memberSet = new Set(members);
+    const reached = new Set<string>();
+    const pending = [members[0]];
+    while (pending.length > 0) {
+      const id = pending.pop()!;
+      if (reached.has(id)) continue;
+      reached.add(id);
+      for (const next of adjacency.get(id) ?? []) if (memberSet.has(next)) pending.push(next);
+    }
+    if (reached.size !== members.length) return false;
   }
   return true;
 }
 
-/** Static import + guard. Null ⇒ the app falls back to CuratedForceLayout. */
-export function loadSemanticMap(): SemanticMap | null {
-  return isSemanticMap(rawSemanticMap) ? rawSemanticMap : null;
+/** Parse optional raw JSON without allowing a bad artifact to break startup. */
+export function parseSemanticMap(raw: string | undefined): SemanticMap | null {
+  if (raw === undefined) return null;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return isSemanticMap(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
 }
 
-/** True when every article has a star in the map (stale maps fall back). */
+/** Optional raw import + guard. Null ⇒ the app falls back to CuratedForceLayout. */
+export function loadSemanticMap(): SemanticMap | null {
+  return parseSemanticMap(rawSemanticMap);
+}
+
+/** True only when the map and live content carry the exact same unique ids. */
 export function coversArticles(map: SemanticMap, articles: readonly Article[]): boolean {
   const ids = new Set(map.stars.map((s) => s.id));
-  return articles.every((a) => ids.has(a.id));
+  return (
+    ids.size === map.stars.length &&
+    ids.size === articles.length &&
+    articles.every((a) => ids.has(a.id))
+  );
+}
+
+/** Unknown mapped groups would hide articles, so reject them before activation. */
+export function usesKnownConstellations(
+  map: SemanticMap,
+  constellations: readonly Constellation[],
+): boolean {
+  const known = new Set(constellations.map((c) => c.id));
+  return map.stars.every((star) => known.has(star.constellation));
 }
 
 /**

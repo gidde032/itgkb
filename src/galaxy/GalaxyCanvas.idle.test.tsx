@@ -52,6 +52,8 @@ describe('GalaxyCanvas twinkle loop (P1 idle-gate)', () => {
     onSelect: () => {},
     matchIds: null,
     focus: null,
+    showRelatedOverlay: false,
+    onToggleRelatedOverlay: () => {},
   };
 
   it('runs while active, self-cancels when idle, and resumes on interaction', () => {

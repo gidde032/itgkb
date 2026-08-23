@@ -8,7 +8,13 @@ import { writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pipeline, env } from '@huggingface/transformers';
-import { MODEL_ID, buildSemanticMap, readSemanticInputs } from './semantic-lib.mjs';
+import {
+  MODEL_ID,
+  MODEL_REVISION,
+  buildSemanticMap,
+  readSemanticInputs,
+  semanticText,
+} from './semantic-lib.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -21,12 +27,12 @@ async function main() {
   const { articles, constellations } = readSemanticInputs(root);
 
   console.log(`Embedding ${articles.length} articles with ${MODEL_ID}…`);
-  const extractor = await pipeline('feature-extraction', MODEL_ID);
+  const extractor = await pipeline('feature-extraction', MODEL_ID, { revision: MODEL_REVISION });
   // Embedding input is title + summary + tags only: topical signal, short
   // enough for MiniLM's 256-token window, and independent of body rewrites.
   // The authored constellation is deliberately excluded — semantics must be
   // free to disagree with curation (#29 decision 3a).
-  const texts = articles.map((a) => `${a.title}. ${a.summary}. ${a.tags.join(', ')}`);
+  const texts = articles.map(semanticText);
   const output = await extractor(texts, { pooling: 'mean', normalize: true });
   const rows = output.tolist();
   const vectors = Object.fromEntries(articles.map((a, i) => [a.id, rows[i]]));

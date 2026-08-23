@@ -1,8 +1,7 @@
-// CI helper (#29): tolerant comparison of two semantic-map JSON files via
-// semantic-lib's compareArtifacts. Byte equality is too strict across
-// platforms (last-bit float wobble in model inference can move a rounded
-// coordinate), but a cluster flip, an input-hash change, or real coordinate
-// drift must fail the run.
+// CI helper (#29): exact semantic comparison of two semantic-map JSON files via
+// semantic-lib's compareArtifacts. Model weights are revision-pinned and the
+// pipeline rounds its committed output, so any output drift or hand edit must
+// fail the run.
 import { readFileSync } from 'node:fs';
 import { compareArtifacts } from './semantic-lib.mjs';
 

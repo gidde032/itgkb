@@ -5,8 +5,16 @@ import type { ReactNode } from 'react';
 // Wrapper-level test: the Scene subtree and r3f's Canvas are mocked — the
 // chrome (orbit toggle, reset, chips, labels, HUD) is what's under test. The
 // math underneath lives in pure modules with their own unit tests.
-const fiber = vi.hoisted(() => ({ canvasProps: [] as Array<{ frameloop?: string }> }));
-vi.mock('./Scene', () => ({ Scene: () => null }));
+const fiber = vi.hoisted(() => ({
+  canvasProps: [] as Array<{ frameloop?: string }>,
+  sceneProps: [] as Array<{ arcs?: Array<{ id: string }> }>,
+}));
+vi.mock('./Scene', () => ({
+  Scene: (props: { arcs?: Array<{ id: string }> }) => {
+    fiber.sceneProps.push(props);
+    return null;
+  },
+}));
 vi.mock('@react-three/fiber', () => ({
   Canvas: (props: { children?: ReactNode; frameloop?: string }) => {
     fiber.canvasProps.push(props);
@@ -31,6 +39,8 @@ function renderShowcase(overrides: Record<string, unknown> = {}) {
     onSelect: vi.fn(),
     matchIds: null,
     focus: null,
+    showRelatedOverlay: false,
+    onToggleRelatedOverlay: vi.fn(),
     ...overrides,
   };
   return render(<ShowcaseCanvas {...props} />);
@@ -43,6 +53,31 @@ describe('ShowcaseCanvas chrome (#31 decisions 2, 5, 10, 13)', () => {
     expect(orbit).toHaveAttribute('aria-pressed', 'true');
     fireEvent.click(orbit);
     expect(orbit).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('renders the shared Related lines toggle and delegates changes', () => {
+    const onToggleRelatedOverlay = vi.fn();
+    renderShowcase({ onToggleRelatedOverlay });
+    const related = screen.getByRole('button', { name: 'Related lines' });
+    expect(related).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.click(related);
+    expect(onToggleRelatedOverlay).toHaveBeenCalledOnce();
+  });
+
+  it('hides all arcs by default but keeps selected-star arcs visible', () => {
+    const linked = content.articles.find((article) => article.related.length > 0)!;
+    renderShowcase();
+    expect(fiber.sceneProps.at(-1)?.arcs).toHaveLength(0);
+
+    renderShowcase({ selectedId: linked.id });
+    const selectedArcs = fiber.sceneProps.at(-1)?.arcs ?? [];
+    expect(selectedArcs.length).toBeGreaterThan(0);
+    expect(selectedArcs.every((arc) => arc.id.split('|').includes(linked.id))).toBe(true);
+  });
+
+  it('shows the full related-arc set when the shared overlay is on', () => {
+    renderShowcase({ showRelatedOverlay: true });
+    expect(fiber.sceneProps.at(-1)?.arcs?.length).toBeGreaterThan(1);
   });
 
   // Review repair regression (correctness #2/#3): the render loop runs

@@ -1,9 +1,10 @@
 {
-  "schemaVersion": 1,
-  "generatorVersion": 1,
+  "schemaVersion": 2,
+  "generatorVersion": 3,
   "model": "Xenova/all-MiniLM-L6-v2",
+  "revision": "751bff37182d3f1213fa05d7196b954e230abad9",
   "seed": 42,
-  "inputHash": "sha256:e9c5a6c374c6f8ef1e396ac395dda7424814490243f6ff37ef80054c4c489f70",
+  "inputHash": "sha256:ac2968e1c1a25abb66b950f3b0673f485afc0a7c59bceee32fce328e392f4ebd",
   "stars": [
     {
       "id": "account-access",
@@ -432,28 +433,23 @@
   "edges": [
     {
       "a": "account-access",
-      "b": "email-delegation-send-as",
-      "weight": 0.368
+      "b": "network-architecture",
+      "weight": 0.363
     },
     {
       "a": "account-access",
-      "b": "password-managers-strong-passwords",
-      "weight": 0.371
-    },
-    {
-      "a": "account-access",
-      "b": "suspected-account-compromise",
-      "weight": 0.439
-    },
-    {
-      "a": "bluetooth-pairing-issues",
-      "b": "choppy-video-quality",
-      "weight": 0.329
+      "b": "vpn-when-and-failures",
+      "weight": 0.282
     },
     {
       "a": "bluetooth-pairing-issues",
       "b": "display-docking-issues",
       "weight": 0.31
+    },
+    {
+      "a": "bluetooth-pairing-issues",
+      "b": "screen-sharing-fails",
+      "weight": 0.304
     },
     {
       "a": "cant-join-meeting",
@@ -466,9 +462,9 @@
       "weight": 0.446
     },
     {
-      "a": "cant-join-meeting",
-      "b": "screen-sharing-fails",
-      "weight": 0.459
+      "a": "choppy-video-quality",
+      "b": "dns-problems",
+      "weight": 0.257
     },
     {
       "a": "choppy-video-quality",
@@ -476,9 +472,9 @@
       "weight": 0.431
     },
     {
-      "a": "choppy-video-quality",
-      "b": "video-call-no-audio",
-      "weight": 0.477
+      "a": "chrome-forced-dark-rendering",
+      "b": "word-template-unwanted-gridlines",
+      "weight": 0.213
     },
     {
       "a": "clicked-phishing-response",
@@ -491,24 +487,19 @@
       "weight": 0.57
     },
     {
-      "a": "clicked-phishing-response",
-      "b": "suspected-account-compromise",
-      "weight": 0.465
-    },
-    {
-      "a": "cloud-storage-personal-vs-shared",
-      "b": "restoring-deleted-file-version",
-      "weight": 0.384
-    },
-    {
-      "a": "cloud-storage-personal-vs-shared",
-      "b": "sharing-links-permissions",
-      "weight": 0.505
-    },
-    {
       "a": "cloud-storage-personal-vs-shared",
       "b": "storage-quota-full",
       "weight": 0.563
+    },
+    {
+      "a": "disk-encryption",
+      "b": "handling-sensitive-data",
+      "weight": 0.267
+    },
+    {
+      "a": "disk-encryption",
+      "b": "recovering-deleted-mail-calendar",
+      "weight": 0.3
     },
     {
       "a": "display-docking-issues",
@@ -517,13 +508,18 @@
     },
     {
       "a": "email-delegation-send-as",
-      "b": "recognizing-phishing",
-      "weight": 0.332
+      "b": "reporting-suspicious-email",
+      "weight": 0.381
     },
     {
       "a": "email-delegation-send-as",
-      "b": "reporting-suspicious-email",
-      "weight": 0.381
+      "b": "vacation-responder-filters",
+      "weight": 0.324
+    },
+    {
+      "a": "enterprise-wifi-8021x",
+      "b": "password-managers-strong-passwords",
+      "weight": 0.295
     },
     {
       "a": "enterprise-wifi-8021x",
@@ -532,8 +528,13 @@
     },
     {
       "a": "firefox-email-session-expired",
-      "b": "workspace-session-auth",
-      "weight": 0.408
+      "b": "office-365-install-activation-issues",
+      "weight": 0.209
+    },
+    {
+      "a": "firefox-email-session-expired",
+      "b": "password-managers-strong-passwords",
+      "weight": 0.282
     },
     {
       "a": "gcal-cannot-be-shown",
@@ -541,29 +542,14 @@
       "weight": 0.703
     },
     {
-      "a": "gcal-cannot-be-shown",
-      "b": "gcal-external-sharing",
-      "weight": 0.606
-    },
-    {
       "a": "gcal-event-couldnt-update",
       "b": "gcal-external-sharing",
       "weight": 0.648
     },
     {
-      "a": "gcal-event-couldnt-update",
-      "b": "gcal-transient-errors",
-      "weight": 0.488
-    },
-    {
       "a": "gcal-external-sharing",
-      "b": "workspace-service-status",
-      "weight": 0.324
-    },
-    {
-      "a": "gcal-transient-errors",
-      "b": "recovering-deleted-mail-calendar",
-      "weight": 0.411
+      "b": "gcal-transient-errors",
+      "weight": 0.331
     },
     {
       "a": "gcal-transient-errors",
@@ -572,23 +558,28 @@
     },
     {
       "a": "gmail-templates-missing",
-      "b": "recovering-deleted-mail-calendar",
-      "weight": 0.339
+      "b": "word-template-unwanted-gridlines",
+      "weight": 0.221
+    },
+    {
+      "a": "handling-sensitive-data",
+      "b": "video-call-no-audio",
+      "weight": 0.219
     },
     {
       "a": "meeting-notifications-missing",
-      "b": "mfa-fatigue-push-bombing",
-      "weight": 0.337
-    },
-    {
-      "a": "meeting-notifications-missing",
-      "b": "screen-sharing-fails",
-      "weight": 0.348
+      "b": "web-form-500-server-error",
+      "weight": 0.233
     },
     {
       "a": "mfa-fatigue-push-bombing",
-      "b": "mfa-new-device",
-      "weight": 0.564
+      "b": "suspected-account-compromise",
+      "weight": 0.333
+    },
+    {
+      "a": "mfa-new-device",
+      "b": "video-call-no-audio",
+      "weight": 0.168
     },
     {
       "a": "network-architecture",
@@ -596,19 +587,9 @@
       "weight": 0.523
     },
     {
-      "a": "network-architecture",
-      "b": "vpn-when-and-failures",
-      "weight": 0.321
-    },
-    {
-      "a": "office-365-install-activation-issues",
-      "b": "software-install-self-service",
-      "weight": 0.452
-    },
-    {
-      "a": "printer-troubleshooting",
-      "b": "traceroute-reading-output",
-      "weight": 0.343
+      "a": "public-wifi-travel-safety",
+      "b": "wired-ethernet-wont-connect",
+      "weight": 0.122
     },
     {
       "a": "recognizing-phishing",
@@ -621,19 +602,14 @@
       "weight": 0.488
     },
     {
-      "a": "reporting-suspicious-email",
-      "b": "suspected-account-compromise",
-      "weight": 0.349
-    },
-    {
       "a": "restoring-deleted-file-version",
       "b": "storage-quota-full",
       "weight": 0.411
     },
     {
-      "a": "screen-sharing-fails",
-      "b": "video-call-no-audio",
-      "weight": 0.37
+      "a": "sharing-links-permissions",
+      "b": "vacation-responder-filters",
+      "weight": 0.115
     },
     {
       "a": "slow-computer-triage",
@@ -641,9 +617,9 @@
       "weight": 0.389
     },
     {
-      "a": "storage-quota-full",
+      "a": "software-install-self-service",
       "b": "sync-client-wont-sync",
-      "weight": 0.399
+      "weight": 0.146
     },
     {
       "a": "sync-client-wont-sync",

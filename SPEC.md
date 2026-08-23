@@ -1,8 +1,9 @@
 # IT Knowledge Galaxy — Spec & Phase Outline
 
 Status: APPROVED v1 (2026-07-17) with amendments: budgets softened to sanity
-checks; no AI/semantic features in any near-term version; prototype speed
-prioritized. Amendments since: repo is public with a live GitHub Pages demo
+checks; prototype speed prioritized. Amendments since: the build-time semantic
+layout is the default with curated fallback (#29, 2026-08-22); repo is public
+with a live GitHub Pages demo
 (M1); constellation taxonomy remapped to a vendor-neutral set + Security for
 the public v1.0.0 line (M2/M4); content is organization-agnostic and
 `npm run check:sensitivity` enforces it as a hard gate;
@@ -33,7 +34,7 @@ title/tags/summary/body; the galaxy pans and zooms smoothly; content is
 authored in plain markdown files that are trivial to add/edit.
 
 **Explicitly out of MVP scope** (extensibility hooks — architecture must not
-block them): AI/semantic search, auto-suggested related articles, ticketing-system
+block them): semantic search, auto-suggested related articles, ticketing-system
 integration, AI authoring assistant, analytics, multi-user contribution flow.
 
 ## 2. Stack
@@ -42,7 +43,7 @@ integration, AI authoring assistant, analytics, multi-user contribution flow.
 | ------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Build/runtime       | Vite + React 18 + TypeScript                                                                                      | Fastest path to working; standard for maintainer's prior projects; extensibility hooks (AI search, integrations) need a real app structure, not a single-file build                     |
 | Galaxy rendering    | HTML `<canvas>` 2D, custom renderer                                                                               | Glow, dimming, constellation lines, and labels are crisp and cheap in canvas; no WebGL/Three.js risk in MVP. Depth cues via z-jitter, parallax on pan, size/brightness falloff ("2.5D") |
-| Layout simulation   | `d3-force` (+ `d3-zoom` for pan/zoom)                                                                             | Battle-tested force simulation; curated anchors + tag-similarity links; runs once at load, positions cached                                                                             |
+| Layout simulation   | Build-time MiniLM embeddings + deterministic `d3-force`; `d3-zoom` for 2D interaction                             | Semantic positions are committed as validated JSON; curated anchors and tag-force layout remain the no-artifact fallback                                                                |
 | Article content     | Markdown files with YAML frontmatter, one per article, loaded via Vite `import.meta.glob(..., { query: '?raw' })` | Human-editable, git-diffable, zero build script; natural path to PR-based contribution later                                                                                            |
 | Frontmatter parsing | Tiny in-repo parser (or `js-yaml` if edge cases demand)                                                           | Frontmatter schema is small and controlled                                                                                                                                              |
 | Markdown rendering  | `react-markdown`                                                                                                  | Standard, safe (no `dangerouslySetInnerHTML`)                                                                                                                                           |
@@ -56,8 +57,9 @@ integration, AI authoring assistant, analytics, multi-user contribution flow.
 React 18) is a third renderer against the same positions, not a rewrite: a
 lazy-loaded chunk that projects the constellations onto a celestial globe
 (figure directions derived from the curated anchors; local force-layout
-offsets become tangent-plane figure spread), never a new LayoutProvider, so a
-future semantic layout (#29 / OQ-2) flows through unchanged.
+offsets become tangent-plane figure spread), never a new LayoutProvider. The
+default semantic layout (#29 / OQ-2) and curated fallback flow through this
+same renderer contract.
 
 ## 3. Functional requirements
 
@@ -70,12 +72,16 @@ future semantic layout (#29 / OQ-2) flows through unchanged.
   sections follow the article template (Diagnostic Steps, Resolution Steps,
   Notes/Edge Cases as applicable). The validator enforces the required fields;
   `tags`/`stub`/`related` are checked for type when present.
-- **FR-3** The galaxy view must render one star per article, clustered into its
-  constellation's region, with constellation labels and intra-cluster
-  connecting lines between closely related stars (constellation line art).
-- **FR-4** Star proximity within a constellation must reflect tag overlap
-  (shared tags attract). Cross-constellation placement is curated via a
-  per-constellation anchor config.
+- **FR-3** The galaxy view must render one star per article. By default,
+  build-time semantic clusters map one-to-one onto the seven curated
+  constellation identities. Inside each mapped constellation, a weighted
+  similarity-favoured open path forms connected line art with degree at most
+  two per star. Missing, malformed, or incomplete artifacts
+  fall back to the curated layout.
+- **FR-4** One semantic position map must drive both the 2D galaxy and 3D globe.
+  Cluster members form tight knots around curated anchors; semantic outliers
+  occupy sparse regions while remaining inside the globe silhouette. In the
+  curated fallback, shared tags attract within authored constellations.
 - **FR-5** Hover (desktop) must show a preview: title + summary. Click must
   open a side panel with the full rendered article.
 - **FR-6** Stub articles must be visually distinct (dimmer star, dashed ring)
@@ -239,7 +245,9 @@ drawing), so they stay serial per the bundling precondition.
 
 - OQ-1: RESOLVED — 3D showcase view shipped (#31 / PR #45); design contract
   ratified in the issue-31 decision record (2026-08-20).
-- OQ-2: Embedding/TF-IDF layout provider — worthwhile at ~50+ articles.
+- OQ-2: RESOLVED — revision-pinned MiniLM embeddings generate the committed
+  semantic layout at build time (#29 / PR #50); no model, key, API, or server
+  ships to the browser.
 - OQ-3: Semantic search provider (Anthropic API or local embeddings).
 - OQ-4: ticketing-system integration, analytics, authoring assistant, multi-user
   contribution — all post-MVP, architecture keeps the door open (provider

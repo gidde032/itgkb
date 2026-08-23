@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { select } from 'd3-selection';
 import 'd3-transition'; // side-effect: patches selection.transition for smooth reset (FR-9)
 import { zoom, zoomIdentity, type ZoomTransform, type ZoomBehavior } from 'd3-zoom';
@@ -28,6 +28,8 @@ export interface GalaxyCanvasProps {
   matchIds: ReadonlySet<string> | null;
   /** FR-7: bumping seq flies the view to the star with this id. */
   focus: { id: string; seq: number } | null;
+  showRelatedOverlay: boolean;
+  onToggleRelatedOverlay: () => void;
 }
 
 export function GalaxyCanvas({
@@ -39,6 +41,8 @@ export function GalaxyCanvas({
   onSelect,
   matchIds,
   focus,
+  showRelatedOverlay,
+  onToggleRelatedOverlay,
 }: GalaxyCanvasProps): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const transformRef = useRef<ZoomTransform>(zoomIdentity);
@@ -67,10 +71,6 @@ export function GalaxyCanvas({
   // seamlessly after an idle pause (no phase jump from wall-clock time).
   const twinkleTimeRef = useRef(0);
 
-  // #39: related-lines overlay toggle state.
-  const [showRelatedOverlay, setShowRelatedOverlay] = useState(false);
-  const toggleRelatedOverlay = useCallback(() => setShowRelatedOverlay((v) => !v), []);
-
   const colorByConstellation = useMemo(() => constellationColors(constellations), [constellations]);
 
   // Shared with the showcase renderer (#31): catalog ids + colors from one
@@ -81,10 +81,12 @@ export function GalaxyCanvas({
   // mode (#29) the artifact's similarity edges are the line art; the curated
   // builder otherwise produces the tag-affinity chains.
   const links = useMemo(() => {
-    const posMap = new Map(positions.map((p) => [p.id, { x: p.x, y: p.y }]));
     return semanticEdges
-      ? computeSemanticLinks(articles, posMap, semanticEdges)
-      : computeConstellationLinks(articles, posMap);
+      ? computeSemanticLinks(articles, semanticEdges)
+      : computeConstellationLinks(
+          articles,
+          new Map(positions.map((p) => [p.id, { x: p.x, y: p.y }])),
+        );
   }, [articles, positions, semanticEdges]);
 
   // #39: compute related-article links from frontmatter.
@@ -306,26 +308,6 @@ export function GalaxyCanvas({
     renderRef.current?.();
   }, [selectedId, matchIds, showRelatedOverlay]);
 
-  // #39: keyboard shortcut — R toggles related-lines overlay.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      // Ignore when typing in an input/textarea or when modifier keys are held.
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-      // H1 (v1.1 audit): while the article panel modal is open, R would toggle
-      // the overlay invisibly behind it — suppress until the panel closes.
-      // INVALID: PRESSING R WHEN ARTICLE PANEL IS OPEN SHOULD REVEAL RELATED LINKS
-      // THIS BEHAVIOR IS INTENDED AND ALLOWS FOR USERS TO QUICKLY VISUALIZE LINKED ARTICLES
-      //if (drawStateRef.current.selectedId !== null) return;
-      if (e.key === 'r' || e.key === 'R') {
-        e.preventDefault();
-        setShowRelatedOverlay((v) => !v);
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
-
   // FR-7: fly to a star when a focus request arrives (related-link nav, search Enter).
   useEffect(() => {
     if (!focus) return;
@@ -386,7 +368,7 @@ export function GalaxyCanvas({
         type="button"
         className="related-toggle"
         aria-pressed={showRelatedOverlay}
-        onClick={toggleRelatedOverlay}
+        onClick={onToggleRelatedOverlay}
         title="Toggle related-article lines (R)"
       >
         <RelatedLinesIcon />

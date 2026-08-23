@@ -1,9 +1,10 @@
-import { lazy, Suspense, useCallback, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { loadContent } from '../content/load';
 import {
   applySemanticConstellations,
   coversArticles,
   loadSemanticMap,
+  usesKnownConstellations,
 } from '../content/semanticMap';
 import { CuratedForceLayout } from '../layout/curatedForce';
 import { SemanticLayout } from '../layout/semanticLayout';
@@ -39,7 +40,11 @@ export function App(): JSX.Element {
   // doesn't cover every article (degenerate safety path, not a user toggle).
   const semanticMap = useMemo(() => {
     const map = loadSemanticMap();
-    return map && coversArticles(map, content.articles) ? map : null;
+    return map &&
+      coversArticles(map, content.articles) &&
+      usesKnownConstellations(map, content.constellations)
+      ? map
+      : null;
   }, [content]);
   const positions = useMemo(
     () =>
@@ -62,6 +67,10 @@ export function App(): JSX.Element {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [focus, setFocus] = useState<{ id: string; seq: number } | null>(null);
+  // One overlay preference follows the user between 2D and 3D. Selection-only
+  // related links remain visible when the global overlay is off.
+  const [showRelatedOverlay, setShowRelatedOverlay] = useState(false);
+  const toggleRelatedOverlay = useCallback(() => setShowRelatedOverlay((visible) => !visible), []);
   const narrow = useNarrowViewport();
   // A4: desktop users can pick the list; narrow viewports force it (NF-7).
   const [mode, setMode] = useState<ViewMode>('galaxy');
@@ -100,6 +109,26 @@ export function App(): JSX.Element {
     if (matches && matches.length > 0) flyTo(matches[0].id);
   }, [matches, flyTo]);
   const clearSearch = useCallback(() => setQuery(''), []);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLTextAreaElement ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey
+      ) {
+        return;
+      }
+      if (event.key === 'r' || event.key === 'R') {
+        event.preventDefault();
+        toggleRelatedOverlay();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [toggleRelatedOverlay]);
 
   const selected = selectedId ? (articlesById.get(selectedId) ?? null) : null;
 
@@ -193,6 +222,8 @@ export function App(): JSX.Element {
               onSelect={onSelect}
               matchIds={matchIds}
               focus={focus}
+              showRelatedOverlay={showRelatedOverlay}
+              onToggleRelatedOverlay={toggleRelatedOverlay}
             />
           </Suspense>
         ) : (
@@ -205,6 +236,8 @@ export function App(): JSX.Element {
             onSelect={onSelect}
             matchIds={matchIds}
             focus={focus}
+            showRelatedOverlay={showRelatedOverlay}
+            onToggleRelatedOverlay={toggleRelatedOverlay}
           />
         )}
       </main>

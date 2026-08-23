@@ -18,7 +18,7 @@ export interface RelatedArc {
   id: string;
   /** Sampled quadratic-bezier points from source to target star. */
   points: Vec3[];
-  /** Per-point RGB in [0,1], lerping source → target constellation color. */
+  /** Per-point linear RGB in [0,1] for Three.js vertex-color buffers. */
   colors: Vec3[];
 }
 
@@ -38,12 +38,17 @@ interface P3 {
   z: number;
 }
 
-/** Parse a #rrggbb constellation color into linear [0,1] RGB. */
+/** Parse a #rrggbb constellation color into display-space sRGB channels. */
 export function hexToRgb01(hex: string): Vec3 {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
   if (!m) return [1, 1, 1];
   const n = Number.parseInt(m[1], 16);
   return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
+}
+
+/** Convert one display-space sRGB channel to linear light for Three.js. */
+export function srgbChannelToLinear(channel: number): number {
+  return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
 }
 
 /** Squared distance from point p to segment ab (closest-point projection). */
@@ -150,10 +155,14 @@ export function relatedArc(
       u * u * aPos.y + 2 * u * t * mid.y + t * t * bPos.y,
       u * u * aPos.z + 2 * u * t * mid.z + t * t * bPos.z,
     ]);
+    // Canvas2D interpolates the CSS endpoint colors in display-space sRGB.
+    // Sample that same gradient first, then convert each sampled channel to
+    // linear light because Three.js vertex-color buffers bypass CSS Color
+    // parsing and are interpreted as already-linear values.
     colors.push([
-      colorA[0] * u + colorB[0] * t,
-      colorA[1] * u + colorB[1] * t,
-      colorA[2] * u + colorB[2] * t,
+      srgbChannelToLinear(colorA[0] * u + colorB[0] * t),
+      srgbChannelToLinear(colorA[1] * u + colorB[1] * t),
+      srgbChannelToLinear(colorA[2] * u + colorB[2] * t),
     ]);
   }
 

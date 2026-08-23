@@ -16,15 +16,17 @@ import { forceSimulation, forceX, forceY, forceCollide, forceLink, forceManyBody
 import { parseFrontmatterBlock } from './validate-lib.mjs';
 
 /** Artifact format. Bump on breaking shape changes (old artifacts rejected). */
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 /**
  * Bump whenever embedding input, model, clustering, or placement math changes
  * in a way that should invalidate committed artifacts. Recorded in the
  * artifact's inputHash, so a bump fails the freshness gate until regenerated.
  */
-export const GENERATOR_VERSION = 1;
+export const GENERATOR_VERSION = 3;
 /** Pinned so the artifact is reproducible; recorded in inputHash. */
 export const MODEL_ID = 'Xenova/all-MiniLM-L6-v2';
+/** Immutable Hugging Face revision for MODEL_ID (never use the mutable main branch). */
+export const MODEL_REVISION = '751bff37182d3f1213fa05d7196b954e230abad9';
 /** Single fixed seed for the whole pipeline (mirrors curatedForce's 42). */
 export const SEED = 42;
 
@@ -108,6 +110,11 @@ export function makeRandom(seed) {
 const round2 = (n) => Math.round(n * 100) / 100;
 const round3 = (n) => Math.round(n * 1000) / 1000;
 
+/** Canonical text embedded by the generator; authored tag order is preserved. */
+export function semanticText(article) {
+  return `${article.title}. ${article.summary}. ${article.tags.join(', ')}`;
+}
+
 function normalizeVector(v) {
   const l = Math.hypot(...v);
   return l === 0 ? v.slice() : v.map((x) => x / l);
@@ -133,7 +140,8 @@ export function cosine(a, b) {
  * cluster→constellation assignment), the curated anchors (drive placement),
  * and the pinned generator version + model. Body text is deliberately NOT
  * hashed — body edits cannot change the artifact, so they must not fail the
- * freshness gate. Order-insensitive: articles and tags are sorted first.
+ * freshness gate. Article order is normalized; authored tag order is preserved
+ * because it is also preserved in the exact embedding text.
  * @param {SemanticArticle[]} articles
  * @param {Array<Record<string, unknown>>} constellations parsed constellations.json
  * @returns {string} "sha256:<hex>"
@@ -142,13 +150,12 @@ export function computeInputHash(articles, constellations) {
   const canonical = {
     generatorVersion: GENERATOR_VERSION,
     model: MODEL_ID,
+    revision: MODEL_REVISION,
     articles: [...articles]
       .sort((a, b) => (a.id < b.id ? -1 : 1))
       .map((a) => ({
         id: a.id,
-        title: a.title,
-        summary: a.summary,
-        tags: [...a.tags].sort(),
+        embeddingText: semanticText(a),
         constellation: a.constellation,
       })),
     constellations: constellations
@@ -353,6 +360,72 @@ export function selectEdges(vectors, ids) {
 }
 
 /**
+ * Display line art for semantic constellations. Each mapped constellation is
+ * reduced to one similarity-favoured open path: connected, cycle-free, and
+ * degree <= 2 at every star. Placement deliberately continues to use the
+ * broader global similarity graph from selectEdges(), so repairing the figure
+ * lines cannot move the committed stars.
+ * @param {Record<string, number[]>} vectors keyed by article id
+ * @param {string[]} ids
+ * @param {ReadonlyMap<string, string>} constellationById mapped group per id
+ * @returns {{ a: string, b: string, weight: number }[]}
+ */
+export function selectConstellationPaths(vectors, ids, constellationById) {
+  const groups = new Map();
+  for (const id of ids) {
+    const constellation = constellationById.get(id);
+    if (constellation === undefined) throw new Error(`missing mapped constellation for "${id}"`);
+    const members = groups.get(constellation) ?? [];
+    members.push(id);
+    groups.set(constellation, members);
+  }
+
+  const edges = [];
+  for (const members of groups.values()) {
+    members.sort();
+    if (members.length < 2) continue;
+    const parent = new Map(members.map((id) => [id, id]));
+    const degree = new Map(members.map((id) => [id, 0]));
+    const find = (id) => {
+      let root = id;
+      while (parent.get(root) !== root) root = parent.get(root);
+      while (parent.get(id) !== id) {
+        const next = parent.get(id);
+        parent.set(id, root);
+        id = next;
+      }
+      return root;
+    };
+    const candidates = [];
+    for (let i = 0; i < members.length; i++) {
+      for (let j = i + 1; j < members.length; j++) {
+        const a = members[i];
+        const b = members[j];
+        candidates.push({ a, b, weight: round3(cosine(vectors[a], vectors[b])) });
+      }
+    }
+    candidates.sort(
+      (x, y) =>
+        y.weight - x.weight ||
+        (x.a < y.a ? -1 : x.a > y.a ? 1 : x.b < y.b ? -1 : x.b > y.b ? 1 : 0),
+    );
+    for (const candidate of candidates) {
+      if ((degree.get(candidate.a) ?? 0) >= 2 || (degree.get(candidate.b) ?? 0) >= 2) continue;
+      const rootA = find(candidate.a);
+      const rootB = find(candidate.b);
+      if (rootA === rootB) continue;
+      edges.push(candidate);
+      degree.set(candidate.a, (degree.get(candidate.a) ?? 0) + 1);
+      degree.set(candidate.b, (degree.get(candidate.b) ?? 0) + 1);
+      parent.set(rootB, rootA);
+    }
+  }
+  return edges.sort((x, y) =>
+    x.a === y.a ? (x.b < y.b ? -1 : x.b > y.b ? 1 : 0) : x.a < y.a ? -1 : 1,
+  );
+}
+
+/**
  * Flat placement in the curated coordinate space: knots form tightly around
  * the mapped constellation's anchor (one layout → galaxy renders it directly,
  * projectGlobe wraps the same coordinates onto the sphere, #29 decision 4a).
@@ -381,9 +454,17 @@ export function placeStars(opts) {
       // on one ray, at 170–250px from their knot's anchor.
       let ux = anchor.x;
       let uy = anchor.y;
-      const l = Math.hypot(ux, uy) || 1;
-      ux /= l;
-      uy /= l;
+      const l = Math.hypot(ux, uy);
+      if (l === 0) {
+        // A centered anchor has no outward radial direction. Pick one from the
+        // seeded RNG so the star still honors the sparse-distance contract.
+        const direction = rngLayout() * 2 * Math.PI;
+        ux = Math.cos(direction);
+        uy = Math.sin(direction);
+      } else {
+        ux /= l;
+        uy /= l;
+      }
       const rot = ((rngLayout() - 0.5) * (50 * Math.PI)) / 180;
       const cos = Math.cos(rot);
       const sin = Math.sin(rot);
@@ -461,7 +542,8 @@ export function placeStars(opts) {
  * @param {SemanticArticle[]} opts.articles
  * @param {Array<Record<string, unknown>>} opts.constellations parsed constellations.json
  * @param {Record<string, number[]>} opts.vectors embedding per article id
- * @returns {{ schemaVersion: number, generatorVersion: number, model: string, seed: number,
+ * @returns {{ schemaVersion: number, generatorVersion: number, model: string, revision: string,
+ *   seed: number,
  *   inputHash: string, stars: Array<{ id: string, constellation: string, x: number, y: number,
  *   z: number, outlier: boolean, strength: number }>, edges: Array<{ a: string, b: string, weight: number }> }}
  */
@@ -485,7 +567,7 @@ export function buildSemanticMap({ articles, constellations, vectors }) {
     constellations.map((c) => c.id),
   );
   const outliers = detectOutliers(strengths);
-  const edges = selectEdges(vectors, ids);
+  const placementEdges = selectEdges(vectors, ids);
   const anchors = new Map(constellations.map((c) => [c.id, c.anchor]));
   const placed = placeStars({
     ids,
@@ -493,7 +575,7 @@ export function buildSemanticMap({ articles, constellations, vectors }) {
     clusterToConstellation,
     strengths,
     outliers,
-    edges,
+    edges: placementEdges,
     anchors,
   });
   const placedById = new Map(placed.map((p) => [p.id, p]));
@@ -510,10 +592,13 @@ export function buildSemanticMap({ articles, constellations, vectors }) {
       strength: round3(strengths[i]),
     };
   });
+  const constellationById = new Map(stars.map((star) => [star.id, star.constellation]));
+  const edges = selectConstellationPaths(vectors, ids, constellationById);
   return {
     schemaVersion: SCHEMA_VERSION,
     generatorVersion: GENERATOR_VERSION,
     model: MODEL_ID,
+    revision: MODEL_REVISION,
     seed: SEED,
     inputHash: computeInputHash(articles, constellations),
     stars,
@@ -542,6 +627,8 @@ export function validateSemanticMap(map, articleIds, constellationIds) {
     );
   if (map.model !== MODEL_ID)
     errors.push(`semantic-map.json: model "${map.model}" ≠ pinned "${MODEL_ID}"`);
+  if (map.revision !== MODEL_REVISION)
+    errors.push(`semantic-map.json: revision "${map.revision}" ≠ pinned "${MODEL_REVISION}"`);
   if (typeof map.seed !== 'number') errors.push('semantic-map.json: "seed" must be a number');
   if (typeof map.inputHash !== 'string' || !/^sha256:[0-9a-f]{64}$/.test(map.inputHash))
     errors.push('semantic-map.json: "inputHash" must be "sha256:<hex>"');
@@ -596,30 +683,88 @@ export function validateSemanticMap(map, articleIds, constellationIds) {
     if (typeof weight !== 'number' || weight <= 0 || weight > 1)
       errors.push(`${src}: "weight" must be within (0, 1]`);
   });
-  const sortedEdges = map.edges.every((e, i, arr) => {
-    if (i === 0) return true;
-    const p = arr[i - 1];
-    return p.a < e.a || (p.a === e.a && p.b < e.b);
-  });
+  const validEdges = map.edges.filter(
+    (e) =>
+      typeof e === 'object' && e !== null && typeof e.a === 'string' && typeof e.b === 'string',
+  );
+  const sortedEdges =
+    validEdges.length === map.edges.length &&
+    validEdges.every((e, i, arr) => {
+      if (i === 0) return true;
+      const p = arr[i - 1];
+      return p.a < e.a || (p.a === e.a && p.b < e.b);
+    });
   if (!sortedEdges) errors.push('semantic-map.json: "edges" must be sorted by (a, b)');
+
+  const validStars = map.stars.filter(
+    (s) => typeof s === 'object' && s !== null && typeof s.id === 'string',
+  );
+  const constellationById = new Map(validStars.map((s) => [s.id, s.constellation]));
+  const degree = new Map(articleIds.map((id) => [id, 0]));
+  const adjacency = new Map(articleIds.map((id) => [id, []]));
+  for (const e of validEdges) {
+    if (!known.has(e.a) || !known.has(e.b)) continue;
+    const constellationA = constellationById.get(e.a);
+    const constellationB = constellationById.get(e.b);
+    if (constellationA !== constellationB) {
+      errors.push(`semantic-map.json: edge ${e.a}|${e.b} crosses mapped constellations`);
+      continue;
+    }
+    degree.set(e.a, (degree.get(e.a) ?? 0) + 1);
+    degree.set(e.b, (degree.get(e.b) ?? 0) + 1);
+    adjacency.get(e.a)?.push(e.b);
+    adjacency.get(e.b)?.push(e.a);
+  }
+  for (const [id, n] of degree) {
+    if (n > 2) errors.push(`semantic-map.json: star "${id}" has degree ${n}; maximum is 2`);
+  }
+  for (const constellation of constellationIds) {
+    const members = validStars.filter((s) => s.constellation === constellation).map((s) => s.id);
+    if (members.length < 2) continue;
+    const memberSet = new Set(members);
+    const reached = new Set();
+    const pending = [members[0]];
+    while (pending.length > 0) {
+      const id = pending.pop();
+      if (reached.has(id)) continue;
+      reached.add(id);
+      for (const next of adjacency.get(id) ?? []) if (memberSet.has(next)) pending.push(next);
+    }
+    if (reached.size !== members.length) {
+      errors.push(`semantic-map.json: constellation "${constellation}" line path is disconnected`);
+    }
+    const internalEdges = validEdges.filter((e) => memberSet.has(e.a) && memberSet.has(e.b)).length;
+    if (internalEdges !== members.length - 1) {
+      errors.push(
+        `semantic-map.json: constellation "${constellation}" must have ${members.length - 1} path edges, found ${internalEdges}`,
+      );
+    }
+  }
   return errors;
 }
 
 /**
- * Tolerant artifact comparison for the CI regeneration check: identical
- * inputs must produce semantically identical output even if last-bit float
- * wobble moves a coordinate by a hair or flips a weight's third decimal. A
- * cluster flip or an input-hash change is a real difference.
+ * Artifact comparison for the CI regeneration check. The pinned model and
+ * deterministic, rounded pipeline make exact regeneration the default: any
+ * hand-edit must fail. Explicit non-zero tolerances remain available only for
+ * diagnostics and are never used by CI.
  * @param {object} a committed artifact
  * @param {object} b freshly regenerated artifact
  * @param {{ maxPositionDelta?: number, maxWeightDelta?: number }} [tolerance]
  * @returns {{ ok: boolean, differences: string[] }}
  */
 export function compareArtifacts(a, b, tolerance = {}) {
-  const maxPositionDelta = tolerance.maxPositionDelta ?? 0.75;
-  const maxWeightDelta = tolerance.maxWeightDelta ?? 0.005;
+  const maxPositionDelta = tolerance.maxPositionDelta ?? 0;
+  const maxWeightDelta = tolerance.maxWeightDelta ?? 0;
   const differences = [];
-  for (const field of ['schemaVersion', 'generatorVersion', 'model', 'seed', 'inputHash']) {
+  for (const field of [
+    'schemaVersion',
+    'generatorVersion',
+    'model',
+    'revision',
+    'seed',
+    'inputHash',
+  ]) {
     if (a[field] !== b[field]) differences.push(`${field}: ${a[field]} ≠ ${b[field]}`);
   }
   const aStars = new Map(a.stars.map((s) => [s.id, s]));

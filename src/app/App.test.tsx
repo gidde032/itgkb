@@ -8,8 +8,15 @@ import { loadContent } from '../content/load';
 const webglState = vi.hoisted(() => ({ available: true }));
 vi.mock('./webgl', () => ({ hasWebGL: () => webglState.available }));
 vi.mock('../showcase/ShowcaseCanvas', () => ({
-  ShowcaseCanvas: () => (
-    <div data-testid="showcase-canvas" role="img" aria-label="3D showcase map" />
+  ShowcaseCanvas: (props: { showRelatedOverlay: boolean; onToggleRelatedOverlay: () => void }) => (
+    <div data-testid="showcase-canvas" role="img" aria-label="3D showcase map">
+      <button
+        type="button"
+        aria-label="3D Related lines"
+        aria-pressed={props.showRelatedOverlay}
+        onClick={props.onToggleRelatedOverlay}
+      />
+    </div>
   ),
 }));
 
@@ -178,6 +185,34 @@ describe('view-mode segmented control (A4, #31 decision 11)', () => {
       screen.getByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' }),
     ).toBeInTheDocument();
     expect(screen.queryByTestId('showcase-canvas')).not.toBeInTheDocument();
+  });
+
+  it('shares the Related lines state and R shortcut across 2D and 3D', async () => {
+    render(<App />);
+    const twoD = screen.getByRole('button', { name: 'Related lines' });
+    expect(twoD).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.keyDown(document.body, { key: 'r' });
+    expect(twoD).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.click(screen.getByRole('button', { name: '3D' }));
+    const threeD = await screen.findByRole('button', { name: '3D Related lines' });
+    expect(threeD).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(threeD);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Galaxy' }));
+    expect(screen.getByRole('button', { name: 'Related lines' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+  });
+
+  it('does not toggle Related lines while typing or using browser modifiers', () => {
+    render(<App />);
+    const related = screen.getByRole('button', { name: 'Related lines' });
+    const search = screen.getByRole('searchbox', { name: 'Search articles' });
+    fireEvent.keyDown(search, { key: 'r' });
+    fireEvent.keyDown(document.body, { key: 'r', ctrlKey: true });
+    expect(related).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('marks the active segment via aria-pressed (coral active state)', () => {

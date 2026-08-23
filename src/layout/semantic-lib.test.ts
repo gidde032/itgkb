@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   EDGE_TOP_K,
   KNOT_MAX_RADIUS,
+  MODEL_REVISION,
   OUTLIER_MIN_DIST,
   buildSemanticMap,
   assignClustersToConstellations,
@@ -10,6 +11,8 @@ import {
   detectOutliers,
   makeRandom,
   placeStars,
+  semanticText,
+  selectConstellationPaths,
   selectEdges,
   sphericalKMeans,
   validateSemanticMap,
@@ -83,11 +86,17 @@ describe('computeInputHash', () => {
   it('matches the sha256:<hex> format', () => {
     expect(computeInputHash(ARTICLES, CONSTELLATIONS)).toMatch(/^sha256:[0-9a-f]{64}$/);
   });
-  it('is order-insensitive across articles and tags', () => {
-    const shuffled = [...ARTICLES].reverse().map((a) => ({ ...a, tags: [...a.tags].reverse() }));
+  it('is order-insensitive across articles', () => {
+    const shuffled = [...ARTICLES].reverse();
     expect(computeInputHash(shuffled, CONSTELLATIONS)).toBe(
       computeInputHash(ARTICLES, CONSTELLATIONS),
     );
+  });
+  it('tracks the same authored tag order as the embedding text', () => {
+    const a = { ...ARTICLES[0], tags: ['two', 'one'] };
+    const b = { ...ARTICLES[0], tags: ['one', 'two'] };
+    expect(semanticText(a)).not.toBe(semanticText(b));
+    expect(computeInputHash([a], CONSTELLATIONS)).not.toBe(computeInputHash([b], CONSTELLATIONS));
   });
   it('changes when a semantic input changes', () => {
     const retitled = ARTICLES.map((a) => (a.id === 'a-one' ? { ...a, title: 'Changed' } : a));
@@ -213,6 +222,37 @@ describe('selectEdges', () => {
   });
 });
 
+describe('selectConstellationPaths', () => {
+  const constellationById = new Map(
+    IDS.map((id) => [id, id.startsWith('a-') || id === 'o-out' ? 'alpha' : `${id[0]}eta`]),
+  );
+  const edges = selectConstellationPaths(GROUP_VECTORS, IDS, constellationById);
+
+  it('builds one open, degree-two-capped path inside every mapped constellation', () => {
+    for (const constellation of new Set(constellationById.values())) {
+      const members = IDS.filter((id) => constellationById.get(id) === constellation);
+      const memberSet = new Set(members);
+      const internal = edges.filter((edge) => memberSet.has(edge.a) && memberSet.has(edge.b));
+      expect(internal).toHaveLength(members.length - 1);
+      const degree = new Map(members.map((id) => [id, 0]));
+      for (const edge of internal) {
+        expect(constellationById.get(edge.a)).toBe(constellationById.get(edge.b));
+        degree.set(edge.a, degree.get(edge.a)! + 1);
+        degree.set(edge.b, degree.get(edge.b)! + 1);
+      }
+      for (const value of degree.values()) expect(value).toBeGreaterThanOrEqual(1);
+      for (const value of degree.values()) expect(value).toBeLessThanOrEqual(2);
+    }
+  });
+
+  it('is deterministic and sorted', () => {
+    expect(edges).toEqual(selectConstellationPaths(GROUP_VECTORS, IDS, constellationById));
+    expect(edges).toEqual(
+      [...edges].sort((x, y) => (x.a === y.a ? x.b.localeCompare(y.b) : x.a.localeCompare(y.a))),
+    );
+  });
+});
+
 describe('placeStars', () => {
   const { assignments, strengths } = sphericalKMeans(
     IDS.map((id) => GROUP_VECTORS[id]),
@@ -264,6 +304,18 @@ describe('placeStars', () => {
   it('is deterministic', () => {
     expect(place()).toEqual(place());
   });
+  it('keeps a center-anchored outlier at the required sparse distance', () => {
+    const [p] = placeStars({
+      ids: ['center-outlier'],
+      assignments: [0],
+      clusterToConstellation: ['center'],
+      strengths: [0],
+      outliers: [true],
+      edges: [],
+      anchors: new Map([['center', { x: 0, y: 0 }]]),
+    });
+    expect(Math.hypot(p.x, p.y)).toBeGreaterThanOrEqual(OUTLIER_MIN_DIST - 0.01);
+  });
 });
 
 describe('buildSemanticMap', () => {
@@ -290,6 +342,33 @@ describe('buildSemanticMap', () => {
   it('is deterministic end to end', () => {
     expect(JSON.stringify(build())).toBe(JSON.stringify(build()));
   });
+  it('keeps display-path selection from changing placement coordinates', () => {
+    const map = build();
+    const sortedArticles = [...ARTICLES].sort((a, b) => a.id.localeCompare(b.id));
+    const sortedIds = sortedArticles.map((article) => article.id);
+    const { assignments, strengths } = sphericalKMeans(
+      sortedIds.map((id) => GROUP_VECTORS[id]),
+      3,
+      makeRandom(42),
+    );
+    const { clusterToConstellation } = assignClustersToConstellations(
+      assignments,
+      sortedArticles.map((article) => article.constellation),
+      CONSTELLATIONS.map((constellation) => constellation.id),
+    );
+    const placement = placeStars({
+      ids: sortedIds,
+      assignments,
+      clusterToConstellation,
+      strengths,
+      outliers: detectOutliers(strengths),
+      edges: selectEdges(GROUP_VECTORS, sortedIds),
+      anchors: new Map(
+        CONSTELLATIONS.map((constellation) => [constellation.id, constellation.anchor]),
+      ),
+    });
+    expect(map.stars.map(({ id, x, y, z }) => ({ id, x, y, z }))).toEqual(placement);
+  });
   it('throws when an embedding is missing', () => {
     const partial = { ...GROUP_VECTORS } as Record<string, number[]>;
     delete partial['a-one'];
@@ -314,6 +393,12 @@ describe('validateSemanticMap', () => {
       constellationIds,
     );
     expect(errs.join(' ')).toMatch(/build:semantic/);
+  });
+  it('requires the immutable model revision', () => {
+    expect(MODEL_REVISION).toMatch(/^[0-9a-f]{40}$/);
+    expect(
+      validateSemanticMap({ ...valid, revision: 'main' }, IDS, constellationIds).join(' '),
+    ).toMatch(/revision/);
   });
   it('rejects unknown constellations and out-of-range z', () => {
     const stars = valid.stars.map((s: { id: string }) =>
@@ -345,6 +430,20 @@ describe('validateSemanticMap', () => {
       validateSemanticMap({ ...valid, stars: reversed }, IDS, constellationIds).join(' '),
     ).toMatch(/sorted by id/);
   });
+  it('rejects cross-constellation, disconnected, and over-degree line art', () => {
+    const cross = valid.edges.map(
+      (edge: { a: string; b: string; weight: number }, index: number) =>
+        index === 0 ? { ...edge, b: edge.b.startsWith('a-') ? 'b-one' : 'a-one' } : edge,
+    );
+    expect(
+      validateSemanticMap({ ...valid, edges: cross }, IDS, constellationIds).join(' '),
+    ).toMatch(/crosses mapped constellations|disconnected/);
+
+    const disconnected = valid.edges.slice(1);
+    expect(
+      validateSemanticMap({ ...valid, edges: disconnected }, IDS, constellationIds).join(' '),
+    ).toMatch(/disconnected|path edges/);
+  });
 });
 
 describe('compareArtifacts', () => {
@@ -356,11 +455,14 @@ describe('compareArtifacts', () => {
   it('accepts an identical artifact', () => {
     expect(compareArtifacts(base, JSON.parse(JSON.stringify(base))).ok).toBe(true);
   });
-  it('accepts tiny position wobble but rejects it below tolerance', () => {
+  it('rejects any position/depth edit by default and allows tolerance only explicitly', () => {
     const nudged = JSON.parse(JSON.stringify(base));
     nudged.stars[0].x += 0.5;
-    expect(compareArtifacts(base, nudged).ok).toBe(true);
-    expect(compareArtifacts(base, nudged, { maxPositionDelta: 0.1 }).ok).toBe(false);
+    expect(compareArtifacts(base, nudged).ok).toBe(false);
+    expect(compareArtifacts(base, nudged, { maxPositionDelta: 0.5 }).ok).toBe(true);
+    const depthEdited = JSON.parse(JSON.stringify(base));
+    depthEdited.stars[0].z = 1;
+    expect(compareArtifacts(base, depthEdited).ok).toBe(false);
   });
   it('rejects a cluster flip and an input-hash change', () => {
     const flipped = JSON.parse(JSON.stringify(base));

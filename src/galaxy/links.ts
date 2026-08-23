@@ -127,20 +127,17 @@ function rescueOrphans(
 }
 
 /**
- * Semantic constellation lines (#29): the artifact's similarity edges become
- * the line art — every edge carries its weight for curved, weight-scaled
- * rendering — with the same orphan-rescue guarantee as the curated builder.
- * `articles` must already carry the MAPPED constellations (App applies
- * applySemanticConstellations), so rescue groups match the rendered knots.
+ * Semantic constellation lines (#29): the validated artifact's per-group path
+ * edges become the line art. Connectivity and degree <= 2 are generator/gate
+ * contracts, so runtime must not invent rescue edges that could change the
+ * figure or connect mapped constellations.
  */
 export function computeSemanticLinks(
   articles: Article[],
-  positions: ReadonlyMap<string, { x: number; y: number }>,
   edges: ReadonlyArray<{ a: string; b: string; weight: number }>,
 ): StarLink[] {
   const known = new Set(articles.map((a) => a.id));
   const links: StarLink[] = [];
-  const degree = new Map<string, number>();
   const seen = new Set<string>();
   for (const e of edges) {
     // The freshness gate validated the artifact; skip unknown/duplicate pairs
@@ -150,10 +147,7 @@ export function computeSemanticLinks(
     if (seen.has(key)) continue;
     seen.add(key);
     links.push({ a: e.a, b: e.b, weight: e.weight });
-    degree.set(e.a, (degree.get(e.a) ?? 0) + 1);
-    degree.set(e.b, (degree.get(e.b) ?? 0) + 1);
   }
-  rescueOrphans(links, degree, articles, positions);
   return links;
 }
 

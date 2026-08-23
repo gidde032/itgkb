@@ -499,8 +499,9 @@ export function Scene(props: SceneProps): JSX.Element {
           />
         );
       })}
-      {/* Related-article arcs: dashed, gradient, always on; emphasized on
-          selection, dimmed during search (decisions 2–3). */}
+      {/* Related-article arcs: the wrapper has already applied the shared
+          overlay/selection visibility rule. Here they remain dashed and
+          gradient-colored, with exact 2D opacity/width parity. */}
       {arcs.map((arc) => {
         const [aId, bId] = arc.id.split('|');
         const emphasized = selectedId !== null && (aId === selectedId || bId === selectedId);
@@ -510,12 +511,12 @@ export function Scene(props: SceneProps): JSX.Element {
             key={arc.id}
             points={arc.points}
             vertexColors={arc.colors}
-            lineWidth={emphasized ? 2.2 : 1.1}
+            lineWidth={emphasized ? 1.8 : 1}
             dashed
             dashSize={7}
             gapSize={5}
             transparent
-            opacity={dim ? 0.06 : emphasized ? 0.6 : 0.22}
+            opacity={dim ? 0.06 : emphasized ? 0.55 : 0.2}
           />
         );
       })}

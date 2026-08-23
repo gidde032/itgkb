@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Semantic layout (issue #29).** Revision-pinned MiniLM embeddings now produce
+  a deterministic committed map at build time. Computed clusters map onto the
+  seven curated constellation identities, and one semantic position map drives
+  both the 2D galaxy and 3D globe. Each computed constellation renders as one
+  connected, similarity-favoured open path with at most two lines per star;
+  authored related links remain visually distinct. The browser ships no
+  model, API key, or server dependency.
+- Semantic artifact freshness and reproducibility gates: offline schema/input
+  validation runs in normal quality gates, while CI regenerates with immutable
+  model bytes and requires exact output agreement.
+
+### Fixed
+
+- Missing, malformed, incomplete, or unknown-group semantic artifacts now fall
+  back to the curated force layout instead of breaking or hiding articles.
+- Related-article lines now share one default-off toggle across 2D and 3D. The
+  3D arcs match 2D opacity, width, and sRGB endpoint-gradient behavior instead
+  of appearing stronger and color-washed.
+
 ## [1.1.0] - 2026-08-21
 
 ### Added

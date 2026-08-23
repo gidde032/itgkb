@@ -6,6 +6,8 @@ import {
   coversArticles,
   isSemanticMap,
   loadSemanticMap,
+  parseSemanticMap,
+  usesKnownConstellations,
   type SemanticMap,
 } from './semanticMap';
 import type { Article } from './types';
@@ -26,9 +28,10 @@ function art(id: string, constellation: string): Article {
 
 function minimalMap(): SemanticMap {
   return {
-    schemaVersion: 1,
-    generatorVersion: 1,
+    schemaVersion: 2,
+    generatorVersion: 3,
     model: 'Xenova/all-MiniLM-L6-v2',
+    revision: '751bff37182d3f1213fa05d7196b954e230abad9',
     seed: 42,
     inputHash: 'sha256:' + '0'.repeat(64),
     stars: [
@@ -37,6 +40,15 @@ function minimalMap(): SemanticMap {
         constellation: 'beta',
         x: 10,
         y: -20,
+        z: 0.5,
+        outlier: false,
+        strength: 0.6,
+      },
+      {
+        id: 'b-two',
+        constellation: 'beta',
+        x: -10,
+        y: 20,
         z: 0.5,
         outlier: false,
         strength: 0.6,
@@ -108,10 +120,32 @@ describe('isSemanticMap', () => {
   });
 });
 
+describe('parseSemanticMap', () => {
+  it('returns null for a missing or syntactically malformed artifact', () => {
+    expect(parseSemanticMap(undefined)).toBeNull();
+    expect(parseSemanticMap('{not json')).toBeNull();
+  });
+});
+
 describe('coversArticles', () => {
   const map = loadSemanticMap()!;
   it('is false for an article the map does not carry', () => {
     expect(coversArticles(map, [art('zzz-not-in-map', 'networking')])).toBe(false);
+  });
+  it('requires exact coverage rather than accepting extra stars', () => {
+    expect(coversArticles(minimalMap(), [art('a-one', 'beta')])).toBe(false);
+  });
+});
+
+describe('usesKnownConstellations', () => {
+  it('rejects a mapped constellation that the live content does not define', () => {
+    const map = minimalMap();
+    map.stars[0] = { ...map.stars[0], constellation: 'bogus' };
+    expect(
+      usesKnownConstellations(map, [
+        { id: 'beta', name: 'Beta', prefix: 'BE', color: '#ffffff', anchor: { x: 0, y: 0 } },
+      ]),
+    ).toBe(false);
   });
 });
 

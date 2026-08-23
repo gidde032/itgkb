@@ -21,9 +21,10 @@ function art(id: string, constellation: string): Article {
 
 function mapWithStars(stars: Array<{ id: string; x: number; y: number; z: number }>): SemanticMap {
   return {
-    schemaVersion: 1,
-    generatorVersion: 1,
+    schemaVersion: 2,
+    generatorVersion: 2,
     model: 'm',
+    revision: '751bff37182d3f1213fa05d7196b954e230abad9',
     seed: 42,
     inputHash: 'sha256:' + '0'.repeat(64),
     stars: stars.map((s) => ({ ...s, constellation: 'alpha', outlier: false, strength: 0.5 })),
