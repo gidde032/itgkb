@@ -8,6 +8,12 @@ import {
 } from '../content/semanticMap';
 import { CuratedForceLayout } from '../layout/curatedForce';
 import { SemanticLayout } from '../layout/semanticLayout';
+import {
+  loadSemanticVectors,
+  vectorsCoverArticles,
+  vectorsMatchMap,
+} from '../content/semanticVectors';
+import { SemanticTextSearch } from '../search/semanticTextSearch';
 import { TextSearch } from '../search/textSearch';
 import { GalaxyCanvas } from '../galaxy/GalaxyCanvas';
 // P6: the article panel pulls in the react-markdown pipeline (~46% of the JS
@@ -23,12 +29,11 @@ const ShowcaseCanvas = lazy(() =>
   import('../showcase/ShowcaseCanvas').then((m) => ({ default: m.ShowcaseCanvas })),
 );
 import { SearchBar } from './SearchBar';
+import { SearchDropdown } from './SearchDropdown';
 import { ListView } from './ListView';
 import { useNarrowViewport } from './useNarrowViewport';
 import { hasWebGL } from './webgl';
 import { ListIcon, StarIcon, CubeIcon } from '../ui/icons';
-
-const searchProvider = new TextSearch();
 
 /** View modes (#31 decision 11): the segmented control picks one explicitly. */
 type ViewMode = 'galaxy' | 'list' | 'showcase';
@@ -54,6 +59,20 @@ export function App(): JSX.Element {
       ),
     [semanticMap, content],
   );
+  // #30: semantic search boost — load precomputed embedding vectors and use
+  // them to re-rank text search results. Same guard pattern as the map.
+  const semanticVectors = useMemo(() => {
+    const vecs = loadSemanticVectors();
+    return vecs &&
+      vectorsCoverArticles(vecs, content.articles) &&
+      (!semanticMap || vectorsMatchMap(vecs, semanticMap))
+      ? vecs
+      : null;
+  }, [content, semanticMap]);
+  const searchProvider = useMemo(
+    () => (semanticVectors ? new SemanticTextSearch(semanticVectors.vectors) : new TextSearch()),
+    [semanticVectors],
+  );
   // #29 decision 3a: when semantic mode is active, articles render under their
   // MAPPED constellation — one grouping truth across legend, list, panel,
   // colors, and both renderers. Frontmatter keeps the authored value.
@@ -63,6 +82,10 @@ export function App(): JSX.Element {
     [semanticMap, content],
   );
   const articlesById = useMemo(() => new Map(articles.map((a) => [a.id, a])), [articles]);
+  const constellationsById = useMemo(
+    () => new Map(content.constellations.map((c) => [c.id, c])),
+    [content],
+  );
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
@@ -82,7 +105,7 @@ export function App(): JSX.Element {
 
   const matches = useMemo(
     () => (query.trim() ? searchProvider.search(query, articles) : null),
-    [query, articles],
+    [query, articles, searchProvider],
   );
   const matchIds = useMemo(() => (matches ? new Set(matches.map((m) => m.id)) : null), [matches]);
 
@@ -155,6 +178,15 @@ export function App(): JSX.Element {
           onOpenTopMatch={openTopMatch}
           onClear={clearSearch}
         />
+        {!showList && matches && matches.length > 0 && (
+          <SearchDropdown
+            matches={matches}
+            articlesById={articlesById}
+            constellationsById={constellationsById}
+            onSelect={flyTo}
+            onClose={clearSearch}
+          />
+        )}
         {!narrow && (
           <div className="mode-switch" role="group" aria-label="View mode">
             <button
@@ -201,6 +233,7 @@ export function App(): JSX.Element {
             articles={articles}
             constellations={content.constellations}
             matchIds={matchIds}
+            matches={matches}
             onOpen={flyTo}
           />
         ) : showShowcase ? (

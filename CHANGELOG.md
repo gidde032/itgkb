@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-08-24
+
 ### Added
 
 - **Semantic layout (issue #29).** Revision-pinned MiniLM embeddings now produce
@@ -16,9 +18,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   connected, similarity-favoured open path with at most two lines per star;
   authored related links remain visually distinct. The browser ships no
   model, API key, or server dependency.
+- **Semantic text search (issue #30).** The same MiniLM pipeline produces
+  per-article embedding vectors committed as `content/semantic-vectors.json`.
+  At runtime, `SemanticTextSearch` re-ranks text matches by cosine similarity
+  to the top hit — surfacing related results even when search terms only
+  partially match. No model or API key in the browser; falls back to plain
+  `TextSearch` when vectors are unavailable.
+- **Ranked search results UI (#30).** List view flattens into a single ranked
+  list when a search is active and restores constellation grouping when cleared.
+  In galaxy and 3D modes, a dropdown below the search bar shows ranked results
+  with keyboard navigation; clicking a result flies to the star and opens the
+  article panel.
 - Semantic artifact freshness and reproducibility gates: offline schema/input
   validation runs in normal quality gates, while CI regenerates with immutable
-  model bytes and requires exact output agreement.
+  model bytes and requires exact output agreement. Covers both the position map
+  and the embedding vectors.
 
 ### Fixed
 
@@ -126,7 +140,8 @@ signals topical similarity.
   content validation, and a production build.
 - Reduced-motion support and accessibility hardening.
 
-[Unreleased]: https://github.com/gidde032/itgkb/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/gidde032/itgkb/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/gidde032/itgkb/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/gidde032/itgkb/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/gidde032/itgkb/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/gidde032/itgkb/releases/tag/v0.1.0

@@ -9,6 +9,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pipeline, env } from '@huggingface/transformers';
 import {
+  GENERATOR_VERSION,
   MODEL_ID,
   MODEL_REVISION,
   buildSemanticMap,
@@ -41,6 +42,20 @@ async function main() {
   const outPath = join(root, 'content', 'semantic-map.json');
   writeFileSync(outPath, JSON.stringify(map, null, 2) + '\n');
 
+  const round4 = (n) => Math.round(n * 10000) / 10000;
+  const sortedIds = Object.keys(vectors).sort();
+  const vectorsArtifact = {
+    schemaVersion: 1,
+    generatorVersion: GENERATOR_VERSION,
+    model: MODEL_ID,
+    revision: MODEL_REVISION,
+    inputHash: map.inputHash,
+    dimensions: vectors[sortedIds[0]].length,
+    vectors: Object.fromEntries(sortedIds.map((id) => [id, vectors[id].map(round4)])),
+  };
+  const vecPath = join(root, 'content', 'semantic-vectors.json');
+  writeFileSync(vecPath, JSON.stringify(vectorsArtifact, null, 2) + '\n');
+
   const sizes = {};
   for (const s of map.stars) sizes[s.constellation] = (sizes[s.constellation] ?? 0) + 1;
   const outlierIds = map.stars.filter((s) => s.outlier).map((s) => s.id);
@@ -49,6 +64,7 @@ async function main() {
     `  stars: ${map.stars.length}, edges: ${map.edges.length}, outliers: ${outlierIds.length}${outlierIds.length ? ` (${outlierIds.join(', ')})` : ''}`,
   );
   console.log(`  constellation sizes: ${JSON.stringify(sizes)}`);
+  console.log(`Wrote ${vecPath} (${sortedIds.length} vectors, ${vectorsArtifact.dimensions} dims)`);
 }
 
 main().catch((e) => {

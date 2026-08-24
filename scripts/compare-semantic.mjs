@@ -1,20 +1,32 @@
-// CI helper (#29): exact semantic comparison of two semantic-map JSON files via
-// semantic-lib's compareArtifacts. Model weights are revision-pinned and the
-// pipeline rounds its committed output, so any output drift or hand edit must
-// fail the run.
+// CI helper (#29/#30): exact comparison of committed vs regenerated semantic
+// artifacts. Model weights are revision-pinned and the pipeline rounds its
+// output, so any drift or hand edit must fail the run.
 import { readFileSync } from 'node:fs';
 import { compareArtifacts } from './semantic-lib.mjs';
 
-const [aPath, bPath] = process.argv.slice(2);
+const [aPath, bPath, aVecPath, bVecPath] = process.argv.slice(2);
 if (!aPath || !bPath) {
-  console.error('usage: node scripts/compare-semantic.mjs <committed.json> <regenerated.json>');
+  console.error(
+    'usage: node scripts/compare-semantic.mjs <committed-map> <regen-map> [<committed-vec> <regen-vec>]',
+  );
   process.exit(2);
 }
 const read = (p) => JSON.parse(readFileSync(p, 'utf8'));
-const { ok, differences } = compareArtifacts(read(aPath), read(bPath));
-if (!ok) {
+
+const { ok: mapOk, differences: mapDiff } = compareArtifacts(read(aPath), read(bPath));
+if (!mapOk) {
   console.error('Semantic map regeneration mismatch:');
-  for (const d of differences) console.error(`  - ${d}`);
+  for (const d of mapDiff) console.error(`  - ${d}`);
   process.exit(1);
 }
 console.log('Semantic map regeneration matches the committed artifact.');
+
+if (aVecPath && bVecPath) {
+  const aVec = readFileSync(aVecPath, 'utf8');
+  const bVec = readFileSync(bVecPath, 'utf8');
+  if (aVec !== bVec) {
+    console.error('Semantic vectors regeneration mismatch (byte-level diff).');
+    process.exit(1);
+  }
+  console.log('Semantic vectors regeneration matches the committed artifact.');
+}
