@@ -4,430 +4,439 @@
   "model": "Xenova/all-MiniLM-L6-v2",
   "revision": "751bff37182d3f1213fa05d7196b954e230abad9",
   "seed": 42,
-  "inputHash": "sha256:ac2968e1c1a25abb66b950f3b0673f485afc0a7c59bceee32fce328e392f4ebd",
+  "inputHash": "sha256:a0e4553001744cd381e818d1bb1c25c41737ffdfeef8d3782c41b3573a9d72bc",
   "stars": [
     {
       "id": "account-access",
       "constellation": "networking",
-      "x": 285.69,
-      "y": 149.3,
-      "z": 0.43,
+      "x": 126.34,
+      "y": 154.96,
+      "z": 0.58,
       "outlier": false,
-      "strength": 0.515
+      "strength": 0.512
     },
     {
       "id": "bluetooth-pairing-issues",
-      "constellation": "hardware-endpoints",
-      "x": -242.5,
-      "y": 154.91,
+      "constellation": "collaboration-meetings",
+      "x": 343.95,
+      "y": -73.97,
       "z": 0.55,
       "outlier": false,
-      "strength": 0.688
+      "strength": 0.616
     },
     {
       "id": "cant-join-meeting",
-      "constellation": "workspace-email",
-      "x": -286.68,
-      "y": -81.58,
-      "z": 0.58,
+      "constellation": "collaboration-meetings",
+      "x": 221.13,
+      "y": -175.98,
+      "z": 0.45,
       "outlier": false,
-      "strength": 0.651
+      "strength": 0.654
     },
     {
       "id": "choppy-video-quality",
       "constellation": "networking",
-      "x": 93.36,
-      "y": 226.37,
-      "z": 0.55,
+      "x": 294.77,
+      "y": 141.93,
+      "z": 0.48,
       "outlier": false,
-      "strength": 0.594
+      "strength": 0.57
     },
     {
       "id": "chrome-forced-dark-rendering",
-      "constellation": "collaboration-meetings",
-      "x": 380,
-      "y": -177.78,
-      "z": 0.45,
+      "constellation": "hardware-endpoints",
+      "x": -384.03,
+      "y": 107.97,
+      "z": 0.47,
       "outlier": false,
-      "strength": 0.683
+      "strength": 0.779
     },
     {
       "id": "clicked-phishing-response",
-      "constellation": "security",
-      "x": 339.98,
-      "y": 58.87,
-      "z": 0.48,
+      "constellation": "workspace-email",
+      "x": -208.28,
+      "y": -171.87,
+      "z": 0.5,
       "outlier": false,
-      "strength": 0.755
+      "strength": 0.606
     },
     {
       "id": "cloud-storage-personal-vs-shared",
       "constellation": "files-storage",
-      "x": -24.42,
-      "y": 262.92,
-      "z": 0.47,
+      "x": -1,
+      "y": 275.8,
+      "z": 0.55,
       "outlier": false,
-      "strength": 0.636
+      "strength": 0.672
     },
     {
       "id": "disk-encryption",
       "constellation": "files-storage",
-      "x": -41.81,
-      "y": 305.36,
-      "z": 0.5,
+      "x": -54.01,
+      "y": 321.08,
+      "z": 0.57,
       "outlier": false,
-      "strength": 0.621
+      "strength": 0.525
     },
     {
       "id": "display-docking-issues",
-      "constellation": "hardware-endpoints",
-      "x": -328.66,
-      "y": 136.33,
-      "z": 0.55,
+      "constellation": "collaboration-meetings",
+      "x": 350.52,
+      "y": -134.66,
+      "z": 0.45,
       "outlier": false,
-      "strength": 0.712
+      "strength": 0.604
     },
     {
       "id": "dns-problems",
       "constellation": "networking",
-      "x": 258.62,
-      "y": 282.13,
-      "z": 0.57,
+      "x": 260.94,
+      "y": 271.35,
+      "z": 0.47,
       "outlier": false,
-      "strength": 0.463
+      "strength": 0.46
     },
     {
       "id": "email-delegation-send-as",
-      "constellation": "security",
-      "x": 378.31,
-      "y": 128.4,
-      "z": 0.45,
+      "constellation": "workspace-email",
+      "x": -169.34,
+      "y": -81.24,
+      "z": 0.5,
       "outlier": false,
-      "strength": 0.664
+      "strength": 0.543
     },
     {
       "id": "enterprise-wifi-8021x",
-      "constellation": "accounts-identity",
-      "x": 20.38,
-      "y": -321.59,
-      "z": 0.47,
+      "constellation": "workspace-email",
+      "x": -158.33,
+      "y": -107.43,
+      "z": 0.46,
       "outlier": false,
-      "strength": 0.686
+      "strength": 0.424
     },
     {
       "id": "firefox-email-session-expired",
-      "constellation": "accounts-identity",
-      "x": -92.73,
-      "y": -239.05,
-      "z": 0.5,
+      "constellation": "workspace-email",
+      "x": -279.69,
+      "y": -133.77,
+      "z": 0.48,
       "outlier": false,
-      "strength": 0.558
+      "strength": 0.638
     },
     {
       "id": "gcal-cannot-be-shown",
-      "constellation": "workspace-email",
-      "x": -331.4,
-      "y": -143.58,
-      "z": 0.46,
+      "constellation": "collaboration-meetings",
+      "x": 190.3,
+      "y": -169.93,
+      "z": 0.42,
       "outlier": false,
-      "strength": 0.694
+      "strength": 0.529
     },
     {
       "id": "gcal-event-couldnt-update",
       "constellation": "workspace-email",
-      "x": -290.12,
-      "y": -158.35,
-      "z": 0.48,
+      "x": -150.7,
+      "y": -144.57,
+      "z": 0.52,
       "outlier": false,
-      "strength": 0.735
+      "strength": 0.471
     },
     {
       "id": "gcal-external-sharing",
-      "constellation": "workspace-email",
-      "x": -322.01,
-      "y": -182.47,
-      "z": 0.42,
+      "constellation": "accounts-identity",
+      "x": 33.33,
+      "y": -173.91,
+      "z": 0.48,
       "outlier": false,
-      "strength": 0.643
+      "strength": 0.512
     },
     {
       "id": "gcal-transient-errors",
       "constellation": "workspace-email",
-      "x": -247.75,
-      "y": -72.4,
-      "z": 0.52,
+      "x": -189.24,
+      "y": -51.37,
+      "z": 0.5,
       "outlier": false,
-      "strength": 0.63
+      "strength": 0.557
     },
     {
       "id": "gmail-templates-missing",
-      "constellation": "collaboration-meetings",
-      "x": 223.98,
-      "y": -78.02,
-      "z": 0.48,
+      "constellation": "files-storage",
+      "x": -65.88,
+      "y": 252.82,
+      "z": 0.46,
       "outlier": false,
-      "strength": 0.687
+      "strength": 0.498
     },
     {
       "id": "handling-sensitive-data",
-      "constellation": "files-storage",
-      "x": -81.58,
-      "y": 309.69,
-      "z": 0.5,
+      "constellation": "security",
+      "x": 402.48,
+      "y": 81.91,
+      "z": 0.51,
       "outlier": false,
-      "strength": 0.495
+      "strength": 0.666
     },
     {
       "id": "meeting-notifications-missing",
       "constellation": "workspace-email",
-      "x": -184.24,
-      "y": -57.68,
-      "z": 0.46,
+      "x": -150.1,
+      "y": -165.81,
+      "z": 0.53,
       "outlier": false,
-      "strength": 0.561
+      "strength": 0.553
     },
     {
       "id": "mfa-fatigue-push-bombing",
-      "constellation": "security",
-      "x": 231.57,
-      "y": 56.91,
-      "z": 0.51,
-      "outlier": false,
-      "strength": 0.603
-    },
-    {
-      "id": "mfa-new-device",
-      "constellation": "files-storage",
-      "x": 62.1,
-      "y": 181.71,
-      "z": 0.53,
-      "outlier": false,
-      "strength": 0.44
-    },
-    {
-      "id": "network-architecture",
-      "constellation": "networking",
-      "x": 229.01,
-      "y": 254.8,
-      "z": 0.51,
-      "outlier": false,
-      "strength": 0.683
-    },
-    {
-      "id": "office-365-install-activation-issues",
       "constellation": "accounts-identity",
-      "x": -49.12,
-      "y": -281.97,
-      "z": 0.52,
-      "outlier": false,
-      "strength": 0.514
-    },
-    {
-      "id": "password-managers-strong-passwords",
-      "constellation": "accounts-identity",
-      "x": 119.1,
-      "y": -169.52,
-      "z": 0.46,
-      "outlier": false,
-      "strength": 0.556
-    },
-    {
-      "id": "printer-troubleshooting",
-      "constellation": "hardware-endpoints",
-      "x": -233.85,
-      "y": 155.98,
-      "z": 0.48,
-      "outlier": false,
-      "strength": 0.664
-    },
-    {
-      "id": "public-wifi-travel-safety",
-      "constellation": "accounts-identity",
-      "x": 56.77,
-      "y": -338.2,
-      "z": 0.49,
-      "outlier": false,
-      "strength": 0.582
-    },
-    {
-      "id": "recognizing-phishing",
-      "constellation": "security",
-      "x": 403.03,
-      "y": 96.95,
-      "z": 0.57,
-      "outlier": false,
-      "strength": 0.663
-    },
-    {
-      "id": "recovering-deleted-mail-calendar",
-      "constellation": "files-storage",
-      "x": -79.49,
-      "y": 150.06,
-      "z": 0.46,
-      "outlier": false,
-      "strength": 0.579
-    },
-    {
-      "id": "reporting-suspicious-email",
-      "constellation": "security",
-      "x": 388.15,
-      "y": 59.82,
-      "z": 0.57,
-      "outlier": false,
-      "strength": 0.685
-    },
-    {
-      "id": "restoring-deleted-file-version",
-      "constellation": "files-storage",
-      "x": -68.26,
-      "y": 257.44,
-      "z": 0.57,
-      "outlier": false,
-      "strength": 0.659
-    },
-    {
-      "id": "screen-sharing-fails",
-      "constellation": "hardware-endpoints",
-      "x": -278.39,
-      "y": 60.96,
-      "z": 0.51,
-      "outlier": false,
-      "strength": 0.658
-    },
-    {
-      "id": "sharing-links-permissions",
-      "constellation": "security",
-      "x": 243.1,
-      "y": 145.45,
-      "z": 0.57,
-      "outlier": false,
-      "strength": 0.436
-    },
-    {
-      "id": "slow-computer-triage",
-      "constellation": "networking",
-      "x": 189.73,
-      "y": 247.24,
-      "z": 0.42,
-      "outlier": false,
-      "strength": 0.588
-    },
-    {
-      "id": "software-install-self-service",
-      "constellation": "workspace-email",
-      "x": -205.38,
-      "y": -213.66,
-      "z": 0.46,
-      "outlier": false,
-      "strength": 0.371
-    },
-    {
-      "id": "storage-quota-full",
-      "constellation": "files-storage",
-      "x": -105.45,
-      "y": 222.95,
+      "x": -38.79,
+      "y": -255.2,
       "z": 0.51,
       "outlier": false,
       "strength": 0.609
     },
     {
-      "id": "suspected-account-compromise",
+      "id": "mfa-new-device",
+      "constellation": "accounts-identity",
+      "x": 15.77,
+      "y": -300.15,
+      "z": 0.52,
+      "outlier": false,
+      "strength": 0.579
+    },
+    {
+      "id": "network-architecture",
+      "constellation": "networking",
+      "x": 239.99,
+      "y": 229.8,
+      "z": 0.46,
+      "outlier": false,
+      "strength": 0.646
+    },
+    {
+      "id": "office-365-install-activation-issues",
+      "constellation": "accounts-identity",
+      "x": 57.8,
+      "y": -310.55,
+      "z": 0.48,
+      "outlier": false,
+      "strength": 0.663
+    },
+    {
+      "id": "password-managers-strong-passwords",
+      "constellation": "workspace-email",
+      "x": -180.16,
+      "y": -63.34,
+      "z": 0.49,
+      "outlier": false,
+      "strength": 0.415
+    },
+    {
+      "id": "printer-troubleshooting",
+      "constellation": "collaboration-meetings",
+      "x": 323.88,
+      "y": -39.37,
+      "z": 0.57,
+      "outlier": false,
+      "strength": 0.536
+    },
+    {
+      "id": "public-wifi-travel-safety",
       "constellation": "security",
-      "x": 363.43,
-      "y": 91.27,
+      "x": 239,
+      "y": 25.41,
+      "z": 0.46,
+      "outlier": false,
+      "strength": 0.558
+    },
+    {
+      "id": "recognizing-phishing",
+      "constellation": "workspace-email",
+      "x": -178.31,
+      "y": -118.72,
+      "z": 0.57,
+      "outlier": false,
+      "strength": 0.529
+    },
+    {
+      "id": "recovering-deleted-mail-calendar",
+      "constellation": "files-storage",
+      "x": -90.53,
+      "y": 204.86,
+      "z": 0.57,
+      "outlier": false,
+      "strength": 0.62
+    },
+    {
+      "id": "reporting-suspicious-email",
+      "constellation": "security",
+      "x": 236.6,
+      "y": 33.1,
+      "z": 0.51,
+      "outlier": false,
+      "strength": 0.561
+    },
+    {
+      "id": "restoring-deleted-file-version",
+      "constellation": "files-storage",
+      "x": -79.65,
+      "y": 290.38,
+      "z": 0.57,
+      "outlier": false,
+      "strength": 0.751
+    },
+    {
+      "id": "screen-sharing-fails",
+      "constellation": "collaboration-meetings",
+      "x": 249.13,
+      "y": -136.31,
+      "z": 0.42,
+      "outlier": false,
+      "strength": 0.69
+    },
+    {
+      "id": "sharing-links-permissions",
+      "constellation": "security",
+      "x": 249.82,
+      "y": 159.66,
+      "z": 0.46,
+      "outlier": false,
+      "strength": 0.599
+    },
+    {
+      "id": "slow-computer-triage",
+      "constellation": "networking",
+      "x": 279.85,
+      "y": 226.5,
+      "z": 0.51,
+      "outlier": false,
+      "strength": 0.58
+    },
+    {
+      "id": "software-install-self-service",
+      "constellation": "accounts-identity",
+      "x": 28.71,
+      "y": -338,
       "z": 0.5,
       "outlier": false,
-      "strength": 0.614
+      "strength": 0.652
+    },
+    {
+      "id": "storage-quota-full",
+      "constellation": "files-storage",
+      "x": -40.24,
+      "y": 283.52,
+      "z": 0.57,
+      "outlier": false,
+      "strength": 0.687
+    },
+    {
+      "id": "suspected-account-compromise",
+      "constellation": "workspace-email",
+      "x": -162.78,
+      "y": -95.34,
+      "z": 0.58,
+      "outlier": false,
+      "strength": 0.581
     },
     {
       "id": "sync-client-wont-sync",
-      "constellation": "workspace-email",
-      "x": -230.54,
-      "y": -25.26,
-      "z": 0.57,
+      "constellation": "files-storage",
+      "x": -14.07,
+      "y": 192.85,
+      "z": 0.53,
       "outlier": false,
-      "strength": 0.483
+      "strength": 0.56
     },
     {
       "id": "traceroute-reading-output",
       "constellation": "networking",
-      "x": 136.82,
-      "y": 235.72,
-      "z": 0.58,
+      "x": 276.91,
+      "y": 178.66,
+      "z": 0.55,
       "outlier": false,
-      "strength": 0.674
+      "strength": 0.66
     },
     {
       "id": "vacation-responder-filters",
-      "constellation": "security",
-      "x": 427.74,
-      "y": 65.5,
-      "z": 0.53,
+      "constellation": "workspace-email",
+      "x": -333.83,
+      "y": -143.68,
+      "z": 0.47,
       "outlier": false,
-      "strength": 0.478
+      "strength": 0.431
     },
     {
       "id": "video-call-no-audio",
-      "constellation": "files-storage",
-      "x": -82.89,
-      "y": 189.92,
-      "z": 0.55,
+      "constellation": "security",
+      "x": 329.86,
+      "y": 30.81,
+      "z": 0.51,
       "outlier": false,
-      "strength": 0.434
+      "strength": 0.566
+    },
+    {
+      "id": "vpn-service-unavailable-shared-drive",
+      "constellation": "accounts-identity",
+      "x": 62.84,
+      "y": -151.54,
+      "z": 0.53,
+      "outlier": false,
+      "strength": 0.473
     },
     {
       "id": "vpn-when-and-failures",
       "constellation": "networking",
-      "x": 271.78,
-      "y": 244.35,
-      "z": 0.47,
+      "x": 188.28,
+      "y": 156.46,
+      "z": 0.43,
       "outlier": false,
-      "strength": 0.57
+      "strength": 0.563
     },
     {
       "id": "web-form-500-server-error",
       "constellation": "workspace-email",
-      "x": -360.38,
-      "y": -171.15,
-      "z": 0.51,
+      "x": -315.69,
+      "y": -179.33,
+      "z": 0.47,
       "outlier": false,
-      "strength": 0.488
+      "strength": 0.438
     },
     {
       "id": "wired-ethernet-wont-connect",
-      "constellation": "accounts-identity",
-      "x": 52.96,
-      "y": -298.38,
-      "z": 0.53,
+      "constellation": "collaboration-meetings",
+      "x": 362.07,
+      "y": -184.77,
+      "z": 0.49,
       "outlier": false,
-      "strength": 0.423
+      "strength": 0.496
     },
     {
       "id": "word-template-unwanted-gridlines",
-      "constellation": "collaboration-meetings",
-      "x": 340.25,
-      "y": -182.19,
-      "z": 0.43,
+      "constellation": "hardware-endpoints",
+      "x": -415.97,
+      "y": 132.03,
+      "z": 0.54,
       "outlier": false,
-      "strength": 0.695
+      "strength": 0.779
     },
     {
       "id": "workspace-service-status",
-      "constellation": "workspace-email",
-      "x": -299.49,
-      "y": -119.46,
-      "z": 0.47,
+      "constellation": "networking",
+      "x": 140.11,
+      "y": 139.47,
+      "z": 0.58,
       "outlier": false,
-      "strength": 0.547
+      "strength": 0.465
     },
     {
       "id": "workspace-session-auth",
       "constellation": "workspace-email",
-      "x": -253.73,
-      "y": -141.75,
-      "z": 0.49,
+      "x": -193.55,
+      "y": -81.74,
+      "z": 0.43,
       "outlier": false,
-      "strength": 0.599
+      "strength": 0.514
     }
   ],
   "edges": [
@@ -458,8 +467,8 @@
     },
     {
       "a": "cant-join-meeting",
-      "b": "meeting-notifications-missing",
-      "weight": 0.446
+      "b": "screen-sharing-fails",
+      "weight": 0.459
     },
     {
       "a": "choppy-video-quality",
@@ -478,13 +487,13 @@
     },
     {
       "a": "clicked-phishing-response",
-      "b": "mfa-fatigue-push-bombing",
-      "weight": 0.504
+      "b": "recognizing-phishing",
+      "weight": 0.57
     },
     {
       "a": "clicked-phishing-response",
-      "b": "recognizing-phishing",
-      "weight": 0.57
+      "b": "suspected-account-compromise",
+      "weight": 0.465
     },
     {
       "a": "cloud-storage-personal-vs-shared",
@@ -492,14 +501,14 @@
       "weight": 0.563
     },
     {
-      "a": "disk-encryption",
-      "b": "handling-sensitive-data",
-      "weight": 0.267
+      "a": "cloud-storage-personal-vs-shared",
+      "b": "sync-client-wont-sync",
+      "weight": 0.34
     },
     {
       "a": "disk-encryption",
-      "b": "recovering-deleted-mail-calendar",
-      "weight": 0.3
+      "b": "sync-client-wont-sync",
+      "weight": 0.108
     },
     {
       "a": "display-docking-issues",
@@ -508,8 +517,8 @@
     },
     {
       "a": "email-delegation-send-as",
-      "b": "reporting-suspicious-email",
-      "weight": 0.381
+      "b": "recognizing-phishing",
+      "weight": 0.332
     },
     {
       "a": "email-delegation-send-as",
@@ -522,64 +531,69 @@
       "weight": 0.295
     },
     {
-      "a": "enterprise-wifi-8021x",
-      "b": "public-wifi-travel-safety",
-      "weight": 0.306
-    },
-    {
       "a": "firefox-email-session-expired",
-      "b": "office-365-install-activation-issues",
-      "weight": 0.209
-    },
-    {
-      "a": "firefox-email-session-expired",
-      "b": "password-managers-strong-passwords",
+      "b": "web-form-500-server-error",
       "weight": 0.282
     },
     {
-      "a": "gcal-cannot-be-shown",
-      "b": "gcal-event-couldnt-update",
-      "weight": 0.703
+      "a": "firefox-email-session-expired",
+      "b": "workspace-session-auth",
+      "weight": 0.408
     },
     {
       "a": "gcal-event-couldnt-update",
-      "b": "gcal-external-sharing",
-      "weight": 0.648
+      "b": "gcal-transient-errors",
+      "weight": 0.488
+    },
+    {
+      "a": "gcal-event-couldnt-update",
+      "b": "workspace-session-auth",
+      "weight": 0.332
     },
     {
       "a": "gcal-external-sharing",
-      "b": "gcal-transient-errors",
-      "weight": 0.331
+      "b": "software-install-self-service",
+      "weight": 0.225
+    },
+    {
+      "a": "gcal-external-sharing",
+      "b": "vpn-service-unavailable-shared-drive",
+      "weight": 0.289
     },
     {
       "a": "gcal-transient-errors",
-      "b": "workspace-service-status",
-      "weight": 0.4
+      "b": "meeting-notifications-missing",
+      "weight": 0.31
     },
     {
       "a": "gmail-templates-missing",
-      "b": "word-template-unwanted-gridlines",
-      "weight": 0.221
+      "b": "recovering-deleted-mail-calendar",
+      "weight": 0.339
     },
     {
       "a": "handling-sensitive-data",
-      "b": "video-call-no-audio",
-      "weight": 0.219
+      "b": "public-wifi-travel-safety",
+      "weight": 0.231
+    },
+    {
+      "a": "handling-sensitive-data",
+      "b": "sharing-links-permissions",
+      "weight": 0.288
     },
     {
       "a": "meeting-notifications-missing",
-      "b": "web-form-500-server-error",
-      "weight": 0.233
+      "b": "vacation-responder-filters",
+      "weight": 0.271
     },
     {
       "a": "mfa-fatigue-push-bombing",
-      "b": "suspected-account-compromise",
-      "weight": 0.333
+      "b": "mfa-new-device",
+      "weight": 0.564
     },
     {
       "a": "mfa-new-device",
-      "b": "video-call-no-audio",
-      "weight": 0.168
+      "b": "office-365-install-activation-issues",
+      "weight": 0.262
     },
     {
       "a": "network-architecture",
@@ -587,14 +601,24 @@
       "weight": 0.523
     },
     {
-      "a": "public-wifi-travel-safety",
-      "b": "wired-ethernet-wont-connect",
-      "weight": 0.122
+      "a": "office-365-install-activation-issues",
+      "b": "software-install-self-service",
+      "weight": 0.452
     },
     {
-      "a": "recognizing-phishing",
-      "b": "reporting-suspicious-email",
-      "weight": 0.52
+      "a": "password-managers-strong-passwords",
+      "b": "suspected-account-compromise",
+      "weight": 0.344
+    },
+    {
+      "a": "printer-troubleshooting",
+      "b": "wired-ethernet-wont-connect",
+      "weight": 0.218
+    },
+    {
+      "a": "public-wifi-travel-safety",
+      "b": "video-call-no-audio",
+      "weight": 0.192
     },
     {
       "a": "recovering-deleted-mail-calendar",
@@ -602,14 +626,14 @@
       "weight": 0.488
     },
     {
+      "a": "reporting-suspicious-email",
+      "b": "sharing-links-permissions",
+      "weight": 0.213
+    },
+    {
       "a": "restoring-deleted-file-version",
       "b": "storage-quota-full",
       "weight": 0.411
-    },
-    {
-      "a": "sharing-links-permissions",
-      "b": "vacation-responder-filters",
-      "weight": 0.115
     },
     {
       "a": "slow-computer-triage",
@@ -617,19 +641,9 @@
       "weight": 0.389
     },
     {
-      "a": "software-install-self-service",
-      "b": "sync-client-wont-sync",
-      "weight": 0.146
-    },
-    {
-      "a": "sync-client-wont-sync",
-      "b": "workspace-session-auth",
-      "weight": 0.318
-    },
-    {
-      "a": "workspace-service-status",
-      "b": "workspace-session-auth",
-      "weight": 0.386
+      "a": "vpn-when-and-failures",
+      "b": "workspace-service-status",
+      "weight": 0.178
     }
   ]
 }
