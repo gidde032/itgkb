@@ -2,7 +2,7 @@
 // artifacts. Model weights are revision-pinned and the pipeline rounds its
 // output, so any drift or hand edit must fail the run.
 import { readFileSync } from 'node:fs';
-import { compareArtifacts } from './semantic-lib.mjs';
+import { compareArtifacts, compareVectors } from './semantic-lib.mjs';
 
 const [aPath, bPath, aVecPath, bVecPath] = process.argv.slice(2);
 if (!aPath || !bPath) {
@@ -22,10 +22,10 @@ if (!mapOk) {
 console.log('Semantic map regeneration matches the committed artifact.');
 
 if (aVecPath && bVecPath) {
-  const aVec = readFileSync(aVecPath, 'utf8');
-  const bVec = readFileSync(bVecPath, 'utf8');
-  if (aVec !== bVec) {
-    console.error('Semantic vectors regeneration mismatch (byte-level diff).');
+  const { ok: vecOk, differences: vecDiff } = compareVectors(read(aVecPath), read(bVecPath));
+  if (!vecOk) {
+    console.error('Semantic vectors regeneration mismatch:');
+    for (const d of vecDiff) console.error(`  - ${d}`);
     process.exit(1);
   }
   console.log('Semantic vectors regeneration matches the committed artifact.');

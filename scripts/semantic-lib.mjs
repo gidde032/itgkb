@@ -4,10 +4,11 @@
 // placement, and validation cannot drift between them. Plain ESM JS so Node
 // can run it unbundled (same convention as validate-lib.mjs).
 //
-// Everything here is deterministic: same inputs + same seed → byte-identical
+// Everything here is deterministic: same inputs + same seed → identical
 // artifact. The ONLY platform-sensitive step (model inference) lives in the
-// generator script; outputs are quantized so last-bit float wobble between
-// macOS and Linux cannot churn the committed file.
+// generator script; outputs are quantized to 4 decimal places so last-bit
+// float wobble between macOS and Linux stays within one unit in the last
+// place. CI comparison uses structural tolerance, not byte equality.
 
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -798,6 +799,43 @@ export function compareArtifacts(a, b, tolerance = {}) {
       );
     } else if (Math.abs(aEdges.get(key) - bEdges.get(key)) > maxWeightDelta) {
       differences.push(`edge ${key}: weight delta > ${maxWeightDelta}`);
+    }
+  }
+  return { ok: differences.length === 0, differences };
+}
+
+// Half a quantization step: values rounded to 4 decimal places on different
+// platforms can differ by at most one unit in the last place (0.0001).
+const VEC_EPSILON = 0.00015;
+
+export function compareVectors(a, b) {
+  const differences = [];
+  for (const field of ['schemaVersion', 'generatorVersion', 'model', 'revision', 'inputHash']) {
+    if (a[field] !== b[field]) differences.push(`${field}: ${a[field]} ≠ ${b[field]}`);
+  }
+  const aIds = Object.keys(a.vectors).sort();
+  const bIds = Object.keys(b.vectors).sort();
+  if (aIds.length !== bIds.length) {
+    differences.push(`vector count: ${aIds.length} ≠ ${bIds.length}`);
+  }
+  for (const id of new Set([...aIds, ...bIds])) {
+    const va = a.vectors[id];
+    const vb = b.vectors[id];
+    if (!va || !vb) {
+      differences.push(`vector ${id}: present in ${va ? 'committed only' : 'regenerated only'}`);
+      continue;
+    }
+    if (va.length !== vb.length) {
+      differences.push(`vector ${id}: dims ${va.length} ≠ ${vb.length}`);
+      continue;
+    }
+    for (let i = 0; i < va.length; i++) {
+      if (Math.abs(va[i] - vb[i]) > VEC_EPSILON) {
+        differences.push(
+          `vector ${id}[${i}]: ${va[i]} ≠ ${vb[i]} (delta ${Math.abs(va[i] - vb[i]).toFixed(6)})`,
+        );
+        break;
+      }
     }
   }
   return { ok: differences.length === 0, differences };
