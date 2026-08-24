@@ -78,6 +78,34 @@ describe('App search integration (FR-8, FR-7)', () => {
   });
 });
 
+describe('search dropdown in galaxy mode (#30)', () => {
+  it('shows a dropdown with ranked results when searching in galaxy mode', () => {
+    render(<App />);
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Search articles' }), {
+      target: { value: 'calendar' },
+    });
+    expect(screen.getByRole('listbox', { name: 'Search results' })).toBeInTheDocument();
+  });
+
+  it('hides the dropdown when query is cleared', () => {
+    render(<App />);
+    const input = screen.getByRole('searchbox', { name: 'Search articles' });
+    fireEvent.change(input, { target: { value: 'calendar' } });
+    expect(screen.getByRole('listbox', { name: 'Search results' })).toBeInTheDocument();
+    fireEvent.change(input, { target: { value: '' } });
+    expect(screen.queryByRole('listbox', { name: 'Search results' })).not.toBeInTheDocument();
+  });
+
+  it('does not show a dropdown in list mode', () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'List' }));
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Search articles' }), {
+      target: { value: 'calendar' },
+    });
+    expect(screen.queryByRole('listbox', { name: 'Search results' })).not.toBeInTheDocument();
+  });
+});
+
 // P3-F1 regression (reviewer: skeptic, severity Medium): typing in search must
 // NOT rebuild the canvas setup (zoom, listeners, ResizeObserver) per keystroke.
 describe('search keystrokes do not churn canvas setup (P3-F1)', () => {

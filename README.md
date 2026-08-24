@@ -24,9 +24,14 @@ npm run dev
 Open the printed localhost URL.
 
 **Finding articles fast:** type in the search bar — non-matching stars and
-lines dim in place. Press Enter to jump to the top match, Escape to clear. On
-desktop, the "List view" button switches to a flat searchable list grouped by
-constellation. On narrow screens (<900 px) the list is shown automatically.
+lines dim in place. Build-time MiniLM embeddings re-rank results by semantic
+similarity, surfacing related articles even when terms only partially match.
+Press Enter to jump to the top match, Escape to clear. In galaxy and 3D modes
+a dropdown below the search bar shows ranked results — ArrowDown to enter,
+click to fly to a star and open its article. In list mode the view flattens
+into a single ranked list while a query is active and restores constellation
+grouping when cleared. On narrow screens (<900 px) the list is shown
+automatically.
 
 Click a star to read its article. Drag to pan, scroll to zoom, "Reset view" to
 return home.
@@ -61,8 +66,9 @@ lazy-loaded and does not affect the initial page load.
    and the body sections. Leave `related` empty (`[]`) or list ids of articles
    that already exist — unresolvable ids fail validation.
 3. `npm run validate:content` — fix anything it flags.
-4. `npm run build:semantic` — regenerate `content/semantic-map.json` (the first
-   run downloads the pinned model into the gitignored `.cache/` directory).
+4. `npm run build:semantic` — regenerate `content/semantic-map.json` and
+   `content/semantic-vectors.json` (the first run downloads the pinned model
+   into the gitignored `.cache/` directory).
 5. Reload the dev server. Your star is in the galaxy.
 
 `constellation` must be one of the ids in `content/constellations.json`
@@ -84,9 +90,10 @@ employer/team names, internal hostnames, intranet URLs, or PII.
 - `npm run gates:quality` — the gate chain without the build (used by the deploy
   job, which builds separately with the Pages base path).
 - `npm test` — test suite only.
-- `npm run build:semantic` — regenerate the committed semantic artifact after
-  changing an article title, summary, tags, or authored constellation.
-- `npm run check:semantic` — validate artifact schema and input freshness
+- `npm run build:semantic` — regenerate both committed semantic artifacts
+  (`semantic-map.json` and `semantic-vectors.json`) after changing an article
+  title, summary, tags, or authored constellation.
+- `npm run check:semantic` — validate both artifact schemas and input freshness
   without loading the model or requiring network access.
 - `npm run check:sensitivity` — content-sensitivity gate: no org-specific data,
   internal hostnames, or unresolved `(verify)` markers. Hard gate in `gates`.
@@ -102,7 +109,9 @@ where positions or search results come from:
 - **Provider seams.** Layout and search sit behind provider interfaces. The
   default `SemanticLayout` consumes a committed build artifact; the
   `CuratedForceLayout` remains its automatic fallback. Both yield the same plain
-  star-position contract, while `SearchProvider` yields match state.
+  star-position contract. `SemanticTextSearch` wraps `TextSearch` with cosine
+  re-ranking from committed embedding vectors, falling back to plain text when
+  vectors are unavailable — same artifact + fallback pattern as layout.
 - **Renderers.** Three view modes share the same positions and match state: the
   2D galaxy (default), a flat list, and a lazy-loaded 3D showcase (WebGL-gated,
   ~236 KB gz). None of them inspect article bodies.

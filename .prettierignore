@@ -8,3 +8,8 @@ package-lock.json
 content/articles/
 content/constellations.json
 design/mockups/
+
+# Machine-generated semantic artifacts — CI regenerates and compares these
+# structurally; prettier reformatting after regen causes spurious failures.
+content/semantic-map.json
+content/semantic-vectors.json

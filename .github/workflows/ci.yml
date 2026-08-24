@@ -32,10 +32,11 @@ jobs:
       # check:semantic gate (inside gates, below) proves the inputs match;
       # this step proves the committed output is what the pinned model
       # actually produces — every hand-edit and any reproducibility drift fail.
-      - name: Verify semantic map regenerates identically
+      - name: Verify semantic artifacts regenerate identically
         run: |
           cp content/semantic-map.json /tmp/committed-semantic-map.json
+          cp content/semantic-vectors.json /tmp/committed-semantic-vectors.json
           npm run build:semantic
-          node scripts/compare-semantic.mjs /tmp/committed-semantic-map.json content/semantic-map.json
+          node scripts/compare-semantic.mjs /tmp/committed-semantic-map.json content/semantic-map.json /tmp/committed-semantic-vectors.json content/semantic-vectors.json
       - name: Quality gates (typecheck, lint, test+coverage, content, build)
         run: npm run gates

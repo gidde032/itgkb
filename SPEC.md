@@ -34,7 +34,7 @@ title/tags/summary/body; the galaxy pans and zooms smoothly; content is
 authored in plain markdown files that are trivial to add/edit.
 
 **Explicitly out of MVP scope** (extensibility hooks — architecture must not
-block them): semantic search, auto-suggested related articles, ticketing-system
+block them): auto-suggested related articles, ticketing-system
 integration, AI authoring assistant, analytics, multi-user contribution flow.
 
 ## 2. Stack
@@ -180,7 +180,7 @@ extra fields).
 src/
   content/        loader + frontmatter parser + validation logic (shared with script)
   layout/         LayoutProvider interface; CuratedForceLayout (d3-force) impl
-  search/         SearchProvider interface; TextSearch impl
+  search/         SearchProvider interface; TextSearch, SemanticTextSearch (cosine re-ranking)
   galaxy/         canvas renderer, interaction (d3-zoom), hover/click hit-testing
   showcase/       3D renderer (#31): globe projection, arc geometry, camera
                   framing, r3f scene, DOM label projection — lazy chunk
@@ -248,7 +248,8 @@ drawing), so they stay serial per the bundling precondition.
 - OQ-2: RESOLVED — revision-pinned MiniLM embeddings generate the committed
   semantic layout at build time (#29 / PR #50); no model, key, API, or server
   ships to the browser.
-- OQ-3: Semantic search provider (Anthropic API or local embeddings).
+- OQ-3: RESOLVED — build-time MiniLM vectors power cosine re-ranking of text
+  search results (#30 / v1.2.0); same pipeline as layout, no API or server.
 - OQ-4: ticketing-system integration, analytics, authoring assistant, multi-user
   contribution — all post-MVP, architecture keeps the door open (provider
   interfaces, markdown-file content, validation script as the contribution

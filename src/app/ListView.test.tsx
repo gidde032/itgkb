@@ -35,6 +35,7 @@ describe('ListView (NF-7)', () => {
         articles={articles}
         constellations={constellations}
         matchIds={null}
+        matches={null}
         onOpen={() => {}}
       />,
     );
@@ -51,6 +52,7 @@ describe('ListView (NF-7)', () => {
         articles={articles}
         constellations={constellations}
         matchIds={null}
+        matches={null}
         onOpen={() => {}}
       />,
     );
@@ -65,6 +67,7 @@ describe('ListView (NF-7)', () => {
       <ListView
         articles={articles}
         constellations={constellations}
+        matches={null}
         matchIds={new Set(['b1'])}
         onOpen={() => {}}
       />,
@@ -78,6 +81,7 @@ describe('ListView (NF-7)', () => {
       <ListView
         articles={articles}
         constellations={constellations}
+        matches={null}
         matchIds={new Set()}
         onOpen={() => {}}
       />,
@@ -92,10 +96,61 @@ describe('ListView (NF-7)', () => {
         articles={articles}
         constellations={constellations}
         matchIds={null}
+        matches={null}
         onOpen={onOpen}
       />,
     );
     fireEvent.click(screen.getByRole('button', { name: /Beta article/ }));
     expect(onOpen).toHaveBeenCalledWith('b1');
+  });
+});
+
+describe('ListView flat ranked mode (#30)', () => {
+  const matches = [
+    { id: 'b1', score: 10, fields: ['title'] },
+    { id: 'a2', score: 5, fields: ['body'] },
+  ];
+
+  it('renders a flat list in rank order when matches are provided', () => {
+    render(
+      <ListView
+        articles={articles}
+        constellations={constellations}
+        matchIds={new Set(['b1', 'a2'])}
+        matches={matches}
+        onOpen={() => {}}
+      />,
+    );
+    expect(screen.queryByRole('heading', { level: 2 })).not.toBeInTheDocument();
+    const buttons = screen.getAllByRole('button');
+    expect(buttons).toHaveLength(2);
+    expect(buttons[0].textContent).toContain('Beta article');
+    expect(buttons[1].textContent).toContain('Zeta article');
+  });
+
+  it('shows constellation tags in flat mode', () => {
+    render(
+      <ListView
+        articles={articles}
+        constellations={constellations}
+        matchIds={new Set(['b1'])}
+        matches={[{ id: 'b1', score: 10, fields: ['title'] }]}
+        onOpen={() => {}}
+      />,
+    );
+    expect(screen.getByText('Beta Group')).toBeInTheDocument();
+  });
+
+  it('shows empty state for zero-length matches', () => {
+    render(
+      <ListView
+        articles={articles}
+        constellations={constellations}
+        matchIds={new Set()}
+        matches={[]}
+        onOpen={() => {}}
+      />,
+    );
+    expect(screen.getByText('No articles match this search.')).toBeInTheDocument();
   });
 });
