@@ -143,13 +143,34 @@ Intra-constellation links produce the chain-like figures of real star charts.
    each computed cluster: every member is connected, endpoints have one line,
    interior stars have two, and no line crosses mapped constellations. Computed
    clusters map one-to-one onto the curated names, colors, and catalog prefixes;
-   the same positions, grouping, and paths drive the 2D galaxy and 3D globe.
+   the same semantic grouping and path topology drive the 2D galaxy and 3D
+   globe. The 2D renderer applies a deterministic presentation reflow for
+   constellation spacing and label clearance; the 3D renderer retains the
+   canonical positions.
 2. **Curated fallback.** If the committed semantic artifact is missing,
    malformed, or incomplete, same-constellation pairs are ranked by
    shared-tag count and accepted greedily while both endpoints have degree < 2.
 3. **Fallback orphan rescue.** Curated fallback mode connects any degree-zero
    star to its spatially nearest sibling. Semantic mode needs no runtime rescue:
    connected paths are enforced in artifact generation, validation, and CI.
+
+### 2D readability and growth
+
+The 2D galaxy has a presentation layer whose purpose is legibility as the
+article base grows. It is deterministic and 2D-only:
+
+- Constellation footprints expand with their local star spread and article
+  count, then separate from one another while treating authored anchors as
+  preferred locations rather than fixed coordinates.
+- Constellation names are placed in screen space from the actual group bounds,
+  after stars and solid lines, using candidate slots, dark haze plates, and
+  keepouts for stars, glows, lines, and other labels.
+- Article-label zoom thresholds remain unchanged. At eligible zoom levels,
+  labels try alternate slots around their star and avoid protected geometry;
+  focused labels remain visible as the fallback.
+- Reset/overview framing is computed from the resulting 2D bounds. The
+  canonical semantic positions, z values, group membership, edge topology, and
+  the 3D globe renderer are unchanged.
 
 ### Related-article lines (#39)
 
