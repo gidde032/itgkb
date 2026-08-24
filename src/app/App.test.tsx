@@ -26,7 +26,7 @@ describe('App integration', () => {
     expect(errors).toEqual([]);
     // M4 #25, updated 2026-08-21: 47 vendor-generic articles across 7
     // constellations, all populated, no stubs.
-    expect(articles).toHaveLength(47);
+    expect(articles).toHaveLength(48);
     expect(constellations).toHaveLength(7);
     expect(articles.filter((a) => a.stub)).toHaveLength(0);
     // Every constellation now has at least one article.
