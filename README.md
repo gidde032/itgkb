@@ -45,9 +45,11 @@ views; with it off, selecting a star still reveals that star's related lines.
 
 **Semantic constellation lines:** the default layout groups articles by meaning
 and connects every star in each group through a similarity-favoured open path,
-with no more than two lines per star. The 2D galaxy and 3D globe consume the same
-committed position and path map. If that artifact is unusable, the app falls
-back to the curated tag-and-anchor layout.
+with no more than two lines per star. The 3D globe consumes the committed
+semantic positions directly; the 2D galaxy applies a deterministic readability
+pass that preserves constellation membership, local group shape, and path
+topology while separating crowded group footprints. If that artifact is
+unusable, the app falls back to the curated tag-and-anchor layout.
 
 **3D view:** the view switcher (List · Galaxy · 3D) adds a three-dimensional
 showcase. Stars expand into depth based on constellation `depth` settings;
@@ -112,9 +114,11 @@ where positions or search results come from:
   star-position contract. `SemanticTextSearch` wraps `TextSearch` with cosine
   re-ranking from committed embedding vectors, falling back to plain text when
   vectors are unavailable — same artifact + fallback pattern as layout.
-- **Renderers.** Three view modes share the same positions and match state: the
-  2D galaxy (default), a flat list, and a lazy-loaded 3D showcase (WebGL-gated,
-  ~236 KB gz). None of them inspect article bodies.
+- **Renderers.** Three view modes share the canonical layout data and match
+  state: the 2D galaxy (default), a flat list, and a lazy-loaded 3D showcase
+  (WebGL-gated, ~236 KB gz). The 2D renderer may reflow presentation geometry
+  for readability; the 3D renderer uses canonical positions. None of them
+  inspect article bodies.
 
 The visual system (color, type, the cartographic "instrument" layer of catalog
 IDs and a coordinate HUD) is defined in `design/DESIGN.md`; `design/tokens.css`

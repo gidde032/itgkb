@@ -5,6 +5,7 @@ import type { DisplayPoint } from './display';
 import { hashString } from '../util/hash';
 
 export interface StarMeta {
+  constellation?: string;
   color: string;
   stub: boolean;
   title: string;
@@ -44,6 +45,7 @@ export function hitTest(
 }
 
 interface LabelCandidate {
+  id: string;
   sx: number;
   sy: number;
   catalog: string;
@@ -52,6 +54,17 @@ interface LabelCandidate {
   showTitle: boolean;
   emphasized: boolean;
   z: number;
+}
+
+interface ConstellationGeometry {
+  id: string;
+  points: DisplayPoint[];
+  centerX: number;
+  centerY: number;
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
 }
 
 interface Rect {
@@ -65,6 +78,147 @@ function rectsOverlap(a: Rect, b: Rect): boolean {
   return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 }
 
+function screenPoint(point: DisplayPoint, transform: ZoomTransform): { x: number; y: number } {
+  return {
+    x: point.x * transform.k + transform.x,
+    y: point.y * transform.k + transform.y,
+  };
+}
+
+function rectAroundPoint(point: { x: number; y: number }, radius: number): Rect {
+  return { x: point.x - radius, y: point.y - radius, w: radius * 2, h: radius * 2 };
+}
+
+function rectAroundSegment(
+  a: { x: number; y: number },
+  b: { x: number; y: number },
+  padding: number,
+): Rect {
+  const minX = Math.min(a.x, b.x) - padding;
+  const minY = Math.min(a.y, b.y) - padding;
+  return {
+    x: minX,
+    y: minY,
+    w: Math.max(1, Math.max(a.x, b.x) - minX + padding),
+    h: Math.max(1, Math.max(a.y, b.y) - minY + padding),
+  };
+}
+
+function nearestConstellationId(
+  point: DisplayPoint,
+  constellations: readonly Constellation[],
+): string | undefined {
+  let nearest: string | undefined;
+  let distance = Infinity;
+  for (const constellation of constellations) {
+    const next = Math.hypot(point.x - constellation.anchor.x, point.y - constellation.anchor.y);
+    if (next < distance) {
+      nearest = constellation.id;
+      distance = next;
+    }
+  }
+  return nearest;
+}
+
+function constellationGeometry(
+  points: readonly DisplayPoint[],
+  meta: ReadonlyMap<string, StarMeta>,
+  constellations: readonly Constellation[],
+): Map<string, ConstellationGeometry> {
+  const pointsByConstellation = new Map<string, DisplayPoint[]>();
+  for (const point of points) {
+    const id =
+      meta.get(point.id)?.constellation ??
+      (constellations.length === 1
+        ? constellations[0].id
+        : nearestConstellationId(point, constellations));
+    if (!id) continue;
+    const group = pointsByConstellation.get(id) ?? [];
+    group.push(point);
+    pointsByConstellation.set(id, group);
+  }
+
+  return new Map(
+    constellations.map((constellation) => {
+      const group = pointsByConstellation.get(constellation.id) ?? [];
+      if (group.length === 0) {
+        return [
+          constellation.id,
+          {
+            id: constellation.id,
+            points: group,
+            centerX: constellation.anchor.x,
+            centerY: constellation.anchor.y,
+            minX: constellation.anchor.x,
+            maxX: constellation.anchor.x,
+            minY: constellation.anchor.y,
+            maxY: constellation.anchor.y,
+          },
+        ] as const;
+      }
+      const minX = Math.min(...group.map((point) => point.x));
+      const maxX = Math.max(...group.map((point) => point.x));
+      const minY = Math.min(...group.map((point) => point.y));
+      const maxY = Math.max(...group.map((point) => point.y));
+      return [
+        constellation.id,
+        {
+          id: constellation.id,
+          points: group,
+          centerX: (minX + maxX) / 2,
+          centerY: (minY + maxY) / 2,
+          minX,
+          maxX,
+          minY,
+          maxY,
+        },
+      ] as const;
+    }),
+  );
+}
+
+function lineObstacles(scene: Scene, transform: ZoomTransform): Rect[] {
+  const pointById = new Map(scene.points.map((point) => [point.id, point]));
+  return scene.links.flatMap((link) => {
+    const a = pointById.get(link.a);
+    const b = pointById.get(link.b);
+    if (!a || !b) return [];
+    const start = screenPoint(a, transform);
+    const end = screenPoint(b, transform);
+    const obstacles = [rectAroundSegment(start, end, 5)];
+    if (link.weight !== undefined) {
+      const len = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+      const side = hashString(`${link.a}|${link.b}`) % 2 === 0 ? 1 : -1;
+      const bend = len * 0.12 * side;
+      const control = screenPoint(
+        {
+          id: 'control',
+          x: (a.x + b.x) / 2 + (-(b.y - a.y) / len) * bend,
+          y: (a.y + b.y) / 2 + ((b.x - a.x) / len) * bend,
+          z: 0.5,
+        },
+        transform,
+      );
+      obstacles.push(rectAroundSegment(start, control, 5), rectAroundSegment(control, end, 5));
+    }
+    return obstacles;
+  });
+}
+
+function starObstacles(scene: Scene, transform: ZoomTransform): Map<string, Rect> {
+  return new Map(
+    scene.points.map((point) => {
+      const meta = scene.meta.get(point.id);
+      const depth = 0.65 + point.z * 0.35;
+      const radius = 6 * depth * transform.k * 2.4 + 4;
+      return [
+        point.id,
+        rectAroundPoint(screenPoint(point, transform), radius + (meta?.stub ? 3 : 0)),
+      ];
+    }),
+  );
+}
+
 /** Trim `text` to fit `maxWidth` in the current ctx font, appending an ellipsis. */
 function truncateToWidth(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {
   if (ctx.measureText(text).width <= maxWidth) return text;
@@ -75,13 +229,85 @@ function truncateToWidth(ctx: CanvasRenderingContext2D, text: string, maxWidth: 
   return `${t.trimEnd()}…`;
 }
 
+interface LabelPlacement {
+  rect: Rect;
+  text: string;
+  color: string;
+}
+
+function drawConstellationLabels(
+  ctx: CanvasRenderingContext2D,
+  constellations: readonly Constellation[],
+  geometry: ReadonlyMap<string, ConstellationGeometry>,
+  transform: ZoomTransform,
+  protectedRegions: readonly Rect[],
+  selectedConstellationId: string | undefined,
+): Rect[] {
+  // Keep the canvas constellation names in parity with the 3D `.c-label`
+  // treatment: 0.68rem at the app's 16px root, Archivo Narrow, and modest
+  // tracked caps rather than the oversized labels used by the first pass.
+  ctx.font = "600 11px 'Archivo Narrow', system-ui, sans-serif";
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  const placed: LabelPlacement[] = [];
+  const ordered = [...constellations].sort(
+    (a, b) => Number(b.id === selectedConstellationId) - Number(a.id === selectedConstellationId),
+  );
+
+  for (const constellation of ordered) {
+    const group = geometry.get(constellation.id);
+    if (!group) continue;
+    const text = constellation.name.toUpperCase().split('').join(' ');
+    const width = ctx.measureText(text).width;
+    const height = 16;
+    const minX = group.minX * transform.k + transform.x;
+    const maxX = group.maxX * transform.k + transform.x;
+    const minY = group.minY * transform.k + transform.y;
+    const maxY = group.maxY * transform.k + transform.y;
+    const centerX = group.centerX * transform.k + transform.x;
+    const centerY = group.centerY * transform.k + transform.y;
+    const candidates: Rect[] = [
+      { x: centerX - width / 2, y: minY - height - 16, w: width, h: height },
+      { x: maxX + 16, y: centerY - height / 2, w: width, h: height },
+      { x: centerX - width / 2, y: maxY + 16, w: width, h: height },
+      { x: minX - width - 16, y: centerY - height / 2, w: width, h: height },
+      { x: maxX + 16, y: minY - height - 8, w: width, h: height },
+      { x: minX - width - 16, y: minY - height - 8, w: width, h: height },
+      { x: maxX + 16, y: maxY + 8, w: width, h: height },
+      { x: minX - width - 16, y: maxY + 8, w: width, h: height },
+    ];
+    const available = candidates.find(
+      (rect) =>
+        !protectedRegions.some((obstacle) => rectsOverlap(rect, obstacle)) &&
+        !placed.some((label) => rectsOverlap(rect, label.rect)),
+    );
+    const rect = available ?? candidates[0];
+    placed.push({ rect, text, color: constellation.color });
+  }
+
+  for (const label of placed) {
+    // Match the 3D `.c-label` plate: the ink is present but translucent enough
+    // that the galaxy does not read as a black box behind the label.
+    ctx.fillStyle = '#060a1433';
+    ctx.fillRect(label.rect.x - 9, label.rect.y - 5, label.rect.w + 18, label.rect.h + 10);
+    ctx.fillStyle = label.color;
+    ctx.fillText(label.text, label.rect.x + label.rect.w / 2, label.rect.y + label.rect.h - 3);
+  }
+  return placed.map((label) => label.rect);
+}
+
 /**
  * Screen-space label pass with greedy collision culling. Labels are placed in
  * priority order (hovered/selected first, then nearer stars); a label draws only
  * if its box clears every already-placed label, so clusters never tangle and
  * zooming in reveals more labels as stars separate on screen.
  */
-function drawStarLabels(ctx: CanvasRenderingContext2D, candidates: LabelCandidate[]): void {
+function drawStarLabels(
+  ctx: CanvasRenderingContext2D,
+  candidates: LabelCandidate[],
+  occupied: readonly Rect[],
+  starKeepouts: ReadonlyMap<string, Rect>,
+): void {
   const ordered = [...candidates].sort(
     (a, b) => Number(b.emphasized) - Number(a.emphasized) || b.z - a.z,
   );
@@ -104,14 +330,28 @@ function drawStarLabels(ctx: CanvasRenderingContext2D, candidates: LabelCandidat
       titleW = ctx.measureText(titleStr).width;
     }
     const width = idW + (c.showTitle ? 6 + sepW + 5 + titleW : 0);
-    const x0 = c.sx + 12;
-    const rect: Rect = { x: x0, y: c.sy - 9, w: width, h: 16 };
-    // Emphasised labels (hover/selection) always win — never culled.
-    if (!c.emphasized && placed.some((p) => rectsOverlap(rect, p))) continue;
+    const candidateRects: Rect[] = [
+      { x: c.sx + 12, y: c.sy - 9, w: width, h: 16 },
+      { x: c.sx + 12, y: c.sy + 12, w: width, h: 16 },
+      { x: c.sx - width - 12, y: c.sy - 9, w: width, h: 16 },
+      { x: c.sx - width - 12, y: c.sy + 12, w: width, h: 16 },
+      { x: c.sx - width / 2, y: c.sy - 28, w: width, h: 16 },
+      { x: c.sx - width / 2, y: c.sy + 20, w: width, h: 16 },
+    ];
+    const available = candidateRects.find(
+      (rect) =>
+        !placed.some((p) => rectsOverlap(rect, p)) &&
+        !occupied.some((p) => rectsOverlap(rect, p)) &&
+        ![...starKeepouts].some(([id, keepout]) => id !== c.id && rectsOverlap(rect, keepout)),
+    );
+    // Emphasised labels remain guaranteed visible; they use the first clear
+    // slot when possible and otherwise intentionally take the default slot.
+    const rect = available ?? (c.emphasized ? candidateRects[0] : undefined);
+    if (!rect) continue;
     placed.push(rect);
 
-    const ly = c.sy + 4;
-    let lx = x0;
+    const ly = rect.y + 13;
+    let lx = rect.x;
     ctx.font = ID_FONT;
     ctx.fillStyle = c.color;
     ctx.fillText(idStr, lx, ly);
@@ -167,6 +407,7 @@ export function drawGalaxy(
   twinkleAmp = 0,
   showRelatedOverlay = false,
 ): void {
+  const geometry = constellationGeometry(scene.points, scene.meta, constellations);
   ctx.save();
   ctx.clearRect(0, 0, width, height);
   const bg = ctx.createRadialGradient(
@@ -195,20 +436,19 @@ export function drawGalaxy(
   }
   ctx.globalAlpha = 1;
 
-  // Constellation region halos + labels.
+  // Constellation region halos. Names are placed later in screen space, after
+  // stars and lines have supplied the collision obstacles.
   for (const c of constellations) {
-    const halo = ctx.createRadialGradient(c.anchor.x, c.anchor.y, 0, c.anchor.x, c.anchor.y, 190);
+    const group = geometry.get(c.id);
+    const centerX = group?.centerX ?? c.anchor.x;
+    const centerY = group?.centerY ?? c.anchor.y;
+    const halo = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 190);
     halo.addColorStop(0, `${c.color}14`);
     halo.addColorStop(1, `${c.color}00`);
     ctx.fillStyle = halo;
     ctx.beginPath();
-    ctx.arc(c.anchor.x, c.anchor.y, 190, 0, Math.PI * 2);
+    ctx.arc(centerX, centerY, 190, 0, Math.PI * 2);
     ctx.fill();
-
-    ctx.textAlign = 'center';
-    ctx.font = "600 13px 'Archivo Narrow', system-ui, sans-serif";
-    ctx.fillStyle = `${c.color}66`;
-    ctx.fillText(c.name.toUpperCase().split('').join('  '), c.anchor.x, c.anchor.y - 120);
   }
 
   const pointById = new Map(scene.points.map((p) => [p.id, p]));
@@ -339,6 +579,7 @@ export function drawGalaxy(
     // collision culling so clusters never tangle.
     if (m.catalog && !dimmed && transform.k > 0.75) {
       labelCandidates.push({
+        id: p.id,
         sx: p.x * transform.k + transform.x,
         sy: p.y * transform.k + transform.y,
         catalog: m.catalog,
@@ -352,5 +593,23 @@ export function drawGalaxy(
   }
   ctx.restore();
 
-  drawStarLabels(ctx, labelCandidates);
+  const selectedConstellationId = selectedId
+    ? scene.meta.get(selectedId)?.constellation
+    : undefined;
+  const starKeepouts = starObstacles(scene, transform);
+  const protectedRegions = [...starKeepouts.values(), ...lineObstacles(scene, transform)];
+  const constellationLabelRects = drawConstellationLabels(
+    ctx,
+    constellations,
+    geometry,
+    transform,
+    protectedRegions,
+    selectedConstellationId,
+  );
+  drawStarLabels(
+    ctx,
+    labelCandidates,
+    [...lineObstacles(scene, transform), ...constellationLabelRects],
+    starKeepouts,
+  );
 }

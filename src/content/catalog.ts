@@ -6,6 +6,8 @@ import type { Article, Constellation } from './types';
  * identically (GW-001, SEC-001, …) from one implementation.
  */
 export interface CatalogStarMeta {
+  /** Present for 2D group-aware label placement; legacy renderer fixtures may omit it. */
+  constellation?: string;
   color: string;
   stub: boolean;
   title: string;
@@ -39,6 +41,7 @@ export function catalogMeta(
       return [
         a.id,
         {
+          constellation: a.constellation,
           color: colorByConstellation.get(a.constellation) ?? '#ffffff',
           stub: a.stub,
           title: a.title,

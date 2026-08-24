@@ -11,6 +11,7 @@ import { motionDuration, prefersReducedMotion } from '../app/motion';
 import { catalogMeta, constellationColors } from '../content/catalog';
 import { ResetIcon, RelatedLinesIcon } from '../ui/icons';
 import { drawGalaxy, hitTest, screenHitRadius, makeDust } from './draw';
+import { fitGalaxyView, layoutGalaxy2D } from './layout2d';
 
 export interface GalaxyCanvasProps {
   articles: Article[];
@@ -77,6 +78,13 @@ export function GalaxyCanvas({
   // implementation in content/catalog.ts.
   const meta = useMemo(() => catalogMeta(articles, constellations), [articles, constellations]);
 
+  // The semantic positions remain the source for 3D. Galaxy-only group
+  // separation gives the 2D renderer room for growing labels and line art.
+  const positions2D = useMemo(
+    () => layoutGalaxy2D(positions, articles, constellations),
+    [positions, articles, constellations],
+  );
+
   // #39: constellation links with positions for orphan rescue. In semantic
   // mode (#29) the artifact's similarity edges are the line art; the curated
   // builder otherwise produces the tag-affinity chains.
@@ -85,9 +93,9 @@ export function GalaxyCanvas({
       ? computeSemanticLinks(articles, semanticEdges)
       : computeConstellationLinks(
           articles,
-          new Map(positions.map((p) => [p.id, { x: p.x, y: p.y }])),
+          new Map(positions2D.map((p) => [p.id, { x: p.x, y: p.y }])),
         );
-  }, [articles, positions, semanticEdges]);
+  }, [articles, positions2D, semanticEdges]);
 
   // #39: compute related-article links from frontmatter.
   const relatedLinks = useMemo(
@@ -123,7 +131,7 @@ export function GalaxyCanvas({
     const currentPoints = () => {
       const t = transformRef.current;
       const r = restTransformRef.current;
-      return displayPositions(positions, t.x - r.x, t.y - r.y, t.k);
+      return displayPositions(positions2D, t.x - r.x, t.y - r.y, t.k);
     };
     // P2-F2: dust shares the parallax transform so the depth cue is real.
     const currentDust = () => {
@@ -233,7 +241,8 @@ export function GalaxyCanvas({
     selection.call(zoomBehavior);
     if (transformRef.current === zoomIdentity) {
       const rect = canvas.getBoundingClientRect();
-      const initial = zoomIdentity.translate(rect.width / 2, rect.height / 2).scale(0.8);
+      const fitted = fitGalaxyView(rect.width, rect.height, positions2D);
+      const initial = zoomIdentity.translate(fitted.x, fitted.y).scale(fitted.k);
       restTransformRef.current = initial;
       selection.call(zoomBehavior.transform, initial);
     }
@@ -300,7 +309,7 @@ export function GalaxyCanvas({
       observer.disconnect();
       selection.on('.zoom', null);
     };
-  }, [positions, meta, links, relatedLinks, dust, constellations, onSelect]);
+  }, [positions2D, meta, links, relatedLinks, dust, constellations, onSelect]);
 
   // P3-F1: cheap re-draw when selection/search/overlay change — no setup teardown.
   useEffect(() => {
@@ -313,7 +322,7 @@ export function GalaxyCanvas({
     if (!focus) return;
     const canvas = canvasRef.current;
     const zoomBehavior = zoomRef.current;
-    const target = positions.find((p) => p.id === focus.id);
+    const target = positions2D.find((p) => p.id === focus.id);
     if (!canvas || !zoomBehavior || !target) return;
     const rect = canvas.getBoundingClientRect();
     const k = Math.max(1.2, transformRef.current.k);
@@ -327,14 +336,15 @@ export function GalaxyCanvas({
           .scale(k)
           .translate(-target.x, -target.y),
       );
-  }, [focus, positions]);
+  }, [focus, positions2D]);
 
   const resetView = () => {
     const canvas = canvasRef.current;
     const zoomBehavior = zoomRef.current;
     if (!canvas || !zoomBehavior) return;
     const rect = canvas.getBoundingClientRect();
-    const rest = zoomIdentity.translate(rect.width / 2, rect.height / 2).scale(0.8);
+    const fitted = fitGalaxyView(rect.width, rect.height, positions2D);
+    const rest = zoomIdentity.translate(fitted.x, fitted.y).scale(fitted.k);
     restTransformRef.current = rest;
     select(canvas).transition().duration(motionDuration(450)).call(zoomBehavior.transform, rest);
   };

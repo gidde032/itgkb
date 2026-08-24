@@ -8,6 +8,8 @@ import type { Constellation } from '../content/types';
 function makeRecordingCtx(): {
   ctx: CanvasRenderingContext2D;
   fillTexts: () => string[];
+  fonts: () => string[];
+  fillStyles: () => unknown[];
   setLineDashCalls: () => number[][];
   createLinearGradientCalls: () => number[][];
   /** Gradient stops per createLinearGradient call, in call order. */
@@ -20,6 +22,8 @@ function makeRecordingCtx(): {
   lineToCalls: () => number[][];
 } {
   const fillText = vi.fn();
+  const fonts: string[] = [];
+  const fillStyles: unknown[] = [];
   const setLineDash = vi.fn();
   // #29: record curve-vs-straight path commands so weighted similarity edges
   // and unweighted links can be asserted apart.
@@ -65,12 +69,16 @@ function makeRecordingCtx(): {
     },
     set(target: Record<string, unknown>, prop: string, value: unknown) {
       target[prop] = value;
+      if (prop === 'font') fonts.push(String(value));
+      if (prop === 'fillStyle') fillStyles.push(value);
       return true;
     },
   }) as unknown as CanvasRenderingContext2D;
   return {
     ctx,
     fillTexts: () => fillText.mock.calls.map((c) => String(c[0])),
+    fonts: () => fonts,
+    fillStyles: () => fillStyles,
     setLineDashCalls: () => setLineDash.mock.calls.map((c) => c[0] as number[]),
     quadraticCurveCalls: () => quadraticCurveTo.mock.calls.map((c) => c as unknown as number[]),
     lineToCalls: () => lineTo.mock.calls.map((c) => c as unknown as number[]),
@@ -127,7 +135,7 @@ describe('star labels (#16)', () => {
     expect(fillTexts().some((t) => t.endsWith('…') && t.length < 71)).toBe(true);
   });
 
-  it('culls a lower-priority label when two would collide', () => {
+  it('keeps a focused label visible in a dense cluster', () => {
     const { ctx, fillTexts } = makeRecordingCtx();
     const cluster = {
       points: [
@@ -142,9 +150,10 @@ describe('star labels (#16)', () => {
       relatedLinks: [],
       dust: [],
     };
-    drawGalaxy(ctx, 800, 600, cluster, constellations, transformAt(2), null, null, null);
+    drawGalaxy(ctx, 800, 600, cluster, constellations, transformAt(2), 's1', null, null);
     const texts = fillTexts();
-    // Nearer star (higher z) wins; the colliding one is dropped.
+    // Focused labels remain visible even when surrounding star keep-outs leave
+    // no ordinary safe slot for the dense cluster.
     expect(texts.some((t) => t.includes('GW-001'))).toBe(true);
     expect(texts.some((t) => t.includes('GW-002'))).toBe(false);
   });
@@ -161,6 +170,17 @@ describe('star labels (#16)', () => {
     const texts = fillTexts();
     expect(texts.some((t) => t.includes('GW-001'))).toBe(false);
     expect(texts).not.toContain('Star Title');
+  });
+});
+
+describe('constellation labels', () => {
+  it('matches the 3D chip typography and translucent ink plate', () => {
+    const { ctx, fillTexts, fonts, fillStyles } = makeRecordingCtx();
+    drawGalaxy(ctx, 800, 600, scene, constellations, transformAt(0.8), null, null, null);
+
+    expect(fonts()).toContain("600 11px 'Archivo Narrow', system-ui, sans-serif");
+    expect(fillTexts()).toContain('G R O U P');
+    expect(fillStyles()).toContain('#060a1433');
   });
 });
 

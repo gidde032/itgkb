@@ -52,14 +52,16 @@ integration, AI authoring assistant, analytics, multi-user contribution flow.
 | Lint/format         | ESLint + Prettier                                                                                                 | Standard gates                                                                                                                                                                          |
 
 **Rendering-swap contract:** the layout engine outputs plain
-`{ id, x, y, z }` positions consumed by a renderer interface. The 3D
+`{ id, x, y, z }` semantic positions consumed by a renderer interface. The 3D
 "showcase" view (#31, react-three-fiber v8 — the line pairing with the pinned
-React 18) is a third renderer against the same positions, not a rewrite: a
-lazy-loaded chunk that projects the constellations onto a celestial globe
-(figure directions derived from the curated anchors; local force-layout
-offsets become tangent-plane figure spread), never a new LayoutProvider. The
-default semantic layout (#29 / OQ-2) and curated fallback flow through this
-same renderer contract.
+React 18) consumes those canonical positions directly: a lazy-loaded chunk
+that projects the constellations onto a celestial globe (figure directions
+derived from the curated anchors; local force-layout offsets become
+tangent-plane figure spread), never a new LayoutProvider. The 2D galaxy may
+apply a deterministic presentation pass for group spacing, label clearance,
+and overview framing, but that pass preserves article IDs, constellation
+membership, z values, and semantic edge topology. The default semantic layout
+(#29 / OQ-2) and curated fallback flow through this same renderer contract.
 
 ## 3. Functional requirements
 
@@ -78,10 +80,14 @@ same renderer contract.
   similarity-favoured open path forms connected line art with degree at most
   two per star. Missing, malformed, or incomplete artifacts
   fall back to the curated layout.
-- **FR-4** One semantic position map must drive both the 2D galaxy and 3D globe.
-  Cluster members form tight knots around curated anchors; semantic outliers
-  occupy sparse regions while remaining inside the globe silhouette. In the
-  curated fallback, shared tags attract within authored constellations.
+- **FR-4** One semantic position map is canonical for both the 2D galaxy and 3D
+  globe. The 3D globe consumes it directly; the 2D galaxy may apply a
+  deterministic readability transform that separates constellation footprints
+  and frames the complete layout without changing membership, local group
+  shape, z values, or edge topology. Cluster members form tight knots around
+  curated anchors; semantic outliers occupy sparse regions while remaining
+  inside the globe silhouette. In the curated fallback, shared tags attract
+  within authored constellations.
 - **FR-5** Hover (desktop) must show a preview: title + summary. Click must
   open a side panel with the full rendered article.
 - **FR-6** Stub articles must be visually distinct (dimmer star, dashed ring)
