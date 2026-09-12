@@ -9,7 +9,12 @@ const webglState = vi.hoisted(() => ({ available: true }));
 vi.mock('./webgl', () => ({ hasWebGL: () => webglState.available }));
 vi.mock('../showcase/ShowcaseCanvas', () => ({
   ShowcaseCanvas: (props: { showRelatedOverlay: boolean; onToggleRelatedOverlay: () => void }) => (
-    <div data-testid="showcase-canvas" role="img" aria-label="3D showcase map">
+    <div
+      className="galaxy-wrap"
+      data-testid="showcase-canvas"
+      role="img"
+      aria-label="3D showcase map"
+    >
       <button
         type="button"
         aria-label="3D Related lines"
@@ -179,6 +184,42 @@ describe('live viewport switching (P4-F4)', () => {
     expect(
       screen.queryByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' }),
     ).not.toBeInTheDocument();
+  });
+
+  it('moves focus to search and announces the list when a focused viewport surface is removed', () => {
+    render(<App />);
+    const galaxyButton = screen.getByRole('button', { name: 'Galaxy' });
+    galaxyButton.focus();
+    expect(galaxyButton).toHaveFocus();
+
+    act(() => {
+      (globalThis as unknown as { __setNarrowViewport: (v: boolean) => void }).__setNarrowViewport(
+        true,
+      );
+    });
+
+    const search = screen.getByRole('searchbox', { name: 'Search articles' });
+    expect(search).toHaveFocus();
+    expect(screen.getByText('Viewport is narrow; showing the article list.')).toHaveAttribute(
+      'aria-live',
+      'polite',
+    );
+  });
+
+  it('preserves focus when the 3D surface is active during the transition', async () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: '3D' }));
+    const related = await screen.findByRole('button', { name: '3D Related lines' });
+    related.focus();
+    expect(related).toHaveFocus();
+
+    act(() => {
+      (globalThis as unknown as { __setNarrowViewport: (v: boolean) => void }).__setNarrowViewport(
+        true,
+      );
+    });
+
+    expect(screen.getByRole('searchbox', { name: 'Search articles' })).toHaveFocus();
   });
 });
 

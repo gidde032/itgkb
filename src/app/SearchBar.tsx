@@ -1,8 +1,9 @@
-import type { ChangeEvent, KeyboardEvent } from 'react';
+import type { ChangeEvent, KeyboardEvent, Ref } from 'react';
 
 export interface SearchBarProps {
   query: string;
   matchCount: number | null;
+  inputRef?: Ref<HTMLInputElement>;
   /** A2: true when results are best-effort (not every term matched). */
   partial?: boolean;
   onChange: (query: string) => void;
@@ -13,6 +14,7 @@ export interface SearchBarProps {
 export function SearchBar({
   query,
   matchCount,
+  inputRef,
   partial = false,
   onChange,
   onOpenTopMatch,
@@ -26,6 +28,7 @@ export function SearchBar({
     <div className="search-bar">
       <input
         id="article-search"
+        ref={inputRef}
         type="search"
         value={query}
         placeholder="Search articles…"

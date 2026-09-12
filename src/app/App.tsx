@@ -31,7 +31,7 @@ const ShowcaseCanvas = lazy(() =>
 import { SearchBar } from './SearchBar';
 import { SearchDropdown } from './SearchDropdown';
 import { ListView } from './ListView';
-import { useNarrowViewport } from './useNarrowViewport';
+import { NARROW_BREAKPOINT_PX, useNarrowViewport } from './useNarrowViewport';
 import { hasWebGL } from './webgl';
 import { ListIcon, StarIcon, CubeIcon } from '../ui/icons';
 
@@ -94,7 +94,23 @@ export function App(): JSX.Element {
   // related links remain visible when the global overlay is off.
   const [showRelatedOverlay, setShowRelatedOverlay] = useState(false);
   const toggleRelatedOverlay = useCallback(() => setShowRelatedOverlay((visible) => !visible), []);
-  const narrow = useNarrowViewport();
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [viewportAnnouncement, setViewportAnnouncement] = useState('');
+  const onViewportChange = useCallback((isNarrow: boolean) => {
+    if (!isNarrow) {
+      setViewportAnnouncement('');
+      return;
+    }
+
+    setViewportAnnouncement('Viewport is narrow; showing the article list.');
+    // The mode switch and both canvas surfaces are removed by the next render.
+    // Move focus while the active element still exists so the browser does not
+    // leave keyboard users on document.body.
+    if (document.activeElement?.closest('.mode-switch, .galaxy-wrap')) {
+      searchInputRef.current?.focus();
+    }
+  }, []);
+  const narrow = useNarrowViewport(NARROW_BREAKPOINT_PX, onViewportChange);
   // A4: desktop users can pick the list; narrow viewports force it (NF-7).
   const [mode, setMode] = useState<ViewMode>('galaxy');
   // #31 decision 7: 3D is desktop-only and requires WebGL; without it the
@@ -173,11 +189,15 @@ export function App(): JSX.Element {
         <SearchBar
           query={query}
           matchCount={matches ? matches.length : null}
+          inputRef={searchInputRef}
           partial={Boolean(matches && matches.length > 0 && matches[0].partial)}
           onChange={setQuery}
           onOpenTopMatch={openTopMatch}
           onClear={clearSearch}
         />
+        <span className="visually-hidden" aria-live="polite" aria-atomic="true">
+          {viewportAnnouncement}
+        </span>
         {!showList && matches && matches.length > 0 && (
           <SearchDropdown
             matches={matches}
