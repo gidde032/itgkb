@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Five generalized IT-support articles.** Added troubleshooting guidance for
+  Excel cells that cannot be edited, Respondus LockDown Browser and Honorlock
+  launch failures, suspected malware or browser popups, RStudio Desktop
+  installation and session errors, and combining changed Google Forms responses
+  in Google Sheets.
+
 ## [1.2.0] - 2026-08-24
 
 ### Added

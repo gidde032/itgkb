@@ -35,7 +35,8 @@ export const SEED = 42;
 export const OUTLIER_STRENGTH_THRESHOLD = 0.35;
 export const EDGE_TOP_K = 3;
 /**
- * Measured on the real corpus (47 articles, this model): median top-3
+ * Calibration reference: the 47-article corpus used when these thresholds were
+ * tuned with this model; median top-3
  * similarity ≈ 0.35, 98% of ALL pairs sit below 0.45 — a 0.45 cut leaves the
  * graph nearly edge-less. 0.30 keeps roughly the top 8% of pairs, which is
  * the "sparse but present" line density of the reference aesthetic.
