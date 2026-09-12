@@ -111,7 +111,7 @@ membership, z values, and semantic edge topology. The default semantic layout
   non-zero on any violation.
 - **FR-12** The v1.0.0 line ships 40 vendor-generic articles across the 7
   constellations (§5), with no stubs (41 as of v1.1; 47 as of the 2026-08-21
-  additions). Content is enforced
+  additions; 53 as of the 2026-09-12 batch). Content is enforced
   vendor-neutral by
   `npm run check:sensitivity` — no organization-specific data or unresolved
   `(verify)`/`[NEEDS VERIFICATION]` markers.
