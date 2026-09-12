@@ -31,7 +31,7 @@ const ShowcaseCanvas = lazy(() =>
 import { SearchBar } from './SearchBar';
 import { SearchDropdown } from './SearchDropdown';
 import { ListView } from './ListView';
-import { useNarrowViewport } from './useNarrowViewport';
+import { NARROW_BREAKPOINT_PX, useNarrowViewport } from './useNarrowViewport';
 import { hasWebGL } from './webgl';
 import { ListIcon, StarIcon, CubeIcon } from '../ui/icons';
 
@@ -94,9 +94,29 @@ export function App(): JSX.Element {
   // related links remain visible when the global overlay is off.
   const [showRelatedOverlay, setShowRelatedOverlay] = useState(false);
   const toggleRelatedOverlay = useCallback(() => setShowRelatedOverlay((visible) => !visible), []);
-  const narrow = useNarrowViewport();
   // A4: desktop users can pick the list; narrow viewports force it (NF-7).
   const [mode, setMode] = useState<ViewMode>('galaxy');
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [viewportAnnouncement, setViewportAnnouncement] = useState('');
+  const onViewportChange = useCallback(
+    (isNarrow: boolean) => {
+      setViewportAnnouncement(isNarrow ? 'Viewport is narrow; showing the article list.' : '');
+      // Responsive branches are removed by the next render. Move focus while
+      // the active element still exists so the browser does not leave keyboard
+      // users on document.body. The list is only removed on widening when the
+      // remembered desktop mode is not already List.
+      const removedSurfaceSelector = isNarrow
+        ? '.mode-switch, .galaxy-wrap, .search-dropdown'
+        : mode === 'list'
+          ? null
+          : '.list-view';
+      if (removedSurfaceSelector && document.activeElement?.closest(removedSurfaceSelector)) {
+        searchInputRef.current?.focus();
+      }
+    },
+    [mode],
+  );
+  const narrow = useNarrowViewport(NARROW_BREAKPOINT_PX, onViewportChange);
   // #31 decision 7: 3D is desktop-only and requires WebGL; without it the
   // segment renders disabled with a note.
   const webglAvailable = useMemo(() => hasWebGL(), []);
@@ -126,7 +146,12 @@ export function App(): JSX.Element {
     const el = lastFocusedRef.current;
     lastFocusedRef.current = null;
     // Restore focus to the trigger, unless it lived inside the (now closing) panel.
-    if (el && document.contains(el) && !el.closest('.article-panel')) el.focus();
+    if (el && el !== document.body && document.contains(el) && !el.closest('.article-panel')) {
+      el.focus();
+    } else if (el) {
+      // A responsive transition may have removed the original trigger.
+      searchInputRef.current?.focus();
+    }
   }, []);
   const openTopMatch = useCallback(() => {
     if (matches && matches.length > 0) flyTo(matches[0].id);
@@ -173,11 +198,15 @@ export function App(): JSX.Element {
         <SearchBar
           query={query}
           matchCount={matches ? matches.length : null}
+          inputRef={searchInputRef}
           partial={Boolean(matches && matches.length > 0 && matches[0].partial)}
           onChange={setQuery}
           onOpenTopMatch={openTopMatch}
           onClear={clearSearch}
         />
+        <span className="visually-hidden" aria-live="polite" aria-atomic="true">
+          {viewportAnnouncement}
+        </span>
         {!showList && matches && matches.length > 0 && (
           <SearchDropdown
             matches={matches}

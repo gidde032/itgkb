@@ -9,7 +9,12 @@ const webglState = vi.hoisted(() => ({ available: true }));
 vi.mock('./webgl', () => ({ hasWebGL: () => webglState.available }));
 vi.mock('../showcase/ShowcaseCanvas', () => ({
   ShowcaseCanvas: (props: { showRelatedOverlay: boolean; onToggleRelatedOverlay: () => void }) => (
-    <div data-testid="showcase-canvas" role="img" aria-label="3D showcase map">
+    <div
+      className="galaxy-wrap"
+      data-testid="showcase-canvas"
+      role="img"
+      aria-label="3D showcase map"
+    >
       <button
         type="button"
         aria-label="3D Related lines"
@@ -179,6 +184,105 @@ describe('live viewport switching (P4-F4)', () => {
     expect(
       screen.queryByRole('img', { name: 'Interactive galaxy map of IT knowledge articles' }),
     ).not.toBeInTheDocument();
+  });
+
+  it('moves focus to search and announces the list when a focused viewport surface is removed', () => {
+    render(<App />);
+    const galaxyButton = screen.getByRole('button', { name: 'Galaxy' });
+    galaxyButton.focus();
+    expect(galaxyButton).toHaveFocus();
+
+    act(() => {
+      (globalThis as unknown as { __setNarrowViewport: (v: boolean) => void }).__setNarrowViewport(
+        true,
+      );
+    });
+
+    const search = screen.getByRole('searchbox', { name: 'Search articles' });
+    expect(search).toHaveFocus();
+    expect(screen.getByText('Viewport is narrow; showing the article list.')).toHaveAttribute(
+      'aria-live',
+      'polite',
+    );
+  });
+
+  it('preserves focus when the 3D surface is active during the transition', async () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: '3D' }));
+    const related = await screen.findByRole('button', { name: '3D Related lines' });
+    related.focus();
+    expect(related).toHaveFocus();
+
+    act(() => {
+      (globalThis as unknown as { __setNarrowViewport: (v: boolean) => void }).__setNarrowViewport(
+        true,
+      );
+    });
+
+    expect(screen.getByRole('searchbox', { name: 'Search articles' })).toHaveFocus();
+  });
+
+  it('moves focus from a search result when narrowing removes the dropdown', () => {
+    render(<App />);
+    const search = screen.getByRole('searchbox', { name: 'Search articles' });
+    fireEvent.change(search, { target: { value: 'calendar' } });
+    const result = screen
+      .getByRole('listbox', { name: 'Search results' })
+      .querySelector<HTMLButtonElement>('button');
+    if (!result) throw new Error('Expected a search result button');
+    result.focus();
+    expect(result).toHaveFocus();
+
+    act(() => {
+      (globalThis as unknown as { __setNarrowViewport: (v: boolean) => void }).__setNarrowViewport(
+        true,
+      );
+    });
+
+    expect(search).toHaveFocus();
+  });
+
+  it('moves focus from the forced list when widening restores the desktop canvas', () => {
+    (globalThis as unknown as { __setNarrowViewport: (v: boolean) => void }).__setNarrowViewport(
+      true,
+    );
+    render(<App />);
+    const listButton = screen.getByRole('button', {
+      name: /Traceroute: Reading and interpreting output/,
+    });
+    listButton.focus();
+    expect(listButton).toHaveFocus();
+
+    act(() => {
+      (globalThis as unknown as { __setNarrowViewport: (v: boolean) => void }).__setNarrowViewport(
+        false,
+      );
+    });
+
+    expect(screen.getByRole('searchbox', { name: 'Search articles' })).toHaveFocus();
+  });
+
+  it('falls back to search when a resized-away article trigger is later closed', async () => {
+    render(<App />);
+    const search = screen.getByRole('searchbox', { name: 'Search articles' });
+    fireEvent.change(search, { target: { value: 'calendar' } });
+    const result = screen
+      .getByRole('listbox', { name: 'Search results' })
+      .querySelector<HTMLButtonElement>('button');
+    if (!result) throw new Error('Expected a search result button');
+    result.focus();
+    expect(result).toHaveFocus();
+    fireEvent.click(result);
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+
+    act(() => {
+      (globalThis as unknown as { __setNarrowViewport: (v: boolean) => void }).__setNarrowViewport(
+        true,
+      );
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Close article' }));
+
+    expect(search).toHaveFocus();
   });
 });
 

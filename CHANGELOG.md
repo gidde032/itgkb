@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Responsive focus recovery (issue #46).** Crossing the narrow-viewport
+  boundary now moves focus to the stable search control and politely announces
+  the list-view transition when the previous mode control or canvas is removed.
+
+### Changed
+
+- **Dependency security maintenance (issue #33).** Updated the Node-20-
+  compatible Vite, Vitest, coverage, YAML, formatting, lint, and test packages
+  to current fixed releases. The pinned Transformers generator remains
+  dev-only and retains its upstream warning because no safe fixed release is
+  available; it is not shipped to users.
+
 ### Added
 
 - **Five generalized IT-support articles.** Added troubleshooting guidance for
