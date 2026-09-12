@@ -221,6 +221,69 @@ describe('live viewport switching (P4-F4)', () => {
 
     expect(screen.getByRole('searchbox', { name: 'Search articles' })).toHaveFocus();
   });
+
+  it('moves focus from a search result when narrowing removes the dropdown', () => {
+    render(<App />);
+    const search = screen.getByRole('searchbox', { name: 'Search articles' });
+    fireEvent.change(search, { target: { value: 'calendar' } });
+    const result = screen
+      .getByRole('listbox', { name: 'Search results' })
+      .querySelector<HTMLButtonElement>('button');
+    if (!result) throw new Error('Expected a search result button');
+    result.focus();
+    expect(result).toHaveFocus();
+
+    act(() => {
+      (globalThis as unknown as { __setNarrowViewport: (v: boolean) => void }).__setNarrowViewport(
+        true,
+      );
+    });
+
+    expect(search).toHaveFocus();
+  });
+
+  it('moves focus from the forced list when widening restores the desktop canvas', () => {
+    (globalThis as unknown as { __setNarrowViewport: (v: boolean) => void }).__setNarrowViewport(
+      true,
+    );
+    render(<App />);
+    const listButton = screen.getByRole('button', {
+      name: /Traceroute: Reading and interpreting output/,
+    });
+    listButton.focus();
+    expect(listButton).toHaveFocus();
+
+    act(() => {
+      (globalThis as unknown as { __setNarrowViewport: (v: boolean) => void }).__setNarrowViewport(
+        false,
+      );
+    });
+
+    expect(screen.getByRole('searchbox', { name: 'Search articles' })).toHaveFocus();
+  });
+
+  it('falls back to search when a resized-away article trigger is later closed', async () => {
+    render(<App />);
+    const search = screen.getByRole('searchbox', { name: 'Search articles' });
+    fireEvent.change(search, { target: { value: 'calendar' } });
+    const result = screen
+      .getByRole('listbox', { name: 'Search results' })
+      .querySelector<HTMLButtonElement>('button');
+    if (!result) throw new Error('Expected a search result button');
+    result.focus();
+    expect(result).toHaveFocus();
+    fireEvent.click(result);
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+
+    act(() => {
+      (globalThis as unknown as { __setNarrowViewport: (v: boolean) => void }).__setNarrowViewport(
+        true,
+      );
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Close article' }));
+
+    expect(search).toHaveFocus();
+  });
 });
 
 // A4 regression: desktop users can pick the list view and back. Since #31 the
