@@ -29,6 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   installation and session errors, and combining changed Google Forms responses
   in Google Sheets.
 
+- **Four generalized IT-support articles.** Added guidance for connecting to
+  shared or network printers, replacing printer toner and cartridges, diagnosing
+  laptop charging problems, and troubleshooting laptop overheating or fan issues.
+
 ## [1.2.0] - 2026-08-24
 
 ### Added
