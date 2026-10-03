@@ -4,6 +4,8 @@
 
 **▶ Live demo: https://gidde032.github.io/itgkb/**
 
+https://github.com/user-attachments/assets/2e522ebc-4d04-44ee-ad87-75f05cdf5049
+
 An explorable, vendor-neutral IT knowledge base rendered as a galaxy: every
 article is a star, stars cluster into constellations by category, and proximity
 means topical similarity. A revision-pinned MiniLM model computes the default
