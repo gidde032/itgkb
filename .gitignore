@@ -27,3 +27,6 @@ Thumbs.db
 *.swp
 .idea/
 .vscode/
+
+# Local trailer sources and rendered media
+/trailer/
